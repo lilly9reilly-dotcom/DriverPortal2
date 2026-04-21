@@ -16,6 +16,8 @@ targets:
       - path: DriverPortalIOS
         excludes:
           - README.md
+          - Preview Content/**
+          - Preview Content
     settings:
       base:
         PRODUCT_NAME: DriverPortalIOS
