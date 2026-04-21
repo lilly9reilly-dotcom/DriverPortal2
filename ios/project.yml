@@ -2,6 +2,8 @@ name: DriverPortalIOS
 options:
   deploymentTarget:
     iOS: 16.0
+  xcodeVersion: "15.4"
+  generateEmptyDirectories: true
 configs:
   Debug: debug
   Release: release
