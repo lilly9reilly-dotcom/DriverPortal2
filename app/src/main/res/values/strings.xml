@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">شركة الناقلات النموذجية</string>
+    <string name="welcome">مرحباً</string>
+    <string name="phone_prefix">📞 %1$s</string>
+    <string name="car_prefix">🚗 %1$s</string>
+    <string name="online_status">متصل</string>
+    <string name="my_account">حسابي</string>
+    <string name="trips">النقلات</string>
+    <string name="quantity">الكمية</string>
+    <string name="gas">الكاز</string>
+    <string name="profits">الأرباح</string>
+    <string name="current_location">📍 الموقع الحالي</string>
+    <string name="latitude_label">Lat: %1$s</string>
+    <string name="longitude_label">Lng: %1$s</string>
+    <string name="distance_label">المسافة: %1$s كم</string>
+    <string name="update_location">تحديث الموقع</string>
+    <string name="open_map">فتح الخريطة</string>
+    <string name="logout">تسجيل خروج</string>
+</resources>

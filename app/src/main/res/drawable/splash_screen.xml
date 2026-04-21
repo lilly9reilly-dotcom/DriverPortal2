@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- خلفية سوداء -->
+    <item android:drawable="@android:color/black" />
+
+    <!-- الصورة في المنتصف -->
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/login_background"/>
+    </item>
+
+</layer-list>
