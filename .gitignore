@@ -23,3 +23,8 @@ ios/*.xcworkspace/
 **/*.xcuserstate
 ios/Pods/
 
+
+ann.json
+jobs.json
+logs.txt
+response.json
