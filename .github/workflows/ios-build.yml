@@ -50,6 +50,16 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
+      - name: Downgrade project format for Xcode 15
+        run: |
+          set -eu
+          PBX="DriverPortalIOS.xcodeproj/project.pbxproj"
+          if [ -f "$PBX" ]; then
+            # Replace any objectVersion >= 70 with 56 (Xcode 14 format, supported by Xcode 15)
+            sed -i.bak -E 's/objectVersion = (7[0-9]|8[0-9]|9[0-9]);/objectVersion = 56;/' "$PBX"
+            grep "objectVersion" "$PBX" || true
+          fi
+
       - name: Build unsigned archive
         if: ${{ github.event.inputs.mode == 'unsigned' || github.event_name == 'push' }}
         run: |
