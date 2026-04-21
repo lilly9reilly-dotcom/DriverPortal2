@@ -1,0 +1,25 @@
+{
+  "total_count": 1,
+  "artifacts": [
+    {
+      "id": 6558313433,
+      "node_id": "MDg6QXJ0aWZhY3Q2NTU4MzEzNDMz",
+      "name": "xcodebuild-log",
+      "size_in_bytes": 1549,
+      "url": "https://api.github.com/repos/lilly9reilly-dotcom/DriverPortal2/actions/artifacts/6558313433",
+      "archive_download_url": "https://api.github.com/repos/lilly9reilly-dotcom/DriverPortal2/actions/artifacts/6558313433/zip",
+      "expired": false,
+      "digest": "sha256:11eb5a299d8a2f1f45d52223c3ff46ff6a1aae08dd3913f239efdf9a02a6a688",
+      "created_at": "2026-04-21T15:19:44Z",
+      "updated_at": "2026-04-21T15:19:44Z",
+      "expires_at": "2026-04-28T15:19:43Z",
+      "workflow_run": {
+        "id": 24730663946,
+        "repository_id": 1217060144,
+        "head_repository_id": 1217060144,
+        "head_branch": "main",
+        "head_sha": "928fd509066c3a00812842a43e16d215173bb47f"
+      }
+    }
+  ]
+}
