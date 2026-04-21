@@ -1,0 +1,145 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 72343196764,
+      "run_id": 24730477174,
+      "workflow_name": "Build iOS IPA",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/lilly9reilly-dotcom/DriverPortal2/actions/runs/24730477174",
+      "run_attempt": 1,
+      "node_id": "CR_kwDOSIrdMM8AAAAQ1_2UXA",
+      "head_sha": "f5d0591b3bafc1fb741ea0d251fb87cf9966fdb8",
+      "url": "https://api.github.com/repos/lilly9reilly-dotcom/DriverPortal2/actions/jobs/72343196764",
+      "html_url": "https://github.com/lilly9reilly-dotcom/DriverPortal2/actions/runs/24730477174/job/72343196764",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-04-21T15:15:25Z",
+      "started_at": "2026-04-21T15:15:28Z",
+      "completed_at": "2026-04-21T15:16:01Z",
+      "name": "Build DriverPortal iOS IPA",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-04-21T15:15:28Z",
+          "completed_at": "2026-04-21T15:15:29Z"
+        },
+        {
+          "name": "Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-04-21T15:15:29Z",
+          "completed_at": "2026-04-21T15:15:32Z"
+        },
+        {
+          "name": "Select Xcode",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-04-21T15:15:32Z",
+          "completed_at": "2026-04-21T15:15:32Z"
+        },
+        {
+          "name": "Show Xcode version",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-04-21T15:15:32Z",
+          "completed_at": "2026-04-21T15:15:34Z"
+        },
+        {
+          "name": "Install XcodeGen",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-04-21T15:15:34Z",
+          "completed_at": "2026-04-21T15:15:41Z"
+        },
+        {
+          "name": "Generate Xcode project",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-04-21T15:15:41Z",
+          "completed_at": "2026-04-21T15:15:41Z"
+        },
+        {
+          "name": "Downgrade project format for Xcode 15",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-04-21T15:15:41Z",
+          "completed_at": "2026-04-21T15:15:41Z"
+        },
+        {
+          "name": "Build unsigned archive",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 8,
+          "started_at": "2026-04-21T15:15:41Z",
+          "completed_at": "2026-04-21T15:15:57Z"
+        },
+        {
+          "name": "Package unsigned IPA",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 9,
+          "started_at": "2026-04-21T15:15:58Z",
+          "completed_at": "2026-04-21T15:15:58Z"
+        },
+        {
+          "name": "Build signed IPA (Ad Hoc / App Store)",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-04-21T15:15:58Z",
+          "completed_at": "2026-04-21T15:15:58Z"
+        },
+        {
+          "name": "Upload IPA artifact",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-04-21T15:15:58Z",
+          "completed_at": "2026-04-21T15:15:58Z"
+        },
+        {
+          "name": "Upload xcarchive (for re-signing)",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-04-21T15:15:58Z",
+          "completed_at": "2026-04-21T15:15:58Z"
+        },
+        {
+          "name": "Post Checkout",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-04-21T15:15:58Z",
+          "completed_at": "2026-04-21T15:15:59Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-04-21T15:15:59Z",
+          "completed_at": "2026-04-21T15:16:00Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/lilly9reilly-dotcom/DriverPortal2/check-runs/72343196764",
+      "labels": [
+        "macos-14"
+      ],
+      "runner_id": 1000000006,
+      "runner_name": "GitHub Actions 1000000006",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

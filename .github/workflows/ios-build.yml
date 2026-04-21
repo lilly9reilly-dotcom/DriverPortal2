@@ -65,6 +65,8 @@ jobs:
         run: |
           set -eu
           rm -rf build
+          mkdir -p build
+          set +e
           xcodebuild \
             -project DriverPortalIOS.xcodeproj \
             -scheme DriverPortalIOS \
@@ -74,7 +76,25 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            archive
+            archive 2>&1 | tee build/xcodebuild.log
+          STATUS=${PIPESTATUS[0]}
+          echo "xcodebuild exit status: $STATUS"
+          if [ $STATUS -ne 0 ]; then
+            echo "===== ERROR LINES ====="
+            grep -E "(error:|warning:|note:)" build/xcodebuild.log | tail -100 || true
+            echo "===== LAST 200 LINES ====="
+            tail -200 build/xcodebuild.log
+          fi
+          exit $STATUS
+
+      - name: Upload xcodebuild log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-log
+          path: ios/build/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Package unsigned IPA
         if: ${{ github.event.inputs.mode == 'unsigned' || github.event_name == 'push' }}
