@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -46,7 +48,7 @@ fun MoreScreen(
     Box(modifier = Modifier.fillMaxSize()) {
 
         Image(
-            painter = painterResource(id = R.drawable.more_bg),
+            painter = painterResource(id = R.drawable.driver_more_bg),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -84,7 +86,7 @@ fun MoreScreen(
             MoreItemCard(
                 title = "السجل",
                 subtitle = "استعراض السجلات والحركات السابقة",
-                icon = Icons.Default.List,
+                icon = Icons.AutoMirrored.Filled.List,
                 accent = primary,
                 onClick = onOpenHistory
             )
@@ -108,7 +110,7 @@ fun MoreScreen(
             MoreItemCard(
                 title = "التواصل",
                 subtitle = "اتصال ورسائل سريعة بين السواق ومن داخل التطبيق",
-                icon = Icons.Default.Chat,
+                icon = Icons.AutoMirrored.Filled.Chat,
                 accent = Color(0xFF7B1FA2),
                 onClick = onOpenCommunication
             )

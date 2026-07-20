@@ -24,6 +24,6 @@ class FactoryCatalogTest {
 
         assertEquals(names.size, names.toSet().size)
         assertFalse(names.contains("مشثل"))
-        assertTrue(names.contains("مشعل"))
+        assertTrue(names.contains("معمل المشتل"))
     }
 }

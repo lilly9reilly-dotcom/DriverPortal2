@@ -12,7 +12,6 @@ data class TripUiState(
     val destination: String = "",
     val factoryName: String = "",
     val factoryVoucher: String = "",
-    val price: String = "",
     val notes: String = "",
     val imageData: String = ""
 ) {

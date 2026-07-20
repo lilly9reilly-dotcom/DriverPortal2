@@ -1,0 +1,61 @@
+{
+  "name": "driverportal-desktop-company",
+  "version": "1.0.5",
+  "description": "بوابة الشركات - تطبيق سطح مكتب مطابق للنظام التشغيلي",
+  "main": "main.js",
+  "author": "DriverPortal",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.driverportal.company.desktop",
+    "productName": "بوابة الشركات - سطح المكتب",
+    "files": [
+      "main.js",
+      "preload.js",
+      "company-dashboard.html",
+      "company.css",
+      "company-app.js",
+      "login-page.html",
+      "dashboard.html",
+      "dashboard.css",
+      "advanced-dashboard.js",
+      "images.svg",
+      "login-bg-cinematic.svg",
+      "login-bg-pro.svg",
+      "login-bg.jpg",
+      "icon.ico",
+      "company-icon.png",
+      "manager-config.json",
+      "node_modules/xlsx/dist/xlsx.full.min.js"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "signAndEditExecutable": false,
+      "forceCodeSigning": false,
+      "target": [
+        "nsis"
+      ],
+      "icon": "icon.ico",
+      "artifactName": "DriverPortalCompany-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^31.7.0",
+    "electron-builder": "^24.13.3"
+  }
+}

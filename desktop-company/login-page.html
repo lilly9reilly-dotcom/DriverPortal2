@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول - الناقلات النموذجية</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      direction: rtl;
+    }
+
+    .login-page {
+      min-height: 100vh;
+      background-image: url('login-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* الطبقة الإضافية (Overlay) */
+    .login-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(26, 37, 47, 0.4);
+      backdrop-filter: blur(2px);
+      z-index: 1;
+    }
+
+    /* نموذج الدخول */
+    .login-form-container {
+      position: relative;
+      z-index: 2;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 50px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 100px rgba(243, 156, 18, 0.2);
+      max-width: 420px;
+      width: 100%;
+      animation: slideUp 0.6s ease-out;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .login-logo {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 20px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 4px 8px rgba(243, 156, 18, 0.3));
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-15px);
+      }
+    }
+
+    .login-header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+
+    .login-header p {
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .form-group label i {
+      color: #f39c12;
+      font-size: 16px;
+    }
+
+    .password-wrapper {
+      display: flex;
+      align-items: center;
+      border: 2px solid #bdc3c7;
+      border-radius: 10px;
+      background: #f8f9fa;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .password-wrapper:focus-within {
+      border-color: #f39c12;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1);
+    }
+
+    .password-wrapper input {
+      flex: 1;
+      border: none;
+      padding: 14px 15px;
+      font-size: 15px;
+      outline: none;
+      background: transparent;
+      color: #2c3e50;
+    }
+
+    .password-wrapper input::placeholder {
+      color: #bdc3c7;
+    }
+
+    .toggle-password {
+      background: none;
+      border: none;
+      padding: 0 12px;
+      cursor: pointer;
+      color: #7f8c8d;
+      font-size: 18px;
+      transition: color 0.2s;
+    }
+
+    .toggle-password:hover {
+      color: #f39c12;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(243, 156, 18, 0.5);
+    }
+
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .error-message {
+      color: #c0392b;
+      font-size: 13px;
+      margin-top: 12px;
+      min-height: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #ecf0f1;
+    }
+
+    .login-footer p {
+      color: #7f8c8d;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .footer-motto {
+      color: #f39c12;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* استجابية الشاشة */
+    @media (max-width: 768px) {
+      .login-form-container {
+        margin: 20px;
+        padding: 35px 25px;
+        max-width: 100%;
+      }
+
+      .login-header h1 {
+        font-size: 24px;
+      }
+
+      .login-page::before {
+        background: rgba(26, 37, 47, 0.6);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-form-container {
+        padding: 25px 20px;
+      }
+
+      .login-header h1 {
+        font-size: 20px;
+      }
+
+      .password-wrapper input {
+        padding: 12px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- صفحة الدخول مع الخلفية -->
+  <div class="login-page">
+    <!-- نموذج الدخول -->
+    <div class="login-form-container">
+      <div class="login-header">
+        <svg class="login-logo" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#f39c12" stroke-width="2" opacity="0.9"/>
+          <path d="M 30 65 L 50 35 L 70 65 Z" fill="#f39c12" opacity="0.9"/>
+          <circle cx="50" cy="60" r="8" fill="#f39c12" opacity="0.9"/>
+        </svg>
+        <h1>لوحة المدير المتقدمة</h1>
+        <p>نظام إدارة الأسطول والشحنات</p>
+      </div>
+
+      <form class="login-form" id="loginForm">
+        <div class="form-group">
+          <label for="password">
+            <i class="fas fa-lock"></i> كلمة المرور الآمنة
+          </label>
+          <div class="password-wrapper">
+            <input
+              type="password"
+              id="password"
+              placeholder="أدخل كلمة المرور"
+              autocomplete="current-password"
+              required
+            />
+            <button type="button" class="toggle-password" onclick="togglePassword()">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <i class="fas fa-sign-in-alt"></i> تسجيل الدخول الآمن
+        </button>
+
+        <div id="loginError" class="error-message"></div>
+      </form>
+
+      <div class="login-footer">
+        <p>© شركة الناقلات النموذجية</p>
+        <p class="footer-motto">معاً نقل أكثر أماناً وكفاءة</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const button = document.querySelector('.toggle-password');
+
+      if (input.type === 'password') {
+        input.type = 'text';
+        button.innerHTML = '<i class="fas fa-eye-slash"></i>';
+      } else {
+        input.type = 'password';
+        button.innerHTML = '<i class="fas fa-eye"></i>';
+      }
+    }
+
+    document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const password = document.getElementById('password').value;
+      const errorEl = document.getElementById('loginError');
+      errorEl.textContent = '';
+
+      if (!password) {
+        errorEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> يرجى إدخال كلمة المرور';
+        return;
+      }
+
+      try {
+        const result = await window.managerDesktop.login(password);
+
+        if (result.success) {
+          // اذهب إلى لوحة التحكم
+          window.location.href = 'dashboard.html';
+        } else {
+          errorEl.innerHTML = '<i class="fas fa-times-circle"></i> ' + (result.message || 'فشل تسجيل الدخول');
+        }
+      } catch (error) {
+        errorEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> خطأ في الاتصال';
+      }
+    });
+  </script>
+</body>
+</html>

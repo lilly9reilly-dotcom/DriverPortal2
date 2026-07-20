@@ -33,7 +33,15 @@ class SplashScreen : ComponentActivity() {
 
             LaunchedEffect(true) {
                 delay(2000)
-                startActivity(Intent(this@SplashScreen, MainActivity::class.java))
+                val targetActivity = runCatching {
+                    Class.forName("com.driver.portal.OwnerMainActivity")
+                }.recoverCatching {
+                    Class.forName("com.driver.portal.GasMainActivity")
+                }.recoverCatching {
+                    Class.forName("com.driver.portal.CompanyMainActivity")
+                }.getOrDefault(MainActivity::class.java)
+
+                startActivity(Intent(this@SplashScreen, targetActivity))
                 finish()
             }
         }

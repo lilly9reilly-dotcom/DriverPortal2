@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام إدارة الناقلات النموذجية</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div class="login-container" id="loginContainer">
+      <div class="login-background">
+        <div class="login-right">
+          <div class="login-form-section">
+            <div class="login-header-new">
+              <svg class="lock-icon" viewBox="0 0 24 24" width="48" height="48">
+                <path d="M12 1C6.48 1 2 5.48 2 11v10c0 .55.45 1 1 1h2v4c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-4h4v4c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-4h2c.55 0 1-.45 1-1V11c0-5.52-4.48-10-10-10zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="white" opacity="0.9"/>
+              </svg>
+              <h1>تسجيل دخول مدير الحسابات</h1>
+              <p>أدخل رمز PIN للتفعيل الآمن وفتح لوحة الإدارة</p>
+            </div>
+
+            <form class="login-form-new" id="loginForm">
+              <div class="form-group-new">
+                <label for="password">
+                  <i class="fas fa-lock"></i> رمز PIN
+                </label>
+                <div class="password-input-group-new">
+                  <input
+                    type="password"
+                    id="password"
+                    placeholder="أدخل كلمة المرور الآمنة"
+                    class="form-input-new"
+                    autocomplete="current-password"
+                    required
+                  />
+                  <button type="button" class="toggle-password-new" onclick="togglePassword()">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-checkbox">
+                <input type="checkbox" id="rememberMe" />
+                <label for="rememberMe">تذكرني في المرة القادمة</label>
+              </div>
+
+              <button type="submit" class="btn-login-new">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+              </button>
+
+              <div id="loginError" class="error-message-new"></div>
+            </form>
+
+            <div class="login-support">
+              <a href="javascript:uiAlert('اتصل بمدير النظام', 'الدعم')" title="اطلب الدعم">
+                <i class="fas fa-headset"></i> هل تحتاج لمساعدة؟
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app-container hidden" id="appContainer">
+      <header class="main-header">
+        <div class="header-left">
+          <button class="menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="company-info">
+            <h2>الناقلات النموذجية</h2>
+            <p id="currentPage">-</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="بحث سريع..." class="search-input" />
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="user-menu">
+            <span id="userName">مدير الحسابات</span>
+            <button class="btn-logout" onclick="logout()">
+              <i class="fas fa-sign-out-alt"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <aside class="sidebar" id="sidebar">
+        <nav class="nav-menu">
+          <div class="nav-section">
+            <h3>الرئيسية</h3>
+            <a href="#" onclick="openTab('dashboard')" class="nav-item active" data-tab="dashboard"><i class="fas fa-chart-line"></i> <span>الرئيسية</span></a>
+            <a href="#" onclick="openTab('trips')" class="nav-item" data-tab="trips"><i class="fas fa-route"></i> <span>السواق</span></a>
+            <a href="#" onclick="openTab('vehicles')" class="nav-item" data-tab="vehicles"><i class="fas fa-truck"></i> <span>السيارات</span></a>
+            <a href="#" onclick="openTab('drivers')" class="nav-item" data-tab="drivers"><i class="fas fa-users"></i> <span>السائقين</span></a>
+          </div>
+
+          <div class="nav-section">
+            <h3>التشغيل</h3>
+            <a href="#" onclick="openTab('accounting')" class="nav-item" data-tab="accounting"><i class="fas fa-calculator"></i> <span>الحسابات</span></a>
+            <a href="#" onclick="openTab('reports')" class="nav-item" data-tab="reports"><i class="fas fa-file-alt"></i> <span>التقارير</span></a>
+            <a href="#" onclick="openTab('payments')" class="nav-item" data-tab="payments"><i class="fas fa-shield-alt"></i> <span>التفعيل</span></a>
+          </div>
+
+          <div class="nav-section">
+            <h3>الدعم</h3>
+            <a href="#" onclick="openTab('maintenance')" class="nav-item" data-tab="maintenance"><i class="fas fa-gas-pump"></i> <span>الصيانة</span></a>
+            <a href="#" onclick="openTab('tracking')" class="nav-item" data-tab="tracking"><i class="fas fa-database"></i> <span>النسخ الاحتياطي</span></a>
+            <a href="#" onclick="openTab('settings')" class="nav-item" data-tab="settings"><i class="fas fa-plug"></i> <span>الإعدادات</span></a>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <section id="dashboard-section" class="content-section active">
+          <div class="section-header">
+            <div>
+              <h2>لوحة التحكم الرئيسية</h2>
+              <p>مؤشرات الأداء والملخصات التشغيلية</p>
+            </div>
+            <div class="date-range">
+              <input type="date" id="dateFrom" />
+              <span>إلى</span>
+              <input type="date" id="dateTo" />
+              <button class="btn btn-primary" onclick="applyDateFilter()">تطبيق</button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card stat-blue"><div class="stat-icon"><i class="fas fa-truck"></i></div><div class="stat-info"><h4>عدد السيارات</h4><p class="stat-value" id="activeVehicles">0</p></div></div>
+            <div class="stat-card stat-green"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><h4>عدد السواق</h4><p class="stat-value" id="totalDrivers">0</p></div></div>
+            <div class="stat-card stat-violet"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-info"><h4>الإيرادات</h4><p class="stat-value" id="totalRevenue">0</p></div></div>
+            <div class="stat-card stat-orange"><div class="stat-icon"><i class="fas fa-oil-can"></i></div><div class="stat-info"><h4>كمية الكاز</h4><p class="stat-value" id="totalTrips">0</p></div></div>
+            <div class="stat-card stat-red"><div class="stat-icon"><i class="fas fa-wrench"></i></div><div class="stat-info"><h4>الصيانة</h4><p class="stat-value" id="maintenanceCount">0</p></div></div>
+            <div class="stat-card stat-dark"><div class="stat-icon"><i class="fas fa-chart-pie"></i></div><div class="stat-info"><h4>الأرباح</h4><p class="stat-value" id="netProfit">0</p></div></div>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel-card panel-chart">
+              <div class="panel-head"><h3>الإيرادات الشهرية</h3><span>آخر 30 يوم</span></div>
+              <canvas id="monthlyChart" height="130"></canvas>
+            </section>
+            <section class="panel-card panel-chart">
+              <div class="panel-head"><h3>توزيع الوصلات</h3><span>محطات / معامل</span></div>
+              <canvas id="ownerChart" height="130"></canvas>
+            </section>
+          </div>
+
+          <div class="dashboard-grid two-col">
+            <section class="panel-card">
+              <div class="panel-head"><h3>آخر النقلات</h3><a href="#" onclick="openTab('trips')">عرض الكل</a></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>الوصلة</th><th>السائق</th><th>السيارة</th><th>المحطة</th><th>الكمية</th><th>الإيراد</th><th>التاريخ</th></tr></thead><tbody id="recentTripsBody"></tbody></table></div>
+            </section>
+            <section class="panel-card">
+              <div class="panel-head"><h3>آخر الصيانة</h3><a href="#" onclick="openTab('maintenance')">عرض الكل</a></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>المركبة</th><th>النوع</th><th>الحالة</th><th>التكلفة</th><th>التاريخ</th></tr></thead><tbody id="recentMaintenanceBody"></tbody></table></div>
+            </section>
+          </div>
+
+          <section class="panel-card">
+            <div class="panel-head"><h3>التنبيهات</h3><span>متابعة مباشرة</span></div>
+            <div id="alertsList" class="alerts-list"></div>
+          </section>
+        </section>
+
+        <section id="trips-section" class="content-section">
+          <div class="section-header"><h2>السواق</h2><button class="btn btn-primary" onclick="openDriverForm()">إضافة سائق</button></div>
+          <div class="panel-card"><div class="table-wrap"><table class="data-table"><thead><tr><th>الصورة</th><th>السائق</th><th>السيارة</th><th>الهاتف</th><th>الحالة</th><th>آخر نقلة</th><th>الإجراءات</th></tr></thead><tbody id="driversBody"></tbody></table></div></div>
+        </section>
+
+        <section id="vehicles-section" class="content-section"><div class="panel-card"><h2>السيارات</h2><div id="vehiclesList"></div></div></section>
+        <section id="drivers-section" class="content-section"><div class="panel-card"><h2>السائقين</h2><div id="driversManagement"></div></div></section>
+        <section id="accounting-section" class="content-section"><div class="panel-card"><h2>الحسابات</h2><div class="dashboard-grid two-col"><div class="panel-card mini-card"><h3>إيرادات السيارات</h3><div id="carRevenueList"></div></div><div class="panel-card mini-card"><h3>رواتب السواق</h3><div id="driverSalaryList"></div></div></div></div></section>
+        <section id="reports-section" class="content-section"><div class="panel-card"><h2>التقارير</h2><div class="filter-row"><select id="reportHalf"><option value="all">كل الشهر</option><option value="first">1 - 15</option><option value="second">16 - نهاية الشهر</option></select><button class="btn btn-primary" onclick="renderReports()">تحديث</button><button class="btn btn-secondary" onclick="exportExcel()">Excel</button><button class="btn btn-secondary" onclick="exportPdf()">PDF</button></div><div id="reportSummaryCards" class="stats-grid compact"></div><div class="dashboard-grid two-col"><section class="panel-card"><h3>المحطات</h3><div id="reportStationsList"></div></section><section class="panel-card"><h3>المعامل</h3><div id="reportFactoriesList"></div></section></div></div></section>
+        <section id="payments-section" class="content-section"><div class="panel-card"><h2>التفعيل والصلاحيات</h2><div id="permissionsList"></div></div></section>
+        <section id="maintenance-section" class="content-section"><div class="panel-card"><h2>الصيانة</h2><div id="maintenanceList"></div></div></section>
+        <section id="tracking-section" class="content-section"><div class="panel-card"><h2>النسخ الاحتياطي</h2><div id="backupList"></div></div></section>
+        <section id="settings-section" class="content-section"><div class="panel-card"><h2>الإعدادات</h2><div id="settingsList"></div></div></section>
+      </main>
+    </div>
+
+    <script src="dashboard.js"></script>
+  </body>
+  </html>
+</head>
+<body>
+  <!-- شاشة الدخول الاحترافية -->
+  <div class="login-container" id="loginContainer">
+    <div class="login-background">
+      <!-- الجزء الأيسر - البرanding -->
+      <div class="login-left">
+        <div class="login-branding">
+          <div class="company-logo-large">
+            <svg viewBox="0 0 200 200" width="180" height="180">
+              <!-- شاحنة -->
+              <path d="M 30 120 L 40 80 L 100 60 L 160 80 L 170 120 Z" fill="#f39c12" stroke="#c0392b" stroke-width="2"/>
+              <!-- عجلات -->
+              <circle cx="60" cy="140" r="12" fill="#2c3e50" stroke="#34495e" stroke-width="2"/>
+              <circle cx="150" cy="140" r="12" fill="#2c3e50" stroke="#34495e" stroke-width="2"/>
+              <!-- نافذة -->
+              <rect x="105" y="85" width="35" height="20" fill="#3498db" opacity="0.8"/>
+            </svg>
+          </div>
+          <h2 class="company-name">الناقلات النموذجية</h2>
+          <p class="company-slogan">للنقل العام ونقل المنتجات النفطية</p>
+          <p class="company-service">🚛 رواد نقل الغاز السائل (LPG)</p>
+          <p class="company-motto" style="margin-top: 30px; font-size: 16px; color: #ecf0f1; font-style: italic;">
+            "معاً نقل أكثر أماناً وكفاءة"
+          </p>
+        </div>
+      </div>
+
+      <!-- الجزء الأيمن - نموذج الدخول والمعلومات -->
+      <div class="login-right">
+        <div class="login-form-section">
+          <div class="login-header-new">
+            <svg class="lock-icon" viewBox="0 0 24 24" width="48" height="48">
+              <path d="M12 1C6.48 1 2 5.48 2 11v10c0 .55.45 1 1 1h2v4c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-4h4v4c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-4h2c.55 0 1-.45 1-1V11c0-5.52-4.48-10-10-10zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" fill="white" opacity="0.9"/>
+            </svg>
+            <h1>لوحة المدير المتقدمة</h1>
+            <p>نظام إدارة الأسطول والشحنات الاحترافي</p>
+          </div>
+
+          <form class="login-form-new" id="loginForm">
+            <div class="form-group-new">
+              <label for="username">
+                <i class="fas fa-user"></i> اسم المستخدم
+              </label>
+              <input
+                type="text"
+                id="username"
+                placeholder="أدخل اسم المستخدم"
+                class="form-input-new"
+                value="admin"
+              />
+            </div>
+
+            <div class="form-group-new">
+              <label for="password">
+                <i class="fas fa-lock"></i> كلمة المرور
+              </label>
+              <div class="password-input-group-new">
+                <input
+                  type="password"
+                  id="password"
+                  placeholder="أدخل كلمة المرور الآمنة"
+                  class="form-input-new"
+                  autocomplete="current-password"
+                  required
+                />
+                <button type="button" class="toggle-password-new" onclick="togglePassword()">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-checkbox">
+              <input type="checkbox" id="rememberMe" />
+              <label for="rememberMe">تذكرني في المرة القادمة</label>
+            </div>
+
+            <button type="submit" class="btn-login-new">
+              <i class="fas fa-sign-in-alt"></i> تسجيل الدخول الآمن
+            </button>
+
+            <div id="loginError" class="error-message-new"></div>
+          </form>
+
+          <div class="login-divider">
+            <span>أو</span>
+          </div>
+
+          <button type="button" class="btn-microsoft-login" onclick="uiAlert('قريباً: تسجيل الدخول عبر Microsoft', 'قريباً')">
+            <svg width="18" height="18" viewBox="0 0 24 24" style="display: inline-block; margin-left: 8px;">
+              <rect x="2" y="2" width="8" height="8" fill="#F25022"/>
+              <rect x="14" y="2" width="8" height="8" fill="#7FBA00"/>
+              <rect x="2" y="14" width="8" height="8" fill="#00A4EF"/>
+              <rect x="14" y="14" width="8" height="8" fill="#FFB900"/>
+            </svg>
+            تسجيل الدخول عبر Microsoft
+          </button>
+
+          <div class="login-support">
+            <a href="javascript:uiAlert('اتصل بمدير النظام', 'الدعم')" title="اطلب الدعم">
+              <i class="fas fa-headset"></i> هل تحتاج لمساعدة؟
+            </a>
+          </div>
+        </div>
+
+        <!-- معلومات الشركة والاتصال -->
+        <div class="company-details">
+          <div class="details-section">
+            <h3><i class="fas fa-building"></i> الإدارة العليا</h3>
+            <div class="detail-item">
+              <i class="fas fa-user-tie"></i>
+              <div>
+                <strong>المدير العام:</strong>
+                <p>د. علي محمس الموسوي</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h3><i class="fas fa-phone"></i> جهات الاتصال</h3>
+            <div class="detail-item">
+              <i class="fas fa-mobile-alt"></i>
+              <p>+964 781 856 0711</p>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-phone-alt"></i>
+              <p>+964 772 856 7875</p>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-phone-alt"></i>
+              <p>+964 772 856 7874</p>
+            </div>
+          </div>
+
+          <div class="details-section">
+            <h3><i class="fas fa-map-marker-alt"></i> العنوان</h3>
+            <p>العراق - بغداد - المنصور</p>
+            <p style="font-size: 12px; color: #bbb;">قرب أسواق ومخزنات سائل النطاق</p>
+          </div>
+
+          <div class="details-section">
+            <h3><i class="fas fa-globe"></i> الموقع الإلكتروني</h3>
+            <p><a href="#" style="color: #f39c12; text-decoration: none;">tmiraq.iq</a></p>
+          </div>
+        </div>
+
+        <div class="login-footer-new">
+          <p>© شركة الناقلات النموذجية - جميع الحقوق محفوظة</p>
+          <p style="font-size: 12px; margin-top: 8px; color: #888;">معاً نقل أكثر أماناً وكفاءة</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- التطبيق الرئيسي -->
+  <div class="app-container hidden" id="appContainer">
+    <!-- رأس الصفحة -->
+    <header class="main-header">
+      <div class="header-left">
+        <button class="menu-toggle" onclick="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="company-info">
+          <h2>الناقلات النموذجية</h2>
+          <p id="currentPage">-</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="ابحث..." class="search-input" />
+          <i class="fas fa-search"></i>
+        </div>
+        <div class="user-menu">
+          <span id="userName">مدير الحسابات</span>
+          <button class="btn-logout" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- القائمة الجانبية -->
+    <aside class="sidebar" id="sidebar">
+      <nav class="nav-menu">
+        <div class="nav-section">
+          <h3>البوابات الأساسية</h3>
+          <a href="#" onclick="openTab('dashboard')" class="nav-item active" data-tab="dashboard">
+            <i class="fas fa-chart-line"></i> <span>بوابة التحكم الرئيسية</span>
+          </a>
+          <a href="#" onclick="openTab('trips')" class="nav-item" data-tab="trips">
+            <i class="fas fa-route"></i> <span>قسم السائقين</span>
+          </a>
+          <a href="#" onclick="openTab('vehicles')" class="nav-item" data-tab="vehicles">
+            <i class="fas fa-truck"></i> <span>بوابة التطبيقات المستقبلية</span>
+          </a>
+          <a href="#" onclick="openTab('drivers')" class="nav-item" data-tab="drivers">
+            <i class="fas fa-users"></i> <span>بوابة الصلاحيات والمستخدمين</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <h3>الحوكمة والتشغيل</h3>
+          <a href="#" onclick="openTab('accounting')" class="nav-item" data-tab="accounting">
+            <i class="fas fa-calculator"></i> <span>بوابة التدقيق والحوكمة</span>
+          </a>
+          <a href="#" onclick="openTab('reports')" class="nav-item" data-tab="reports">
+            <i class="fas fa-file-alt"></i> <span>قسم المطالبات</span>
+          </a>
+          <a href="#" onclick="openTab('payments')" class="nav-item" data-tab="payments">
+            <i class="fas fa-shield-alt"></i> <span>بوابة الشركات والتفعيل</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <h3>الاستمرارية والتكامل</h3>
+          <a href="#" onclick="openTab('maintenance')" class="nav-item" data-tab="maintenance">
+            <i class="fas fa-gas-pump"></i> <span>بوابة تطبيق الغاز</span>
+          </a>
+          <a href="#" onclick="openTab('tracking')" class="nav-item" data-tab="tracking">
+            <i class="fas fa-database"></i> <span>بوابة النسخ والاستعادة</span>
+          </a>
+          <a href="#" onclick="openTab('settings')" class="nav-item" data-tab="settings">
+            <i class="fas fa-plug"></i> <span>بوابة التكامل والبيانات</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+      <!-- لوحة التحكم -->
+      <section id="dashboard-section" class="content-section active">
+        <div class="section-header">
+          <h2>لوحة التحكم الرئيسية</h2>
+          <div class="date-range">
+            <input type="date" id="dateFrom" />
+            <span>إلى</span>
+            <input type="date" id="dateTo" />
+            <button class="btn btn-primary" onclick="applyDateFilter()">تطبيق</button>
+          </div>
+        </div>
+
+        <!-- الإحصائيات الرئيسية -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+              <i class="fas fa-route"></i>
+            </div>
+            <div class="stat-info">
+              <h4>إجمالي النقلات</h4>
+              <p class="stat-value" id="totalTrips">0</p>
+              <span class="stat-change">+12% من الشهر الماضي</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">
+              <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-info">
+              <h4>الإيرادات الكلية</h4>
+              <p class="stat-value" id="totalRevenue">0</p>
+              <span class="stat-change">دينار عراقي</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)">
+              <i class="fas fa-truck"></i>
+            </div>
+            <div class="stat-info">
+              <h4>السيارات النشطة</h4>
+              <p class="stat-value" id="activeVehicles">0</p>
+              <span class="stat-change">من أصل 0 سيارة</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h4>عدد السائقين</h4>
+              <p class="stat-value" id="totalDrivers">0</p>
+              <span class="stat-change">سائق نشط</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- الرسوم البيانية -->
+        <div class="charts-container">
+          <div class="chart-box">
+            <h3>توزيع النقلات حسب المالك</h3>
+            <canvas id="ownerChart" style="max-height: 300px;"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <h3>الإيرادات اليومية</h3>
+            <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+          </div>
+        </div>
+
+        <!-- جدول النقلات الأخيرة -->
+        <div class="table-container">
+          <h3>أحدث النقلات</h3>
+          <div class="table-controls">
+            <input type="text" id="tableSearch" placeholder="ابحث في الجدول..." class="table-search" />
+            <button class="btn btn-secondary" onclick="exportTableData()">
+              <i class="fas fa-download"></i> تصدير
+            </button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>رقم الوصل</th>
+                <th>السائق</th>
+                <th>السيارة</th>
+                <th>المالك</th>
+                <th>المحطة</th>
+                <th>الكمية</th>
+                <th>الإيراد</th>
+                <th>التاريخ</th>
+              </tr>
+            </thead>
+            <tbody id="recentTripsBody">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 20px; color: #999">جاري تحميل البيانات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- إدارة النقلات -->
+      <section id="trips-section" class="content-section">
+        <div class="section-header">
+          <h2>قسم السائقين (الوصولات والنقلات)</h2>
+          <button class="btn btn-primary" onclick="openAddTripModal()">
+            <i class="fas fa-plus"></i> نقلة جديدة
+          </button>
+        </div>
+
+        <div class="trip-section-shell">
+          <div class="trip-tab-strip">
+            <button class="trip-tab-btn active" id="tripTab-taji" onclick="setTripsSubTab('taji')">
+              قسم التاجي
+              <span class="trip-tab-count" id="tripCount-taji">0</span>
+            </button>
+            <button class="trip-tab-btn trip-tab-factory" id="tripTab-factory" onclick="setTripsSubTab('factory')">
+              قسم المعامل
+              <span class="trip-tab-count" id="tripCount-factory">0</span>
+            </button>
+          </div>
+
+          <div class="stats-grid trip-stats-grid">
+            <div class="stat-card trip-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #2f80ed 0%, #56ccf2 100%)">
+                <i class="fas fa-truck-loading"></i>
+              </div>
+              <div class="stat-info">
+                <h4>عدد النقلات في العرض</h4>
+                <p class="stat-value" id="tripSectionTotal">0</p>
+                <span class="stat-change" id="tripSectionLabel">قسم التاجي</span>
+              </div>
+            </div>
+
+            <div class="stat-card trip-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%)">
+                <i class="fas fa-weight-hanging"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي الكمية</h4>
+                <p class="stat-value" id="tripSectionQty">0</p>
+                <span class="stat-change">طن</span>
+              </div>
+            </div>
+
+            <div class="stat-card trip-stat-card trip-factory-highlight">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي إيراد القسم</h4>
+                <p class="stat-value" id="tripSectionAmount">0</p>
+                <span class="stat-change">حسب التبويب النشط</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="tripSearch" placeholder="ابحث عن نقلة..." class="filter-input" />
+          <select id="tripStatus" class="filter-select">
+            <option value="">جميع الحالات</option>
+            <option value="pending">قيد الانتظار</option>
+            <option value="active">نشط</option>
+            <option value="completed">مكتمل</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+          <button class="btn btn-secondary" onclick="refreshTripsData()">
+            <i class="fas fa-sync"></i> تحديث
+          </button>
+        </div>
+
+        <div class="trips-grid" id="tripsGrid">
+          <div class="loading">جاري تحميل البيانات...</div>
+        </div>
+
+        <!-- جدول مفصل -->
+        <div class="table-container" style="margin-top: 30px;">
+          <div class="demand-legend">
+            <span class="legend-pill legend-factory">نقلات المعامل</span>
+            <span class="legend-pill legend-normal">النقلات الاعتيادية</span>
+          </div>
+          <h3 id="tripTableTitle">جميع النقلات</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>رقم الوصل</th>
+                <th>السائق</th>
+                <th>السيارة</th>
+                <th>المصدر</th>
+                <th>الوجهة</th>
+                <th>الحالة</th>
+                <th>التاريخ</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="allTripsBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 20px;">جاري تحميل البيانات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- إدارة السيارات -->
+      <section id="vehicles-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة التطبيقات المستقبلية (مرونة التوسع)</h2>
+          <button class="btn btn-primary" onclick="openAddVehicleModal()">
+            <i class="fas fa-plus"></i> سيارة جديدة
+          </button>
+        </div>
+
+        <div class="trip-section-shell">
+          <div class="trip-tab-strip">
+            <button class="trip-tab-btn active" id="vehicleTab-taji" onclick="setVehiclesSubTab('taji')">
+              قسم التاجي
+              <span class="trip-tab-count" id="vehicleCount-taji">0</span>
+            </button>
+            <button class="trip-tab-btn trip-tab-factory" id="vehicleTab-factory" onclick="setVehiclesSubTab('factory')">
+              قسم المعامل
+              <span class="trip-tab-count" id="vehicleCount-factory">0</span>
+            </button>
+          </div>
+
+          <div class="stats-grid trip-stats-grid">
+            <div class="stat-card trip-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #2f80ed 0%, #56ccf2 100%)">
+                <i class="fas fa-truck"></i>
+              </div>
+              <div class="stat-info">
+                <h4>عدد السيارات في العرض</h4>
+                <p class="stat-value" id="vehicleSectionTotal">0</p>
+                <span class="stat-change" id="vehicleSectionLabel">قسم التاجي</span>
+              </div>
+            </div>
+
+            <div class="stat-card trip-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%)">
+                <i class="fas fa-route"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي النقلات</h4>
+                <p class="stat-value" id="vehicleSectionTrips">0</p>
+                <span class="stat-change">ضمن نفس القسم</span>
+              </div>
+            </div>
+
+            <div class="stat-card trip-stat-card trip-factory-highlight">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي إيراد القسم</h4>
+                <p class="stat-value" id="vehicleSectionAmount">0</p>
+                <span class="stat-change">اعتمادًا على النقلات الفعلية</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <select id="vehicleMonthFilter" class="filter-select" onchange="onVehicleMonthFilterChange()">
+            <option value="">كل الأشهر المتاحة</option>
+          </select>
+          <input type="text" id="vehicleSearch" placeholder="ابحث باسم الشركة/المالك أو رقم سيارة..." class="filter-input" />
+          <select id="vehicleStatus" class="filter-select">
+            <option value="">جميع الحالات</option>
+            <option value="active">نشطة</option>
+            <option value="maintenance">صيانة</option>
+          </select>
+        </div>
+
+        <div class="vehicles-grid" id="vehiclesGrid">
+          <div class="loading">جاري تحميل بيانات السيارات...</div>
+        </div>
+      </section>
+
+      <!-- إدارة السائقين -->
+      <section id="drivers-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة الصلاحيات والمستخدمين</h2>
+          <button class="btn btn-primary" onclick="openAddDriverModal()">
+            <i class="fas fa-plus"></i> سائق جديد
+          </button>
+        </div>
+
+        <div class="trip-section-shell">
+          <div class="trip-tab-strip">
+            <button class="trip-tab-btn active" id="driverTab-taji" onclick="setDriversSubTab('taji')">
+              عدد نقلات التاجي
+              <span class="trip-tab-count" id="driverCount-taji">0</span>
+            </button>
+            <button class="trip-tab-btn trip-tab-factory" id="driverTab-factory" onclick="setDriversSubTab('factory')">
+              عدد نقلات المعامل
+              <span class="trip-tab-count" id="driverCount-factory">0</span>
+            </button>
+          </div>
+
+          <div class="stats-grid trip-stats-grid">
+            <div class="stat-card trip-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #2f80ed 0%, #56ccf2 100%)">
+                <i class="fas fa-user-check"></i>
+              </div>
+              <div class="stat-info">
+                <h4>عدد السائقين في العرض</h4>
+                <p class="stat-value" id="driverSectionTotal">0</p>
+                <span class="stat-change" id="driverSectionLabel">قسم التاجي</span>
+              </div>
+            </div>
+
+            <div class="stat-card trip-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%)">
+                <i class="fas fa-route"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي النقلات</h4>
+                <p class="stat-value" id="driverSectionTrips">0</p>
+                <span class="stat-change">حسب التبويب النشط</span>
+              </div>
+            </div>
+
+            <div class="stat-card trip-stat-card trip-factory-highlight">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي الرواتب</h4>
+                <p class="stat-value" id="driverSectionSalary">0</p>
+                <span class="stat-change">المعتمد في الشاشة</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="drivers-grid" id="driversGrid">
+          <div class="loading">جاري تحميل بيانات السائقين...</div>
+        </div>
+
+        <!-- جدول السائقين -->
+        <div class="table-container" style="margin-top: 30px;">
+          <h3 id="driverTableTitle">قائمة السائقين</h3>
+          <div class="table-controls">
+            <input type="text" id="driverSearch" placeholder="ابحث عن سائق..." class="table-search" />
+            <select id="driverStatus" class="filter-select">
+              <option value="">كل الحالات</option>
+              <option value="due">مستحق راتب</option>
+              <option value="zero">بدون راتب</option>
+            </select>
+            <button class="btn btn-secondary" onclick="generatePayroll()">
+              <i class="fas fa-file-pdf"></i> طباعة رواتب
+            </button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الاسم</th>
+                <th>رقم الهاتف</th>
+                <th>الرخصة</th>
+                <th>السيارة المسندة</th>
+                <th>عدد النقلات</th>
+                <th>الراتب الشهري</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="driversBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 20px;">جاري تحميل البيانات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- الحسابات والمالية -->
+      <section id="accounting-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة التدقيق والحوكمة</h2>
+          <button class="btn btn-primary" onclick="loadActivationAuditDesktop()">
+            <i class="fas fa-sync"></i> تحديث السجل
+          </button>
+        </div>
+
+        <!-- ملخص التدقيق -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #27ae60 0%, #38f9d7 100%)">
+              <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h4>إنشاء الأكواد</h4>
+              <p class="stat-value" id="totalIncome">0</p>
+              <span class="stat-change">عمليات</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)">
+              <i class="fas fa-minus-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h4>إيقاف الأكواد</h4>
+              <p class="stat-value" id="totalExpenses">0</p>
+              <span class="stat-change">عمليات</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+              <i class="fas fa-balance-scale"></i>
+            </div>
+            <div class="stat-info">
+              <h4>تحديث النطاق</h4>
+              <p class="stat-value" id="netBalance">0</p>
+              <span class="stat-change">عمليات</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%)">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <h4>فك ارتباط الأجهزة</h4>
+              <p class="stat-value" id="pendingPayroll">0</p>
+              <span class="stat-change">عمليات</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- جدول التدقيق -->
+        <div class="table-container" style="margin-top: 30px;">
+          <h3>سجل تدقيق التفعيل المركزي</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>التاريخ</th>
+                <th>الإجراء</th>
+                <th>الكود</th>
+                <th>المنفذ</th>
+                <th>التطبيق</th>
+                <th>الشركة</th>
+                <th>تفاصيل</th>
+              </tr>
+            </thead>
+            <tbody id="auditTrailBodyDesktop">
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 20px;">جاري تحميل سجل التدقيق...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- التقارير -->
+      <section id="reports-section" class="content-section">
+        <div class="section-header">
+          <h2>قسم المطالبات (منظم حسب المناطق)</h2>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <select id="demandMonthFilter" class="filter-select" onchange="onDemandMonthFilterChange()">
+              <option value="">جاري تحميل الأشهر...</option>
+            </select>
+            <select id="demandFactoryFilter" class="filter-select" onchange="onDemandFactoryFilterChange()" style="display:none; min-width: 220px;">
+              <option value="">كل المعامل</option>
+            </select>
+            <button class="btn btn-secondary" onclick="exportDemandsPdf()">
+              <i class="fas fa-file-pdf"></i> تصدير PDF
+            </button>
+            <button class="btn btn-primary" onclick="exportDemandsExcel()">
+              <i class="fas fa-file-excel"></i> تصدير Excel
+            </button>
+          </div>
+        </div>
+
+        <div class="demand-section-shell">
+          <div class="demand-tab-strip">
+            <button class="demand-tab-btn active" id="demandTab-halafaya" onclick="setDemandTab('halafaya')">
+              مطالبة حلفاية
+              <span class="demand-tab-count" id="demandCount-halafaya">0</span>
+            </button>
+            <button class="demand-tab-btn" id="demandTab-rusafa" onclick="setDemandTab('rusafa')">
+              مطالبة الرصافة
+              <span class="demand-tab-count" id="demandCount-rusafa">0</span>
+            </button>
+            <button class="demand-tab-btn" id="demandTab-dora" onclick="setDemandTab('dora')">
+              مطالبة الدورة
+              <span class="demand-tab-count" id="demandCount-dora">0</span>
+            </button>
+            <button class="demand-tab-btn demand-tab-factory" id="demandTab-factories" onclick="setDemandTab('factories')">
+              قسم المعامل
+              <span class="demand-tab-count" id="demandCount-factories">0</span>
+            </button>
+          </div>
+
+          <div class="stats-grid demand-stats-grid">
+            <div class="stat-card demand-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #2f80ed 0%, #56ccf2 100%)">
+                <i class="fas fa-file-invoice"></i>
+              </div>
+              <div class="stat-info">
+                <h4>عدد الوصولات</h4>
+                <p class="stat-value" id="demandTotalCount">0</p>
+                <span class="stat-change" id="demandCurrentLabel">القسم الحالي</span>
+              </div>
+            </div>
+
+            <div class="stat-card demand-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%)">
+                <i class="fas fa-weight-hanging"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي الكمية</h4>
+                <p class="stat-value" id="demandTotalQty">0</p>
+                <span class="stat-change">طن صافي</span>
+              </div>
+            </div>
+
+            <div class="stat-card demand-stat-card">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%)">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="stat-info">
+                <h4>إجمالي المبالغ</h4>
+                <p class="stat-value" id="demandTotalAmount">0</p>
+                <span class="stat-change">دينار عراقي</span>
+              </div>
+            </div>
+
+            <div class="stat-card demand-stat-card demand-factory-hint">
+              <div class="stat-icon" style="background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%)">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-info">
+                <h4>عدد السائقين الفعّالين</h4>
+                <p class="stat-value" id="demandFactoryCount">0</p>
+                <span class="stat-change">ضمن نفس التبويب</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container" style="margin-top: 20px;">
+          <div class="demand-legend">
+            <span class="legend-pill legend-factory">وصلات المعامل</span>
+            <span class="legend-pill legend-normal">الوصلات الاعتيادية</span>
+          </div>
+          <h3 id="demandTableTitle">تفاصيل مطالبة حلفاية</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>رقم الوصل</th>
+                <th>اسم السائق</th>
+                <th>رقم السيارة</th>
+                <th>الوجهة</th>
+                <th>الكمية</th>
+                <th>المبلغ</th>
+                <th>المالك</th>
+                <th>التاريخ</th>
+                <th>النوع</th>
+              </tr>
+            </thead>
+            <tbody id="demandsDataBody">
+              <tr>
+                <td colspan="10" style="text-align: center; padding: 20px;">جاري تحميل المطالبات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- المدفوعات -->
+      <section id="payments-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة الشركات والتفعيل (تحكم مركزي)</h2>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="loadActivationCodesDesktop()">
+              <i class="fas fa-sync"></i> تحديث القائمة
+            </button>
+            <button class="btn btn-primary" onclick="exportActivationCodesDesktop()">
+              <i class="fas fa-file-export"></i> تصدير الأكواد CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="activationCodeInputDesktop" placeholder="كود مخصص (اختياري)" class="filter-input" />
+          <select id="activationAppKeyInputDesktop" class="filter-select">
+            <option value="company">تطبيق الشركات</option>
+            <option value="gas">تطبيق الغاز</option>
+            <option value="owner">تطبيق المالك</option>
+          </select>
+          <input type="text" id="activationCompanyIdInputDesktop" placeholder="معرف الشركة (اختياري)" class="filter-input" />
+          <input type="text" id="activationAllowedPackageInputDesktop" placeholder="الحزمة المسموحة" class="filter-input" />
+          <button class="btn btn-primary" onclick="createActivationCodeDesktop()">
+            <i class="fas fa-plus"></i> إنشاء كود تفعيل
+          </button>
+        </div>
+
+        <div class="table-container" style="margin-top: 30px;">
+          <h3>سجل أكواد التفعيل والصلاحيات</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>الكود</th>
+                <th>الحالة</th>
+                <th>التطبيق</th>
+                <th>الشركة</th>
+                <th>الحزمة</th>
+                <th>مرتبط</th>
+                <th>آخر ظهور</th>
+                <th>الملاحظات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="activationCodesBodyDesktop">
+              <tr>
+                <td colspan="10" style="text-align: center; padding: 20px;">جاري تحميل بيانات التفعيل...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- الصيانة -->
+      <section id="maintenance-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة تطبيق الغاز (الاستهلاك والتكلفة)</h2>
+          <button class="btn btn-primary" onclick="openMaintenanceModal()">
+            <i class="fas fa-plus"></i> سجل صيانة جديد
+          </button>
+        </div>
+
+        <!-- إحصائيات الصيانة -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%)">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-info">
+              <h4>الصيانات المجدولة</h4>
+              <p class="stat-value" id="scheduledMaintenance">0</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)">
+              <i class="fas fa-tools"></i>
+            </div>
+            <div class="stat-info">
+              <h4>قيد الإجراء</h4>
+              <p class="stat-value" id="ongoingMaintenance">0</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #27ae60 0%, #38f9d7 100%)">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h4>المكتملة</h4>
+              <p class="stat-value" id="completedMaintenance">0</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+              <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-info">
+              <h4>إجمالي التكاليف</h4>
+              <p class="stat-value" id="maintenanceCost">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- جدول الصيانات -->
+        <div class="table-container" style="margin-top: 30px;">
+          <h3>سجل الصيانة</h3>
+          <div class="table-controls">
+            <select id="maintenanceStatus" class="filter-select">
+              <option value="">جميع الحالات</option>
+              <option value="scheduled">مجدولة</option>
+              <option value="ongoing">قيد الإجراء</option>
+              <option value="completed">مكتملة</option>
+            </select>
+            <button class="btn btn-secondary" onclick="exportMaintenanceData()">
+              <i class="fas fa-download"></i> تصدير
+            </button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>السيارة</th>
+                <th>نوع الصيانة</th>
+                <th>التاريخ</th>
+                <th>التكلفة</th>
+                <th>الحالة</th>
+                <th>الملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="maintenanceBody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 20px;">جاري تحميل البيانات...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- التتبع المباشر -->
+      <section id="tracking-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة النسخ الاحتياطي والاستعادة</h2>
+          <button class="btn btn-secondary" onclick="loadAllData()">
+            <i class="fas fa-sync"></i> تحديث بيانات النظام
+          </button>
+        </div>
+
+        <div class="settings-container">
+          <div class="settings-section">
+            <h3><i class="fas fa-database"></i> النسخ الاحتياطية</h3>
+            <div class="setting-item">
+              <label>آخر نسخة احتياطية</label>
+              <p id="lastBackupSettings" style="color: #999; font-size: 14px;">لم تتم أي نسخة احتياطية بعد</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="createBackup()">
+                <i class="fas fa-download"></i> إنشاء نسخة احتياطية
+              </button>
+              <button class="btn btn-secondary" onclick="restoreBackup()">
+                <i class="fas fa-upload"></i> استعادة نسخة
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3><i class="fas fa-heartbeat"></i> سلامة النظام</h3>
+            <div class="setting-item">
+              <label>اختبار الاتصال مع المصدر المركزي</label>
+              <button class="btn btn-secondary" onclick="testSheetConnection()">اختبار الاتصال الآن</button>
+            </div>
+            <div class="setting-item">
+              <label>فحص الحالة التشغيلية</label>
+              <button class="btn btn-secondary" onclick="runSystemHealthCheckDesktop()">فحص النظام</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3><i class="fas fa-shield-alt"></i> قواعد الاسترجاع الآمن</h3>
+            <div class="setting-item">
+              <p style="line-height:1.9; color:#506079; margin:0;">
+                قبل أي استرجاع: أنشئ نسخة احتياطية جديدة، ثم نفّذ الاسترجاع، ثم نفّذ اختبار الاتصال.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- الإعدادات -->
+      <section id="settings-section" class="content-section">
+        <div class="section-header">
+          <h2>بوابة التكامل والبيانات</h2>
+        </div>
+
+        <div class="settings-container">
+          <!-- إعدادات النظام -->
+          <div class="settings-section">
+            <h3><i class="fas fa-cog"></i> إعدادات النظام</h3>
+            <div class="setting-item">
+              <label>اسم الشركة</label>
+              <input type="text" id="companyName" class="setting-input" value="الناقلات النموذجية" />
+            </div>
+            <div class="setting-item">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="companyEmail" class="setting-input" placeholder="info@example.com" />
+            </div>
+            <div class="setting-item">
+              <label>الهاتف</label>
+              <input type="tel" id="companyPhone" class="setting-input" placeholder="+964..." />
+            </div>
+          </div>
+
+          <!-- إعدادات الأمان -->
+          <div class="settings-section">
+            <h3><i class="fas fa-lock"></i> إعدادات الأمان</h3>
+            <div class="setting-item">
+              <label>تغيير كلمة المرور</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="password" id="oldPassword" class="setting-input" placeholder="كلمة المرور القديمة" />
+                <input type="password" id="newPassword" class="setting-input" placeholder="كلمة المرور الجديدة" />
+                <button class="btn btn-primary" onclick="changePassword()">تحديث</button>
+              </div>
+            </div>
+            <div class="setting-item">
+              <label>مفعل المصادقة الثنائية</label>
+              <input type="checkbox" id="twoFactorAuth" class="setting-checkbox" />
+            </div>
+          </div>
+
+          <!-- إعدادات التكامل -->
+          <div class="settings-section">
+            <h3><i class="fas fa-plug"></i> التكامل مع الأنظمة الأخرى</h3>
+            <div class="setting-item">
+              <label>Google Sheets ID</label>
+              <input type="text" id="sheetsId" class="setting-input" placeholder="معرف الجدول" />
+              <button class="btn btn-secondary" onclick="testSheetConnection()">اختبار الاتصال</button>
+            </div>
+            <div class="setting-item">
+              <label>API مفتاح</label>
+              <input type="text" id="apiKey" class="setting-input" placeholder="مفتاح API" />
+            </div>
+          </div>
+
+          <!-- إعدادات الإشعارات -->
+          <div class="settings-section">
+            <h3><i class="fas fa-bell"></i> الإشعارات</h3>
+            <div class="setting-item">
+              <label>إشعارات النقلات الجديدة</label>
+              <input type="checkbox" id="notifyTrips" class="setting-checkbox" checked />
+            </div>
+            <div class="setting-item">
+              <label>إشعارات الصيانة المجدولة</label>
+              <input type="checkbox" id="notifyMaintenance" class="setting-checkbox" checked />
+            </div>
+            <div class="setting-item">
+              <label>إشعارات المدفوعات</label>
+              <input type="checkbox" id="notifyPayments" class="setting-checkbox" checked />
+            </div>
+          </div>
+
+          <!-- النسخ الاحتياطية -->
+          <div class="settings-section">
+            <h3><i class="fas fa-database"></i> النسخ الاحتياطية</h3>
+            <div class="setting-item">
+              <label>آخر نسخة احتياطية</label>
+              <p id="lastBackup" style="color: #999; font-size: 14px;">لم تتم أي نسخة احتياطية بعد</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-primary" onclick="createBackup()">
+                <i class="fas fa-download"></i> إنشاء نسخة احتياطية
+              </button>
+              <button class="btn btn-secondary" onclick="restoreBackup()">
+                <i class="fas fa-upload"></i> استعادة نسخة
+              </button>
+            </div>
+          </div>
+
+          <!-- الحفظ -->
+          <div style="margin-top: 30px; display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="saveSettings()">
+              <i class="fas fa-save"></i> حفظ الإعدادات
+            </button>
+            <button class="btn btn-secondary" onclick="resetSettings()">
+              <i class="fas fa-redo"></i> إعادة تعيين
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- مكتبات الرسوم البيانية -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="advanced-dashboard.js"></script>
+</body>
+</html>

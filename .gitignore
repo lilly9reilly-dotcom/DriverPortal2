@@ -32,3 +32,18 @@ response.json
 art.json
 art.zip
 r.json
+
+# Signing files
+keystore.properties
+*.jks
+*.keystore
+
+# Desktop admin build artifacts
+desktop-admin/node_modules/
+desktop-admin/dist/
+
+# Temporary sync/deploy workspaces
+temp-clone/
+temp-bound-target/
+temp-prod-sync/
+temp-prod-deploy-clean/

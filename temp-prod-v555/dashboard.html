@@ -1,0 +1,14 @@
+<head>
+  <base target="_top">
+  <?!= HtmlService.createHtmlOutputFromFile('style').getContent(); ?>
+
+  <?!= HtmlService.createHtmlOutputFromFile('map_js').getContent(); ?>
+  
+</head>
+
+<div class="kpi-bar">
+  <div class="kpi">Trips Today<br><span id="k_trips">0</span></div>
+  <div class="kpi">Distance Today<br><span id="k_km">0</span></div>
+  <div class="kpi">Active Vehicles<br><span id="k_active">0</span></div>
+  <div class="kpi">Driving Hours<br><span id="k_hours">0</span></div>
+</div>

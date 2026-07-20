@@ -1,0 +1,51 @@
+{
+  "name": "driverportal-desktop-admin",
+  "version": "3.5.0",
+  "description": "نظام إدارة الأسطول والشحنات - تشغيل داخلي مباشر بدون متصفح",
+  "main": "main.js",
+  "author": "DriverPortal",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.driverportal.admin.desktop",
+    "productName": "لوحة المدير العام",
+    "files": [
+      "main.js",
+      "preload.js",
+      "login-page.html",
+      "dashboard.html",
+      "dashboard.css",
+      "advanced-dashboard.js",
+      "images.svg",
+      "login-bg-cinematic.svg",
+      "login-bg-pro.svg",
+      "login-bg.jpg",
+      "manager-config.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "signAndEditExecutable": false,
+      "forceCodeSigning": false,
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "DriverPortalAdmin-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.0",
+    "electron-builder": "^24.13.3"
+  }
+}

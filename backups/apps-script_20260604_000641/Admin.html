@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة المدير العام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0d1117;
+      --panel:#111827;
+      --panel-soft:#162233;
+      --line:#263445;
+      --text:#f1f5f9;
+      --muted:#94a3b8;
+      --brand:#f59e0b;
+      --ok:#22c55e;
+      --danger:#ef4444;
+      --info:#38bdf8;
+      --radius:14px;
+      --shadow:0 12px 26px rgba(0,0,0,.28);
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 600px at 90% -10%,rgba(56,189,248,.18),transparent 50%),
+        radial-gradient(900px 500px at -10% 0%,rgba(245,158,11,.12),transparent 55%),
+        linear-gradient(180deg,#0b0f14,#0f1722);
+      color:var(--text);
+      font-family:"Tajawal",sans-serif;
+      padding:18px;
+    }
+
+    .wrap{max-width:1540px;margin:0 auto}
+
+    .header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .title h1{margin:0;color:var(--brand);font-size:30px}
+    .title p{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+    .toolbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      background:var(--panel);
+      border:1px solid var(--line);
+      padding:10px;
+      border-radius:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .toolbar span{color:var(--muted);font-size:13px}
+
+    select,input,button{
+      border:none;
+      border-radius:10px;
+      padding:10px 12px;
+      font-family:"Tajawal",sans-serif;
+    }
+
+    select,input{
+      background:#0f172a;
+      border:1px solid var(--line);
+      color:#fff;
+      min-height:40px;
+    }
+
+    input[type="text"],input[type="date"]{min-width:180px}
+
+    button{cursor:pointer;font-weight:800}
+    .btn-main{background:linear-gradient(135deg,var(--brand),#f97316);color:#101828}
+    .btn-ok{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff}
+    .btn-info{background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:#03293a}
+    .btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+
+    .message{
+      margin-bottom:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      display:none;
+      white-space:pre-wrap;
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .message.show{display:block}
+    .message.ok{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);color:#d1fae5}
+    .message.error{background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.35);color:#fecaca}
+
+    .section{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-bottom:14px;
+    }
+
+    .section h2{margin:0 0 10px;font-size:20px}
+
+    .ops-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(220px,1fr));
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .ops-card{
+      background:var(--panel-soft);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+    }
+
+    .ops-card .k{font-size:12px;color:var(--muted);margin-bottom:6px}
+    .ops-card .v{font-size:14px;font-weight:700;line-height:1.5}
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(160px,1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      box-shadow:var(--shadow);
+    }
+
+    .card .label{font-size:12px;color:var(--muted)}
+    .card .value{font-size:24px;font-weight:800;margin-top:6px}
+
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+
+    .tab-btn{
+      background:var(--panel);
+      border:1px solid var(--line);
+      color:#cbd5e1;
+      border-radius:10px;
+      padding:10px;
+    }
+
+    .tab-btn.active{background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff}
+
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+
+    table{width:100%;min-width:1200px;border-collapse:collapse}
+
+    th,td{
+      padding:10px 8px;
+      border-bottom:1px solid #1e293b;
+      text-align:center;
+      font-size:13px;
+      white-space:nowrap;
+    }
+
+    th{background:#0f172a;color:#cbd5e1}
+    tr:hover td{background:#132033}
+
+    .qty{color:#fbbf24;font-weight:800}
+    .money{color:#4ade80;font-weight:800}
+    .gas{color:#fb923c;font-weight:800}
+
+    .badge{display:inline-block;padding:4px 10px;border-radius:999px;background:#1e293b;border:1px solid #334155}
+    .empty{text-align:center;color:var(--muted);padding:18px}
+
+    .loader{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    }
+
+    .spinner{
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      border:5px solid #334155;
+      border-top-color:var(--brand);
+      animation:spin 1s linear infinite;
+    }
+
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media (max-width:1200px){
+      .ops-grid{grid-template-columns:repeat(2,minmax(220px,1fr))}
+      .form-grid{grid-template-columns:repeat(2,minmax(160px,1fr))}
+    }
+
+    @media (max-width:700px){
+      .tabs{grid-template-columns:1fr}
+      .ops-grid{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="title">
+        <h1><i class="fas fa-building"></i> لوحة شركة النقل</h1>
+        <p>كل عمليات الشهر من مكان واحد: تحميل البيانات، إنشاء قوالب رسمية A4، وتنظيف الشيتات المولدة</p>
+      </div>
+
+      <div class="toolbar">
+        <span>الشهر</span>
+        <select id="monthSelect" onchange="loadData()"></select>
+
+        <span>الفترة</span>
+        <select id="periodSelect" onchange="syncPeriodToTemplateHalf();renderAll()">
+          <option value="all">كل الشهر</option>
+          <option value="1">1 - 15</option>
+          <option value="2">16 - نهاية الشهر</option>
+        </select>
+
+        <input id="searchInput" type="text" placeholder="بحث سائق / سيارة / مالك" oninput="renderAll()">
+        <button class="btn-main" onclick="loadData()">تحديث</button>
+        <button class="btn-ok" onclick="quickExportOfficialFromPeriod()"><i class="fas fa-file-excel"></i> طباعة ملف Excel الرسمي</button>
+      </div>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div class="section">
+      <h2>عمليات القوالب الرسمية للطباعة</h2>
+
+      <div class="ops-grid">
+        <div class="ops-card"><div class="k">النموذج المستهدف</div><div class="v">مطابقة ملف 60 الرسمي تمامًا في Excel</div></div>
+        <div class="ops-card"><div class="k">آلية التشغيل</div><div class="v">بعد إرسال السائقين، اضغط زر Excel الرسمي من هنا فقط</div></div>
+        <div class="ops-card"><div class="k">إدارة الفوضى</div><div class="v">زر تنظيف يحذف TPL/STMT للشهر الحالي فقط</div></div>
+        <div class="ops-card"><div class="k">نتيجة التشغيل</div><div class="v">يتم ضغط الجدول تلقائيًا حسب التاريخ بدون فراغات زائدة</div></div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>نوع القالب</label>
+          <select id="templateHalf">
+            <option value="all">كل الشهر</option>
+            <option value="first">النصف الأول (1-15)</option>
+            <option value="second">النصف الثاني (16-نهاية)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>رقم المطالبة</label>
+          <input id="demandNoInput" type="text" value="61">
+        </div>
+
+        <div class="field">
+          <label>تاريخ المطالبة</label>
+          <input id="reportDateInput" type="text" placeholder="2026/5/15">
+        </div>
+
+        <div class="field">
+          <label>الجهة المجهزة</label>
+          <input id="routeInput" type="text" value="محور - حلفاية - بغداد - تاجي">
+        </div>
+
+        <div class="field">
+          <label>الجهة المستلمة</label>
+          <input id="receiverInput" type="text" value="شركة تعبئة الغاز">
+        </div>
+      </div>
+
+      <div class="form-grid" style="grid-template-columns:repeat(2,minmax(160px,1fr));margin-top:8px">
+        <div class="field">
+          <label>المنتوج</label>
+          <input id="productInput" type="text" value="غاز سائل">
+        </div>
+
+        <div class="field">
+          <label>اسم شيت القالب الرسمي (ضع 60)</label>
+          <input id="officialTemplateSheetInput" type="text" value="60">
+        </div>
+
+        <div class="actions" style="align-items:end">
+          <button class="btn-ok" onclick="buildExactOfficialExcel()"><i class="fas fa-file-excel"></i> إخراج النموذج الرسمي المطابق Excel</button>
+          <button class="btn-ok" onclick="buildSingleTemplateA4()"><i class="fas fa-file-alt"></i> إنشاء قالب A4</button>
+          <button class="btn-info" onclick="buildAllTemplatesA4()"><i class="fas fa-layer-group"></i> إنشاء 3 قوالب A4</button>
+          <button class="btn-main" onclick="buildMonthlyStatements()"><i class="fas fa-table"></i> إنشاء كشوف 10 أعمدة</button>
+          <button class="btn-danger" onclick="cleanupGeneratedSheets()"><i class="fas fa-trash"></i> تنظيف شيتات الشهر</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="card"><div class="label">عدد النقلات</div><div class="value" id="statTrips">0</div></div>
+      <div class="card"><div class="label">إجمالي الكمية</div><div class="value qty" id="statQty">0</div></div>
+      <div class="card"><div class="label">القيمة قبل الخصم</div><div class="value money" id="statGrossValue">0</div></div>
+      <div class="card"><div class="label">قيمة الخصم 18%</div><div class="value" id="statDiscountValue">0</div></div>
+      <div class="card"><div class="label">القيمة بعد الخصم</div><div class="value money" id="statNetValue">0</div></div>
+      <div class="card"><div class="label">إجمالي الكاز</div><div class="value gas" id="statGas">0</div></div>
+      <div class="card"><div class="label">إجمالي الصيانة</div><div class="value" id="statMaint">0</div></div>
+      <div class="card"><div class="label">الصافي النهائي</div><div class="value money" id="statNetMoney">0</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('owners', this)">ملخص الحسابات</button>
+      <button class="tab-btn" onclick="switchTab('trips', this)">سجل الوصولات</button>
+      <button class="tab-btn" onclick="switchTab('maintenance', this)">سجل الصيانة</button>
+    </div>
+
+    <div id="tab-owners" class="tab-panel active section">
+      <h2>ملخص الملاك والشركات</h2>
+      <div class="actions" style="margin-top:0">
+        <button class="btn-ok" onclick="exportOwnersSummary()">تصدير الملخص</button>
+      </div>
+      <div class="table-wrap">
+        <table id="ownersTable">
+          <thead>
+            <tr>
+              <th>اسم المالك / الشركة</th>
+              <th>عدد النقلات</th>
+              <th>إجمالي الكمية</th>
+              <th>القيمة قبل الخصم</th>
+              <th>خصم 18%</th>
+              <th>القيمة بعد الخصم</th>
+              <th>مجموع الكاز</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-trips" class="tab-panel section">
+      <h2>سجل الوصولات</h2>
+      <div class="actions" style="margin-top:0">
+        <button class="btn-ok" onclick="exportTripsExcel()">تصدير الوصولات</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tripsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>رقم الوصل</th>
+              <th>اسم السائق</th>
+              <th>رقم السيارة</th>
+              <th>تاريخ التحميل</th>
+              <th>تاريخ التفريغ</th>
+              <th>الكمية</th>
+              <th>القيمة قبل الخصم</th>
+              <th>خصم 18%</th>
+              <th>القيمة بعد الخصم</th>
+              <th>المالك</th>
+              <th>المحطة</th>
+              <th>لترات الكاز</th>
+              <th>قيمة الكاز</th>
+              <th>ملاحظات</th>
+              <th>الصورة</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-maintenance" class="tab-panel section">
+      <h2>سجل الصيانة</h2>
+      <div class="actions" style="margin-top:0">
+        <button class="btn-danger" onclick="exportMaintExcel()">تصدير الصيانة</button>
+      </div>
+      <div class="table-wrap">
+        <table id="maintTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>السائق</th>
+              <th>رقم السيارة</th>
+              <th>نوع العطل</th>
+              <th>التكلفة</th>
+              <th>التاريخ</th>
+              <th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="loader" id="loader"><div class="spinner"></div></div>
+
+  <script>
+    var tripsData = [];
+    var maintenanceData = [];
+    var ownersSummaryGlobal = {};
+
+    var PRICE_PER_TON = 41800;
+    var PRICE_PER_LITER = 430;
+    var DEDUCTION_RATE = 0.18;
+
+    window.onload = function() {
+      document.getElementById("reportDateInput").value = formatTodayArabicDate();
+      syncPeriodToTemplateHalf();
+      loadMonths();
+    };
+
+    function syncPeriodToTemplateHalf() {
+      var period = document.getElementById("periodSelect").value || "all";
+      var half = "all";
+      if (period === "1") half = "first";
+      if (period === "2") half = "second";
+      document.getElementById("templateHalf").value = half;
+    }
+
+    function quickExportOfficialFromPeriod() {
+      syncPeriodToTemplateHalf();
+      buildExactOfficialExcel();
+    }
+
+    function formatTodayArabicDate() {
+      var d = new Date();
+      return d.getFullYear() + "/" + (d.getMonth() + 1) + "/" + d.getDate();
+    }
+
+    function switchTab(id, btn) {
+      document.querySelectorAll(".tab-panel").forEach(function(el){ el.classList.remove("active"); });
+      document.querySelectorAll(".tab-btn").forEach(function(el){ el.classList.remove("active"); });
+      document.getElementById("tab-" + id).classList.add("active");
+      btn.classList.add("active");
+    }
+
+    function showLoader(show) {
+      document.getElementById("loader").style.display = show ? "flex" : "none";
+    }
+
+    function showMessage(text, type) {
+      var el = document.getElementById("message");
+      el.className = "message show " + (type || "");
+      el.innerText = text || "";
+    }
+
+    function toNum(v) {
+      if (v === null || v === "" || typeof v === "undefined") return 0;
+      var s = String(v)
+        .replace(/[٠-٩]/g, function(d){ return "٠١٢٣٤٥٦٧٨٩".indexOf(d); })
+        .replace(/[^\d.\-]/g, "")
+        .trim();
+      var n = parseFloat(s);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function formatNum(v, digits) {
+      return toNum(v).toLocaleString("en-US", { maximumFractionDigits: digits == null ? 0 : digits });
+    }
+
+    function money(v) {
+      return formatNum(v, 0) + " د.ع";
+    }
+
+    function safe(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function normalize(v) {
+      return String(v || "")
+        .replace(/[أإآ]/g, "ا")
+        .replace(/ة/g, "ه")
+        .replace(/ى/g, "ي")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toLowerCase();
+    }
+
+    function getMetrics(row) {
+      var qty = toNum(row.quantity);
+      var liters = toNum(row.liters);
+      var gasCost = row.gasCost != null ? toNum(row.gasCost) : liters * PRICE_PER_LITER;
+      var grossValue = row.grossValue != null ? toNum(row.grossValue) : qty * PRICE_PER_TON;
+      var discountValue = row.deductionValue != null ? toNum(row.deductionValue) : grossValue * DEDUCTION_RATE;
+      var netValue = row.netValue != null ? toNum(row.netValue) : grossValue - discountValue;
+
+      return {
+        qty: qty,
+        liters: liters,
+        gasCost: gasCost,
+        grossValue: grossValue,
+        discountValue: discountValue,
+        netValue: netValue
+      };
+    }
+
+    function runServer(methodName, arg) {
+      return new Promise(function(resolve, reject) {
+        var runner = google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject);
+        runner[methodName](arg);
+      });
+    }
+
+    async function loadMonths() {
+      showLoader(true);
+      try {
+        var result = await runServer("getAvailableMonths");
+        var months = Array.isArray(result) ? result : (result && result.data ? result.data : []);
+        var select = document.getElementById("monthSelect");
+        select.innerHTML = "";
+
+        if (!months.length) {
+          select.innerHTML = "<option value=''>لا توجد أشهر</option>";
+          showMessage("لم يتم العثور على أشهر متاحة", "error");
+          showLoader(false);
+          return;
+        }
+
+        months.forEach(function(m){
+          var opt = document.createElement("option");
+          opt.value = m;
+          opt.text = String(m).replace("_", " / ");
+          select.add(opt);
+        });
+
+        showMessage("تم تحميل الأشهر بنجاح", "ok");
+        await loadData();
+      } catch (e) {
+        showMessage("تعذر تحميل الأشهر: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function loadData() {
+      var month = document.getElementById("monthSelect").value;
+      if (!month) return;
+
+      showLoader(true);
+      try {
+        var res = await runServer("getAllReceiptsData", month);
+        tripsData = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+
+        var mres = await runServer("getMaintenanceData", month);
+        maintenanceData = (mres && mres.success && Array.isArray(mres.data)) ? mres.data : [];
+
+        renderAll();
+        showMessage("تم تحميل بيانات الشهر بنجاح", "ok");
+      } catch (e) {
+        tripsData = [];
+        maintenanceData = [];
+        renderAll();
+        showMessage("تعذر تحميل البيانات: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    function getFilteredTrips() {
+      var period = document.getElementById("periodSelect").value;
+      var q = normalize(document.getElementById("searchInput").value);
+
+      return tripsData.filter(function(item){
+        var okPeriod = period === "all" ? true : Number(item.period15 || 0) === Number(period);
+        var okSearch = !q ? true :
+          normalize(item.driverName).indexOf(q) >= 0 ||
+          normalize(item.carNumber).indexOf(q) >= 0 ||
+          normalize(item.owner).indexOf(q) >= 0 ||
+          normalize(item.destination).indexOf(q) >= 0 ||
+          normalize(item.docNumber).indexOf(q) >= 0;
+
+        return okPeriod && okSearch;
+      });
+    }
+
+    function renderAll() {
+      var filtered = getFilteredTrips();
+      renderStats(filtered);
+      renderOwners(filtered);
+      renderTrips(filtered);
+      renderMaintenance();
+    }
+
+    function renderStats(rows) {
+      var totalQty = 0;
+      var totalGrossValue = 0;
+      var totalDiscountValue = 0;
+      var totalNetValue = 0;
+      var totalGas = 0;
+      var totalMaint = 0;
+
+      rows.forEach(function(r){
+        var m = getMetrics(r);
+        totalQty += m.qty;
+        totalGrossValue += m.grossValue;
+        totalDiscountValue += m.discountValue;
+        totalNetValue += m.netValue;
+        totalGas += m.gasCost;
+      });
+
+      maintenanceData.forEach(function(m){ totalMaint += toNum(m.cost); });
+
+      var finalNetMoney = totalNetValue - totalGas - totalMaint;
+
+      document.getElementById("statTrips").innerText = formatNum(rows.length, 0);
+      document.getElementById("statQty").innerText = formatNum(totalQty, 3) + " طن";
+      document.getElementById("statGrossValue").innerText = money(totalGrossValue);
+      document.getElementById("statDiscountValue").innerText = money(totalDiscountValue);
+      document.getElementById("statNetValue").innerText = money(totalNetValue);
+      document.getElementById("statGas").innerText = money(totalGas);
+      document.getElementById("statMaint").innerText = money(totalMaint);
+      document.getElementById("statNetMoney").innerText = money(finalNetMoney);
+    }
+
+    function renderOwners(rows) {
+      var summary = {};
+
+      rows.forEach(function(item){
+        var owner = item.owner || "غير محدد";
+        var m = getMetrics(item);
+
+        if (!summary[owner]) {
+          summary[owner] = { count: 0, qty: 0, grossValue: 0, discountValue: 0, netValue: 0, liters: 0 };
+        }
+
+        summary[owner].count += 1;
+        summary[owner].qty += m.qty;
+        summary[owner].grossValue += m.grossValue;
+        summary[owner].discountValue += m.discountValue;
+        summary[owner].netValue += m.netValue;
+        summary[owner].liters += m.liters;
+      });
+
+      ownersSummaryGlobal = summary;
+
+      var tbody = document.querySelector("#ownersTable tbody");
+      tbody.innerHTML = "";
+
+      var keys = Object.keys(summary);
+      if (!keys.length) {
+        tbody.innerHTML = "<tr><td colspan='8' class='empty'>لا توجد بيانات</td></tr>";
+        return;
+      }
+
+      keys.forEach(function(name){
+        var d = summary[name];
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td><b>" + safe(name) + "</b></td>" +
+          "<td>" + formatNum(d.count, 0) + "</td>" +
+          "<td class='qty'>" + formatNum(d.qty, 3) + "</td>" +
+          "<td class='money'>" + money(d.grossValue) + "</td>" +
+          "<td>" + money(d.discountValue) + "</td>" +
+          "<td class='money'>" + money(d.netValue) + "</td>" +
+          "<td class='gas'>" + formatNum(d.liters, 0) + "</td>" +
+          "<td><span class='badge'>نشط</span></td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTrips(rows) {
+      var tbody = document.querySelector("#tripsTable tbody");
+      tbody.innerHTML = "";
+
+      if (!rows.length) {
+        tbody.innerHTML = "<tr><td colspan='16' class='empty'>لا توجد وصولات</td></tr>";
+        return;
+      }
+
+      rows.forEach(function(r, i){
+        var m = getMetrics(r);
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(r.docNumber) + "</td>" +
+          "<td>" + safe(r.driverName) + "</td>" +
+          "<td>" + safe(r.carNumber) + "</td>" +
+          "<td>" + safe(r.loadDate) + "</td>" +
+          "<td>" + safe(r.unloadDate) + "</td>" +
+          "<td class='qty'>" + formatNum(m.qty, 3) + "</td>" +
+          "<td class='money'>" + money(m.grossValue) + "</td>" +
+          "<td>" + money(m.discountValue) + "</td>" +
+          "<td class='money'>" + money(m.netValue) + "</td>" +
+          "<td><span class='badge'>" + safe(r.owner || "") + "</span></td>" +
+          "<td>" + safe(r.destination || "") + "</td>" +
+          "<td class='gas'>" + formatNum(m.liters, 0) + "</td>" +
+          "<td class='gas'>" + money(m.gasCost) + "</td>" +
+          "<td>" + safe(r.notes || "-") + "</td>" +
+          "<td>" + (r.imageUrl ? "<a style='color:#60a5fa' target='_blank' href='" + safe(r.imageUrl) + "'>عرض</a>" : "-") + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMaintenance() {
+      var tbody = document.querySelector("#maintTable tbody");
+      tbody.innerHTML = "";
+
+      if (!maintenanceData.length) {
+        tbody.innerHTML = "<tr><td colspan='7' class='empty'>لا توجد صيانة</td></tr>";
+        return;
+      }
+
+      maintenanceData.forEach(function(r, i){
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(r.driverName) + "</td>" +
+          "<td>" + safe(r.carNumber) + "</td>" +
+          "<td>" + safe(r.type) + "</td>" +
+          "<td class='money'>" + money(r.cost) + "</td>" +
+          "<td>" + safe(r.date) + "</td>" +
+          "<td>" + safe(r.notes || "-") + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportTripsExcel() {
+      var rows = getFilteredTrips().map(function(r){
+        var m = getMetrics(r);
+        return {
+          "رقم الوصل": r.docNumber,
+          "اسم السائق": r.driverName,
+          "رقم السيارة": r.carNumber,
+          "الكمية": m.qty,
+          "القيمة قبل الخصم": m.grossValue,
+          "خصم 18%": m.discountValue,
+          "القيمة بعد الخصم": m.netValue,
+          "الكاز": m.liters,
+          "قيمة الكاز": m.gasCost
+        };
+      });
+
+      if (!rows.length) {
+        alert("لا توجد بيانات");
+        return;
+      }
+
+      var ws = XLSX.utils.json_to_sheet(rows);
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "الوصولات");
+      XLSX.writeFile(wb, "الوصولات.xlsx");
+    }
+
+    function exportMaintExcel() {
+      var rows = maintenanceData.map(function(r){
+        return {
+          "السائق": r.driverName,
+          "رقم السيارة": r.carNumber,
+          "النوع": r.type,
+          "التكلفة": r.cost,
+          "التاريخ": r.date
+        };
+      });
+
+      if (!rows.length) {
+        alert("لا توجد بيانات");
+        return;
+      }
+
+      var ws = XLSX.utils.json_to_sheet(rows);
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "الصيانة");
+      XLSX.writeFile(wb, "الصيانة.xlsx");
+    }
+
+    function exportOwnersSummary() {
+      var rows = Object.keys(ownersSummaryGlobal).map(function(name){
+        var d = ownersSummaryGlobal[name];
+        return {
+          "المالك": name,
+          "عدد النقلات": d.count,
+          "إجمالي الكمية": d.qty,
+          "القيمة قبل الخصم": d.grossValue,
+          "خصم 18%": d.discountValue,
+          "القيمة بعد الخصم": d.netValue,
+          "مجموع الكاز": d.liters
+        };
+      });
+
+      if (!rows.length) {
+        alert("لا توجد بيانات");
+        return;
+      }
+
+      var ws = XLSX.utils.json_to_sheet(rows);
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "الملخص");
+      XLSX.writeFile(wb, "ملخص_الحسابات.xlsx");
+    }
+
+    function templatePayload(halfValue) {
+      return {
+        month: document.getElementById("monthSelect").value,
+        half: halfValue,
+        demandNo: document.getElementById("demandNoInput").value,
+        reportDate: document.getElementById("reportDateInput").value,
+        route: document.getElementById("routeInput").value,
+        receiver: document.getElementById("receiverInput").value,
+        product: document.getElementById("productInput").value
+      };
+    }
+
+    async function buildSingleTemplateA4() {
+      var month = document.getElementById("monthSelect").value;
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+
+      showLoader(true);
+      showMessage("جاري إنشاء القالب الرسمي A4...", "ok");
+
+      try {
+        var half = document.getElementById("templateHalf").value || "all";
+        var res = await runServer("buildDemandTemplateSheet", templatePayload(half));
+
+        if (!res || !res.success) {
+          showMessage((res && res.message) || "تعذر إنشاء القالب", "error");
+          return;
+        }
+
+        var lines = [res.message || "تم إنشاء القالب بنجاح", "الشيت: " + (res.sheetName || "-")];
+        if (res.pdfUrl) lines.push("PDF A4 جاهز للطباعة");
+        showMessage(lines.join("\n"), "ok");
+
+        if (res.sheetUrl) window.open(res.sheetUrl, "_blank");
+        if (res.pdfUrl) window.open(res.pdfUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل إنشاء القالب: " + (e && e.message ? e.message : e), "error");
+      }
+
+      showLoader(false);
+    }
+
+    async function buildExactOfficialExcel() {
+      var month = document.getElementById("monthSelect").value;
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+
+      var templateName = (document.getElementById("officialTemplateSheetInput").value || "60").trim();
+
+      showLoader(true);
+      showMessage("جاري تجهيز النسخة الرسمية المطابقة من القالب...", "ok");
+
+      try {
+        var payload = templatePayload(document.getElementById("templateHalf").value || "all");
+        payload.templateSheetName = templateName;
+
+        var res = await runServer("buildOfficialExactTemplate", payload);
+        if (!res || !res.success) {
+          showMessage((res && res.message) || "تعذر إخراج النموذج الرسمي", "error");
+          return;
+        }
+
+        var lines = [
+          res.message || "تم إنشاء النموذج الرسمي",
+          "القالب المستخدم: " + (res.templateSheetName || templateName || "-"),
+          "الشيت: " + (res.sheetName || "-"),
+          "عدد السجلات: " + (res.rows || 0)
+        ];
+        showMessage(lines.join("\n"), "ok");
+
+        if (res.sheetUrl) window.open(res.sheetUrl, "_blank");
+        if (res.xlsxUrl) window.open(res.xlsxUrl, "_blank");
+        if (res.pdfUrl) window.open(res.pdfUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل إخراج النموذج الرسمي: " + (e && e.message ? e.message : e), "error");
+      }
+
+      showLoader(false);
+    }
+
+    async function buildAllTemplatesA4() {
+      var month = document.getElementById("monthSelect").value;
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+
+      if (!confirm("سيتم إنشاء 3 قوالب: كل الشهر + النصف الأول + النصف الثاني. متابعة؟")) return;
+
+      showLoader(true);
+      showMessage("جاري إنشاء القوالب الثلاثة A4...", "ok");
+
+      var halves = ["all", "first", "second"];
+      var results = [];
+
+      try {
+        for (var i = 0; i < halves.length; i++) {
+          var res = await runServer("buildDemandTemplateSheet", templatePayload(halves[i]));
+          if (res && res.success) {
+            results.push(res);
+          } else {
+            throw new Error((res && res.message) || "فشل في إنشاء قالب من المجموعة");
+          }
+        }
+
+        var lines = ["تم إنشاء القوالب الرسمية بنجاح:"];
+        results.forEach(function(r){ lines.push("- " + r.sheetName + " | سجلات: " + r.rows); });
+        showMessage(lines.join("\n"), "ok");
+
+        if (results[0] && results[0].sheetUrl) window.open(results[0].sheetUrl, "_blank");
+        if (results[0] && results[0].pdfUrl) window.open(results[0].pdfUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل إنشاء القوالب: " + (e && e.message ? e.message : e), "error");
+      }
+
+      showLoader(false);
+    }
+
+    async function buildMonthlyStatements() {
+      var month = document.getElementById("monthSelect").value;
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+
+      if (!confirm("سيتم إنشاء كشوفات الشهر بالكامل (ALL/FIRST/SECOND). متابعة؟")) return;
+
+      showLoader(true);
+      showMessage("جاري إنشاء كشوفات الـ 10 أعمدة...", "ok");
+
+      try {
+        var res = await runServer("buildMonthlyStatementsSheets", { month: month, split: true });
+
+        if (!res || !res.success) {
+          showMessage((res && res.message) || "تعذر إنشاء الكشوفات", "error");
+          return;
+        }
+
+        var sheets = Array.isArray(res.createdSheets) ? res.createdSheets : [];
+        var lines = [res.message || "تم إنشاء الكشوفات بنجاح"];
+        sheets.forEach(function(s){ lines.push("- " + s.sheetName + " | السجلات: " + s.rows); });
+        showMessage(lines.join("\n"), "ok");
+
+        if (sheets.length && sheets[0].sheetUrl) window.open(sheets[0].sheetUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل إنشاء الكشوفات: " + (e && e.message ? e.message : e), "error");
+      }
+
+      showLoader(false);
+    }
+
+    async function cleanupGeneratedSheets() {
+      var month = document.getElementById("monthSelect").value;
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+
+      if (!confirm("سيتم حذف كل شيتات TPL/STMT لهذا الشهر فقط. متابعة؟")) return;
+
+      showLoader(true);
+      showMessage("جاري تنظيف الشيتات المولدة...", "ok");
+
+      try {
+        var res = await runServer("cleanupGeneratedSheets", { month: month });
+
+        if (!res || !res.success) {
+          showMessage((res && res.message) || "تعذر تنظيف الشيتات", "error");
+          return;
+        }
+
+        var lines = [res.message || "تم التنظيف", "عدد المحذوف: " + (res.deletedCount || 0)];
+        showMessage(lines.join("\n"), "ok");
+      } catch (e) {
+        showMessage("فشل التنظيف: " + (e && e.message ? e.message : e), "error");
+      }
+
+      showLoader(false);
+    }
+  </script>
+</body>
+</html>

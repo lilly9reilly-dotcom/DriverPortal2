@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>بوابة الشركات</title>
+  <link rel="stylesheet" href="company.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <section id="authExperience" class="login-experience">
+      <div class="login-topbar">
+        <div class="login-brand">
+          <div class="brand-chip">(LPG) السائل</div>
+          <div>
+            <h1>شركة الناقلات النموذجية</h1>
+            <p>لنقل المنتجات النفطية</p>
+          </div>
+        </div>
+        <div class="login-datetime">
+          <div>
+            <span>الوقت</span>
+            <strong id="authClock">--:--</strong>
+          </div>
+          <div>
+            <span>التاريخ</span>
+            <strong id="authDate">--/--/----</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-center">
+        <section id="activationGate" class="auth-panel auth-activate gate">
+          <div class="auth-head">
+            <h1>تفعيل بوابة الشركات</h1>
+            <p>أدخل كود التفعيل الممنوح لك رسميًا من الإدارة.</p>
+          </div>
+          <div class="row auth-row">
+            <input id="activationCode" type="text" placeholder="كود التفعيل" />
+            <button id="btnActivate" class="btn primary">تفعيل</button>
+          </div>
+          <p id="activationMsg" class="muted"></p>
+          <p id="activationHint" class="muted">لن يعمل التطبيق بدون تحقق تفعيل حقيقي من الخادم.</p>
+        </section>
+
+        <section id="managerSetup" class="auth-panel hidden gate">
+          <div class="auth-head">
+            <h2>إعداد مدير الحسابات (أول مرة)</h2>
+            <p>هذه البيانات مطلوبة لمصادقة الدخول إلى نسخة الشركة على هذا الجهاز.</p>
+          </div>
+          <div class="grid2">
+            <input id="setupName" type="text" placeholder="اسم مدير الحسابات" />
+            <input id="setupPhone" type="text" placeholder="رقم الهاتف" />
+            <input id="setupPin" type="password" placeholder="PIN" />
+            <input id="setupPin2" type="password" placeholder="تأكيد PIN" />
+          </div>
+          <button id="btnSetupManager" class="btn primary">حفظ المدير</button>
+          <p id="setupMsg" class="muted"></p>
+        </section>
+
+        <section id="managerLogin" class="auth-panel hidden gate">
+          <div class="auth-head">
+            <h2>تسجيل دخول مدير الحسابات</h2>
+            <p>أدخل رمز PIN المعتمد لتسجيل الدخول الآمن.</p>
+          </div>
+          <div class="row auth-row">
+            <input id="loginPin" type="password" placeholder="PIN" />
+            <button id="btnManagerLogin" class="btn primary">دخول</button>
+          </div>
+          <p id="managerNameLabel" class="muted"></p>
+          <p id="loginMsg" class="muted"></p>
+        </section>
+      </div>
+    </section>
+
+    <section id="mainWelcome" class="welcome card hidden">
+      <div>
+        <h1>الناقلات النموذجية</h1>
+        <p>بوابة الشركات لنقل المنتجات النفطية - نسخة سطح المكتب الرسمية</p>
+      </div>
+      <div class="welcome-badge">وصول آمن ومفعل فقط</div>
+    </section>
+
+    <section id="dashboard" class="hidden dashboard-shell">
+      <aside class="erp-sidebar card">
+        <div class="erp-brand">
+          <h2>الناقلات النموذجية</h2>
+          <p>لوحة تشغيل الشركات</p>
+        </div>
+
+        <div class="erp-manager-card">
+          <strong>مدير الحسابات</strong>
+          <p id="activeManager" class="muted"></p>
+          <button id="btnEditManagerName" class="btn" type="button">تعديل اسم المدير</button>
+        </div>
+
+        <div id="managerEditModal" class="modal-overlay hidden">
+          <div class="modal-card">
+            <div class="modal-head">
+              <h4>تعديل اسم المدير</h4>
+              <button id="btnCloseManagerEditModal" type="button" class="btn danger">إغلاق</button>
+            </div>
+            <div class="grid2">
+              <input id="editManagerName" type="text" placeholder="اسم المدير الجديد" />
+            </div>
+            <p id="managerEditMsg" class="muted"></p>
+            <div class="row">
+              <button id="btnSaveManagerName" type="button" class="btn primary">حفظ التعديل</button>
+            </div>
+          </div>
+        </div>
+
+        <nav class="erp-menu">
+          <button data-tab="drivers" class="tab active"><span>السواق</span></button>
+          <button data-tab="trip" class="tab"><span>وصل حلفاية</span></button>
+          <button data-tab="factory" class="tab"><span>وصل المعمل</span></button>
+          <button data-tab="company" class="tab"><span>الشركة</span></button>
+          <button data-tab="overview" class="tab"><span>لوحة السائق</span></button>
+          <button data-tab="maintenance" class="tab"><span>لوحة الصيانة</span></button>
+          <button data-tab="reports" class="tab"><span>التقارير</span></button>
+        </nav>
+
+        <button id="btnLogout" class="btn danger erp-logout">خروج</button>
+      </aside>
+
+      <section class="erp-main">
+        <header class="topbar card erp-topbar">
+          <div>
+            <h2>بوابة الشركات</h2>
+            <p class="muted">نظام تشغيلي متكامل لنقل المنتجات النفطية</p>
+          </div>
+          <div class="row">
+            <select id="monthSelect"></select>
+            <button id="btnRefreshMonth" class="btn">تحديث</button>
+          </div>
+          <div id="quickKpis" class="quick-kpis"></div>
+        </header>
+
+        <main class="erp-content">
+        <section id="tab-drivers" class="card panel active">
+          <h3>إدارة السواق</h3>
+          <div class="grid3">
+            <input id="driverName" type="text" placeholder="اسم السائق" />
+            <input id="driverPhone" type="text" placeholder="الهاتف" />
+            <input id="driverCar" type="text" placeholder="رقم السيارة" />
+          </div>
+          <button id="btnAddDriver" class="btn primary">إضافة سائق</button>
+          <div id="driversList" class="list"></div>
+
+          <div id="driverEditModal" class="modal-overlay hidden">
+            <div class="modal-card">
+              <div class="modal-head">
+                <h4>تعديل بيانات السائق</h4>
+                <button id="btnCloseDriverEditModal" type="button" class="btn danger">إغلاق</button>
+              </div>
+              <div class="grid2">
+                <input id="editDriverName" type="text" placeholder="اسم السائق" />
+                <input id="editDriverPhone" type="text" placeholder="الهاتف" />
+                <input id="editDriverCar" type="text" placeholder="رقم السيارة" />
+              </div>
+              <p id="driverEditMsg" class="muted"></p>
+              <div class="row">
+                <button id="btnSaveDriverEdit" type="button" class="btn primary">حفظ التعديل</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-trip" class="card panel">
+          <h3>إرسال وصلة حلفاية</h3>
+          <div class="grid3">
+            <select id="tripDriver"></select>
+            <input id="tripDoc" type="text" placeholder="رقم الوصل" />
+            <select id="tripStation">
+              <option value="محطة الحلفاية">محطة الحلفاية</option>
+              <option value="محطة التاجي">محطة التاجي</option>
+              <option value="محطة الرصافة">محطة الرصافة</option>
+              <option value="محطة الدورة">محطة الدورة</option>
+            </select>
+            <input id="tripLoad" type="date" />
+            <input id="tripUnload" type="date" />
+            <input id="tripQty" type="number" step="0.001" placeholder="الكمية" />
+            <input id="tripLiters" type="number" step="1" placeholder="لترات الكاز" />
+            <input id="tripOwner" type="text" placeholder="المالك" />
+            <input id="tripNotes" type="text" placeholder="ملاحظات" />
+          </div>
+          <button id="btnSendTrip" class="btn primary">إرسال</button>
+          <p id="tripMsg" class="muted"></p>
+        </section>
+
+        <section id="tab-factory" class="card panel">
+          <h3>إرسال وصلة معمل</h3>
+          <div class="grid3">
+            <select id="factoryDriver"></select>
+            <input id="factoryDoc" type="text" placeholder="رقم الوصل" />
+            <select id="factoryName">
+              <option value="">اختر المعمل</option>
+            </select>
+            <input id="factoryNameOther" class="hidden" type="text" placeholder="اكتب اسم المعمل" />
+            <input id="factoryLoad" type="date" />
+            <input id="factoryUnload" type="date" />
+            <input id="factoryQty" type="number" step="0.001" placeholder="الكمية" />
+            <input id="factoryVehicleOwner" type="text" placeholder="مالك السيارة" />
+            <input id="factoryNotes" type="text" placeholder="ملاحظات" />
+          </div>
+          <button id="btnSendFactory" class="btn primary">إرسال</button>
+          <p id="factoryMsg" class="muted"></p>
+        </section>
+
+        <section id="tab-company" class="card panel">
+          <h3>تبويبة الشركة</h3>
+          <div id="companyStats" class="report-kpis"></div>
+          <div class="report-split-wrap company-dual-wrap">
+            <div class="report-split-card">
+              <h4>إيرادات السيارات</h4>
+              <div id="companyCarRevenue" class="list"></div>
+            </div>
+            <div class="report-split-card">
+              <h4>رواتب السواق</h4>
+              <div id="companyDriverSalaries" class="list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab-overview" class="card panel">
+          <h3>لوحة السائق (إحصاءات الشهر)</h3>
+          <div class="overview-tools">
+            <input id="overviewDriverFilter" type="text" placeholder="بحث باسم السائق" />
+            <input id="overviewCarFilter" type="text" placeholder="بحث برقم السيارة" />
+            <input id="overviewDocFilter" type="text" placeholder="بحث برقم الوصل" />
+            <select id="overviewSort">
+              <option value="trips">ترتيب: عدد النقلات</option>
+              <option value="qty">ترتيب: الكمية</option>
+              <option value="amount">ترتيب: المبلغ</option>
+              <option value="name">ترتيب: اسم السائق</option>
+            </select>
+            <button id="btnToggleAuditLog" type="button" class="btn">سجل التعديلات</button>
+            <input id="auditSearch" type="text" placeholder="بحث في سجل التعديلات" />
+            <select id="auditRange">
+              <option value="all">كل الفترات</option>
+              <option value="today">اليوم</option>
+              <option value="week">آخر 7 أيام</option>
+              <option value="month">آخر 30 يوم</option>
+            </select>
+          </div>
+          <div id="overviewStats" class="list"></div>
+          <div id="driversSplitBoard" class="drivers-split-board"></div>
+          <div id="auditLogList" class="list hidden"></div>
+        </section>
+
+        <section id="tab-maintenance" class="card panel">
+          <h3>لوحة الصيانة</h3>
+          <div class="grid3">
+            <select id="maintDriver"></select>
+            <input id="maintType" type="text" placeholder="نوع الصيانة" />
+            <input id="maintDate" type="date" />
+            <input id="maintCost" type="number" step="1" placeholder="الكلفة" />
+            <input id="maintNotes" type="text" placeholder="ملاحظات" />
+          </div>
+          <button id="btnAddMaint" class="btn primary">حفظ صيانة</button>
+          <div id="maintList" class="list"></div>
+        </section>
+
+        <section id="tab-reports" class="card panel">
+          <h3>التقارير</h3>
+          <div class="row">
+            <select id="reportHalf">
+              <option value="all">كل الشهر</option>
+              <option value="first">1 - 15</option>
+              <option value="second">16 - نهاية الشهر</option>
+            </select>
+            <button id="btnLoadReport" class="btn primary">تحديث التقرير</button>
+            <button id="btnExportExcel" class="btn">استخراج Excel</button>
+            <button id="btnExportPdf" class="btn">استخراج PDF</button>
+          </div>
+          <div id="reportKpis" class="report-kpis"></div>
+          <div class="report-bars-wrap">
+            <div class="report-bars-card">
+              <h4>مؤشر الكمية (محطات/معامل)</h4>
+              <div id="reportQtyBars" class="report-bars-list"></div>
+            </div>
+            <div class="report-bars-card">
+              <h4>مؤشر الأسعار والإيراد</h4>
+              <div id="reportAmountBars" class="report-bars-list"></div>
+            </div>
+          </div>
+          <div class="report-split-wrap">
+            <div class="report-split-card">
+              <h4>لائحة السائقين - التاجي/المحطات</h4>
+              <div id="reportStationDrivers" class="list"></div>
+            </div>
+            <div class="report-split-card">
+              <h4>لائحة السائقين - المعامل</h4>
+              <div id="reportFactoryDrivers" class="list"></div>
+            </div>
+          </div>
+          <div id="reportSummary" class="list"></div>
+        </section>
+
+        <div id="tripEditModal" class="modal-overlay hidden">
+          <div class="modal-card">
+            <div class="modal-head">
+              <h4>تعديل النقلة</h4>
+              <button id="btnCloseTripEditModal" type="button" class="btn danger">إغلاق</button>
+            </div>
+            <div class="grid2">
+              <input id="editTripDoc" type="text" placeholder="رقم الوصل" readonly />
+              <input id="editTripCar" type="text" placeholder="رقم السيارة" readonly />
+              <input id="editTripDriver" type="text" placeholder="اسم السائق" readonly />
+              <input id="editTripDestination" type="text" placeholder="الوجهة" />
+              <input id="editTripQty" type="number" step="0.001" placeholder="الكمية" />
+              <input id="editTripLoad" type="date" />
+              <input id="editTripUnload" type="date" />
+              <input id="editTripLiters" type="number" step="1" placeholder="لترات الكاز" />
+              <input id="editTripNotes" type="text" placeholder="ملاحظات" />
+            </div>
+            <p id="tripEditMsg" class="muted"></p>
+            <div class="row">
+              <button id="btnSaveTripEdit" type="button" class="btn primary">حفظ التعديل</button>
+            </div>
+          </div>
+        </div>
+        </main>
+      </section>
+    </section>
+  </div>
+
+  <script src="node_modules/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="company-app.js"></script>
+</body>
+</html>

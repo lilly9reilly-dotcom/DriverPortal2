@@ -1,8 +1,10 @@
 import Foundation
 
 enum GoogleSheetConfig {
-    static let scriptRoot = "https://script.google.com/macros/s/AKfycbw-3wKRuKImCvvB4ip3PGokDP18yJz6HDW2QylDmvQGxAbyn8Wq-FIlHQ9ms-i7wlCEQA/"
-    static let execEndpoint = scriptRoot + "exec"
+    static let apiScriptRoot = "https://script.google.com/macros/s/AKfycbwCreVvebaAN7C4W2OZu6ura7cza42P2lIssNt4sVBv1raDqZkQYY-ZZyNNcl9_iynhAw/"
+    static let adminScriptRoot = "https://script.google.com/macros/s/AKfycbwCreVvebaAN7C4W2OZu6ura7cza42P2lIssNt4sVBv1raDqZkQYY-ZZyNNcl9_iynhAw/"
+    static let execEndpoint = apiScriptRoot + "exec"
+    static let adminPageURL = adminScriptRoot + "exec?page=admin"
     static let supportPhone = "07809830249"
     static let supportWhatsApp = "9647809830249"
 

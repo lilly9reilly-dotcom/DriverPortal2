@@ -17,9 +17,13 @@ interface ApiService {
     @POST("exec")
     fun login(
         @Field("action") action: String = "login",
-        @Field("name") name: String,
-        @Field("phone") phone: String,
-        @Field("carNumber") carNumber: String
+        @Field("carNumber") carNumber: String,
+        @Field("name") name: String = "",
+        @Field("phone") phone: String = "",
+        @Field("companyId") companyId: String = "",
+        @Field("activationCode") activationCode: String = "",
+        @Field("deviceId") deviceId: String = "",
+        @Field("packageName") packageName: String = ""
     ): Call<ApiResponse>
 
     @FormUrlEncoded
@@ -58,10 +62,16 @@ interface ApiService {
 
     @FormUrlEncoded
     @POST("exec")
-    fun checkDocNumber(
+    fun checkDocNumberRaw(
         @Field("action") action: String = "checkDoc",
-        @Field("docNumber") docNumber: String
-    ): Call<ApiResponse>
+        @Field("docNumber") docNumber: String,
+        @Field("driverName") driverName: String = "",
+        @Field("carNumber") carNumber: String = "",
+        @Field("companyId") companyId: String = "",
+        @Field("activationCode") activationCode: String = "",
+        @Field("deviceId") deviceId: String = "",
+        @Field("packageName") packageName: String = ""
+    ): Call<ResponseBody>
 
     @GET("exec")
     fun getHistory(

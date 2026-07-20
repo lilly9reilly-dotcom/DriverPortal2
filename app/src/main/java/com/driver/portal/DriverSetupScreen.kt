@@ -16,7 +16,8 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,7 +56,9 @@ fun DriverSetupScreen(
 
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
-    var car by remember { mutableStateOf("") }
+    val lockedCar = remember { DriverSession.getLockedCarNumber(context) }
+    var car by remember { mutableStateOf(lockedCar) }
+    val isCarLocked = lockedCar.isNotEmpty()
     var isLoading by remember { mutableStateOf(false) }
 
     // ================= بيانات الشركة =================
@@ -108,7 +111,7 @@ fun DriverSetupScreen(
     Box(modifier = Modifier.fillMaxSize()) {
 
         Image(
-            painter = painterResource(id = R.drawable.login_background),
+            painter = painterResource(id = R.drawable.login_bg),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -174,7 +177,7 @@ fun DriverSetupScreen(
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text("اسم السائق") },
+                        label = { Text("اسم السائق (اختياري)") },
                         leadingIcon = {
                             Icon(Icons.Default.Person, contentDescription = null, tint = Color.White)
                         },
@@ -187,7 +190,7 @@ fun DriverSetupScreen(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it.filter { ch -> ch.isDigit() || ch == '+' } },
-                        label = { Text("رقم الهاتف") },
+                        label = { Text("رقم الهاتف (اختياري)") },
                         leadingIcon = {
                             Icon(Icons.Default.Phone, contentDescription = null, tint = Color.White)
                         },
@@ -200,18 +203,33 @@ fun DriverSetupScreen(
 
                     OutlinedTextField(
                         value = car,
-                        onValueChange = { car = it },
+                        onValueChange = { if (!isCarLocked) car = it },
                         label = { Text("رقم السيارة") },
                         leadingIcon = {
                             Icon(Icons.Default.DirectionsCar, contentDescription = null, tint = Color.White)
                         },
+                        trailingIcon = if (isCarLocked) ({
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = "مقفل",
+                                tint = Color.White.copy(alpha = 0.7f)
+                            )
+                        }) else null,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
                         colors = fieldColors,
-                        singleLine = true
+                        singleLine = true,
+                        enabled = !isCarLocked
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "الاعتماد بالدخول يتم على رقم السيارة فقط",
+                        color = Color.White.copy(alpha = 0.92f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
 
                     Button(
                         onClick = {
@@ -226,19 +244,10 @@ fun DriverSetupScreen(
                                 phoneFixed = phoneFixed.substring(1)
                             }
 
-                            if (cleanName.isEmpty() || cleanPhone.isEmpty() || cleanCar.isEmpty()) {
+                            if (cleanCar.isEmpty()) {
                                 Toast.makeText(
                                     context,
-                                    "يجب ملء جميع الحقول",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@Button
-                            }
-
-                            if (phoneFixed.length < 10) {
-                                Toast.makeText(
-                                    context,
-                                    "رقم الهاتف غير مكتمل",
+                                    "يجب إدخال رقم السيارة",
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 return@Button
@@ -247,9 +256,13 @@ fun DriverSetupScreen(
                             isLoading = true
 
                             RetrofitClient.instance.login(
+                                carNumber = cleanCar,
                                 name = cleanName,
                                 phone = phoneFixed,
-                                carNumber = cleanCar
+                                companyId = com.driver.portal.network.DriverScopeConfig.COMPANY_ID,
+                                activationCode = com.driver.portal.network.DriverScopeConfig.ACTIVATION_CODE,
+                                deviceId = com.driver.portal.network.DriverScopeConfig.DEVICE_ID,
+                                packageName = com.driver.portal.network.DriverScopeConfig.PACKAGE_NAME
                             ).enqueue(object : Callback<ApiResponse> {
 
                                 override fun onResponse(
@@ -361,7 +374,7 @@ fun DriverSetupScreen(
                     )
 
                     FooterActionItem(
-                        icon = Icons.Default.Send,
+                        icon = Icons.AutoMirrored.Filled.Send,
                         title = "واتساب",
                         onClick = { openWhatsApp(companyWhatsApp) }
                     )

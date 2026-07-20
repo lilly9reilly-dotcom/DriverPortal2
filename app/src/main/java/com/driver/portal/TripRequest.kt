@@ -36,6 +36,16 @@ data class TripRequest(
     // سعر النقلة
     val price: String,
 
+    // الكروة (توافق مع نسخ الخادم المختلفة)
+    val kroa: String = "",
+    val fare: String = "",
+
+    // نطاق الشركة (أمان)
+    val companyId: String = "",
+    val activationCode: String = "",
+    val deviceId: String = "",
+    val packageName: String = "",
+
     // صورة الوصل
     val fileData: String
 )

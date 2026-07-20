@@ -23,7 +23,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,9 +46,10 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 import java.net.URLEncoder
+import java.util.Calendar
 
 @Composable
-fun TripsHistoryScreen(driverName: String) {
+fun TripsHistoryScreen(driverName: String, carNumber: String) {
     var trips by remember { mutableStateOf<List<TripItem>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var refreshKey by remember { mutableStateOf(0) }
@@ -59,15 +60,31 @@ fun TripsHistoryScreen(driverName: String) {
     val bgTop = Color(0xFFF5F3FF)
     val bgBottom = Color(0xFFE9EEFF)
 
-    LaunchedEffect(refreshKey, driverName) {
+    LaunchedEffect(refreshKey, driverName, carNumber) {
         loading = true
         hasError = false
 
         try {
             val result = withContext(Dispatchers.IO) {
+                val calendar = Calendar.getInstance()
+                val month = String.format("%02d", calendar.get(Calendar.MONTH) + 1)
+                val year = calendar.get(Calendar.YEAR).toString()
+                val tripSheet = "${year}_${month}"
+                val factorySheet = "F_${year}_${month}"
                 val url = com.driver.portal.network.GoogleSheetConfig.execUrl(
                     "history",
-                    "driverName" to driverName
+                    "companyId" to com.driver.portal.network.DriverScopeConfig.COMPANY_ID,
+                    "activationCode" to com.driver.portal.network.DriverScopeConfig.ACTIVATION_CODE,
+                    "deviceId" to com.driver.portal.network.DriverScopeConfig.DEVICE_ID,
+                    "packageName" to com.driver.portal.network.DriverScopeConfig.PACKAGE_NAME,
+                    "carNumber" to carNumber,
+                    "driverName" to driverName,
+                    "month" to month,
+                    "year" to year,
+                    "sheet" to tripSheet,
+                    "tripSheet" to tripSheet,
+                    "factorySheet" to factorySheet,
+                    "source" to "trip"
                 )
 
                 URL(url).readText()
@@ -297,7 +314,7 @@ fun TripCard(
                 }
             }
 
-            Divider()
+            HorizontalDivider()
 
             if (trip.carNumber.orEmpty().isNotBlank() || trip.station.orEmpty().isNotBlank()) {
                 DataGridRow(
@@ -371,11 +388,22 @@ fun TripCard(
                         scope.launch {
                             val result = withContext(Dispatchers.IO) {
                                 try {
+                                    val calendar = Calendar.getInstance()
+                                    val month = String.format("%02d", calendar.get(Calendar.MONTH) + 1)
+                                    val year = calendar.get(Calendar.YEAR).toString()
+                                    val tripSheet = "${year}_${month}"
+                                    val factorySheet = "F_${year}_${month}"
                                     val url = com.driver.portal.network.GoogleSheetConfig.execUrl(
                                         "reportIssue",
                                         "driverName" to driverName,
                                         "docNumber" to trip.docNumber,
-                                        "issueType" to selectedIssue
+                                        "issueType" to selectedIssue,
+                                        "month" to month,
+                                        "year" to year,
+                                        "sheet" to tripSheet,
+                                        "tripSheet" to tripSheet,
+                                        "factorySheet" to factorySheet,
+                                        "source" to "trip"
                                     )
 
                                     URL(url).readText()

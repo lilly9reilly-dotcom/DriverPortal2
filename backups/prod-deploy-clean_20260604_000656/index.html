@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base target="_top">
+  <title>الناقلات النموذجية</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { --primary: #004d40; --secondary: #00695c; --accent: #ffd700; --bg: #f3f4f6; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Tajawal', sans-serif; background-color: var(--bg); margin: 0; padding: 0; padding-bottom: 30px; }
+
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 20px 0 40px 0;
+      text-align: center;
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+    }
+
+    .tabs-container {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: -20px;
+      margin-bottom: 20px;
+      padding: 0 10px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 5px;
+      border: none;
+      border-radius: 12px;
+      background: white;
+      color: var(--secondary);
+      font-family: 'Tajawal';
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .tab-btn.active { background: var(--accent); color: #000; transform: translateY(-3px); }
+
+    .form-container { max-width: 600px; margin: 0 auto; padding: 0 15px; display: none; }
+    .form-container.active { display: block; }
+    .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+
+    .row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .col { flex: 1; }
+    .lbl { display: block; font-size: 0.85rem; font-weight: 700; color: #546e7a; margin-bottom: 5px; }
+    .inp { width: 100%; padding: 12px; border: 1px solid #cfd8dc; border-radius: 10px; font-family: 'Tajawal'; font-size: 1rem; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 15px;
+      margin-top: 15px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .cam-btn {
+      border: 2px dashed #b0bec5;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .cam-btn i { font-size: 2rem; color: #546e7a; }
+
+    /* شاشة المحفظة */
+    .wallet-screen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #f0f2f5; z-index: 2000;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .wallet-header { font-weight: 900; font-size: 1.8rem; margin-bottom: 30px; color: #333; letter-spacing: -0.5px; }
+    .blue-card {
+      background: linear-gradient(135deg, #1565c0, #0d47a1);
+      width: 100%; max-width: 380px;
+      border-radius: 25px; padding: 40px 20px;
+      text-align: center; color: white;
+      box-shadow: 0 20px 40px rgba(13, 71, 161, 0.25);
+    }
+    .balance-label { font-size: 0.95rem; opacity: 0.9; margin-bottom: 15px; font-weight: 500; }
+    .wallet-balance { font-size: 3.8rem; font-weight: 900; margin: 0; letter-spacing: -1px; line-height: 1; }
+    .currency-label { font-size: 1.1rem; opacity: 0.8; margin-top: 10px; margin-bottom: 40px; }
+    .stats-row { display: flex; justify-content: space-between; gap: 12px; }
+    .stat-item {
+      background: rgba(255,255,255,0.15);
+      border-radius: 18px; padding: 15px 5px; flex: 1;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .stat-val { font-size: 1.3rem; font-weight: 800; margin-bottom: 5px; }
+    .stat-lbl { font-size: 0.8rem; opacity: 0.9; font-weight: 500; }
+    .back-btn {
+      margin-top: 40px; background: transparent; border: 1px solid #ccc;
+      padding: 12px 45px; border-radius: 30px; color: #555;
+      font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s;
+    }
+    .back-btn:active { background: #eee; }
+
+    /* شاشة التنبيه / الخطأ */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); z-index: 3000;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .error-box {
+      background: white; width: 90%; max-width: 350px;
+      padding: 30px; border-radius: 20px; text-align: center; animation: popIn 0.3s;
+    }
+    .error-icon { font-size: 4rem; color: #d32f2f; margin-bottom: 15px; }
+
+    /* شاشة التحميل */
+    .loader {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.9); z-index: 5000;
+      display: none; align-items: center; justify-content: center;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 5px solid #eee; border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <div class="header"><h1>الناقلات النموذجية</h1></div>
+
+  <div class="tabs-container">
+    <button class="tab-btn active" onclick="showTab(event,'trip')"><i class="fas fa-truck"></i> تسجيل وصل</button>
+    <button class="tab-btn" onclick="showTab(event,'maint')"><i class="fas fa-tools"></i> الصيانة</button>
+    <button class="tab-btn" onclick="openDirectWallet()"><i class="fas fa-wallet"></i> محفظة السائق</button>
+  </div>
+
+  <!-- تبويب الوصل -->
+  <div id="tab-trip" class="form-container active">
+    <div class="card">
+      <form id="tripForm" onsubmit="submitForm(event, 'trip')">
+        <div class="row">
+          <div class="col">
+            <label class="lbl">رقم الوصل</label>
+            <input type="number" class="inp" name="docNumber" id="driverDocNumber" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">اسم السائق</label>
+            <input type="text" class="inp" id="mainDriverName" name="driverName" placeholder="اكتب اسمك الثلاثي" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">رقم السيارة</label>
+            <input type="tel" class="inp" name="carNumber" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">تاريخ التحميل</label>
+            <input type="date" class="inp" name="loadDate" required>
+          </div>
+          <div class="col">
+            <label class="lbl">تاريخ التفريغ</label>
+            <input type="date" class="inp" name="unloadDate">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">الكمية (طن)</label>
+            <input type="number" step="0.01" class="inp" name="quantity" required>
+          </div>
+          <div class="col">
+            <label class="lbl">لترات الكاز</label>
+            <input type="number" class="inp" name="liters" placeholder="0">
+          </div>
+        </div>
+
+        <!-- المالك + المحطة (كما كانت سابقاً) -->
+        <div class="row">
+          <div class="col">
+            <label class="lbl">المالك (الشركة)</label>
+            <input type="text" class="inp" name="ownerType" placeholder="اسم الشركة أو المالك" required>
+          </div>
+          <div class="col">
+            <label class="lbl">المحطة</label>
+            <select class="inp" name="destination" required>
+              <option value="">اختر...</option>
+              <option>محطة حلفاية</option>
+              <option>محطة التاجي</option>
+              <option>محطات الشمال</option>
+              <option>أخرى</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- اسم المعمل (قائمة بالمعامل / المناطق) -->
+        <div class="row">
+          <div class="col">
+            <label class="lbl">اسم المعمل</label>
+            <select class="inp" id="factoryName">
+              <option value="">اختر المعمل...</option>
+              <option>مستودع التاجي</option>
+              <option>أبو غريب</option>
+              <option>غزاليه</option>
+              <option>عامرية</option>
+              <option>صمود</option>
+              <option>زعفرانيه</option>
+              <option>مشتل</option>
+              <option>نهضة</option>
+              <option>رصافه</option>
+              <option>نهروان</option>
+              <option>حبيبيه</option>
+              <option>طارق</option>
+              <option>بوب الشام</option>
+              <option>كسرى وعطش</option>
+              <option>أخرى</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- رقم بوچر المعمل -->
+        <div class="row">
+          <div class="col">
+            <label class="lbl">رقم بوچر المعمل</label>
+            <input type="text" class="inp" id="factoryVoucher" placeholder="رقم بوچر المعمل">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label class="lbl">السعر (دينار)</label>
+            <input type="number" class="inp" name="price" required>
+          </div>
+        </div>
+
+        <!-- صورة الوصل -->
+        <div style="margin-bottom:15px">
+          <label class="lbl">صورة الوصل (التقط صورة)</label>
+          <div class="cam-btn" onclick="document.getElementById('fileTrip').click()">
+            <i class="fas fa-camera"></i>
+            <span id="txtTrip">اضغط لفتح الكاميرا</span>
+            <input type="file" id="fileTrip" accept="image/*" capture="environment" style="display:none" onchange="fileCheck('txtTrip')">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col">
+            <label class="lbl">ملاحظات</label>
+            <textarea class="inp" name="notes" rows="2"></textarea>
+          </div>
+        </div>
+
+        <button class="btn-submit">حفظ وإرسال الوصل</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- تبويب الصيانة -->
+  <div id="tab-maint" class="form-container">
+    <div class="card" style="border-top: 4px solid #d32f2f">
+      <h3 style="margin-top:0; color:#d32f2f">طلب صيانة</h3>
+      <form id="maintForm" onsubmit="submitForm(event, 'maint')">
+        <div class="row">
+          <div class="col">
+            <label class="lbl">اسم السائق</label>
+            <input type="text" class="inp" name="driverName" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">رقم السيارة</label>
+            <input type="tel" class="inp" name="carNumber" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">العطل</label>
+            <input type="text" class="inp" name="issue" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">التكلفة</label>
+            <input type="number" class="inp" name="cost" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label class="lbl">ملاحظات</label>
+            <textarea class="inp" name="notes"></textarea>
+          </div>
+        </div>
+
+        <!-- صورة العطل / الفاتورة -->
+        <div style="margin-bottom:15px">
+          <label class="lbl">صورة العطل/الفاتورة</label>
+          <div class="cam-btn" onclick="document.getElementById('fileMaint').click()">
+            <i class="fas fa-camera"></i>
+            <span id="txtMaint">اضغط لفتح الكاميرا</span>
+            <input type="file" id="fileMaint" accept="image/*" capture="environment" style="display:none" onchange="fileCheck('txtMaint')">
+          </div>
+        </div>
+
+        <button class="btn-submit" style="background:#d32f2f">إرسال الطلب</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- شاشة المحفظة -->
+  <div class="wallet-screen" id="walletScreen">
+    <div class="wallet-header">محفظة السائق</div>
+    <div class="blue-card">
+      <div class="balance-label">الرصيد الكلي المستحق</div>
+      <div class="wallet-balance" id="wBalance">0</div>
+      <div class="currency-label">دينار عراقي</div>
+      <div class="stats-row">
+        <div class="stat-item"><span class="stat-val" id="wGas">0</span><span class="stat-lbl">لتر كاز</span></div>
+        <div class="stat-item"><span class="stat-val" id="wQty">0</span><span class="stat-lbl">الكمية (طن)</span></div>
+        <div class="stat-item"><span class="stat-val" id="wTrips">0</span><span class="stat-lbl">عدد النقلات</span></div>
+      </div>
+    </div>
+    <button class="back-btn" onclick="document.getElementById('walletScreen').style.display='none'">رجوع</button>
+  </div>
+
+  <!-- شاشة التنبيه / الأخطاء (تشمل تكرار الوصل) -->
+  <div class="modal-overlay" id="alertScreen">
+    <div class="error-box">
+      <i class="fas fa-exclamation-circle error-icon" id="alertIcon" style="color:#f57c00"></i>
+      <h2 style="margin:0 0 10px 0; color:#333" id="alertTitle">تنبيه</h2>
+      <p style="font-size:1.1rem; color:#555" id="alertMsg">يرجى كتابة اسمك في الحقل أولاً</p>
+      <button onclick="document.getElementById('alertScreen').style.display='none'"
+              style="background:#333; color:white; border:none; padding:12px 30px; border-radius:20px; margin-top:20px; font-weight:bold; cursor:pointer">
+        حسناً
+      </button>
+    </div>
+  </div>
+
+  <!-- شاشة التحميل -->
+  <div class="loader" id="loader"><div class="spinner"></div></div>
+
+  <script>
+    function showTab(ev, tab) {
+      document.querySelectorAll('.form-container').forEach(e => e.classList.remove('active'));
+      document.getElementById('tab-'+tab).classList.add('active');
+      document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+      if(ev) ev.currentTarget.classList.add('active');
+    }
+
+    function fileCheck(id) {
+      var el = document.getElementById(id);
+      el.innerText = "تم التقاط الصورة ✅";
+      el.style.color = "#00c853";
+    }
+
+    function openDirectWallet() {
+      var name = document.getElementById('mainDriverName').value;
+      if(!name) {
+        document.getElementById('alertIcon').className = "fas fa-user-edit error-icon";
+        document.getElementById('alertIcon').style.color = "#f57c00";
+        document.getElementById('alertTitle').innerText = "الاسم مطلوب";
+        document.getElementById('alertMsg').innerText = "يرجى كتابة اسمك في خانة 'اسم السائق' أولاً لعرض محفظتك.";
+        document.getElementById('alertScreen').style.display = 'flex';
+        showTab(null,'trip');
+        document.getElementById('mainDriverName').focus();
+        return;
+      }
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run.withSuccessHandler(function(res){
+        document.getElementById('loader').style.display = 'none';
+        showWallet(res.stats);
+      }).processForm({type:'getWallet', driverName:name});
+    }
+
+    function submitForm(e, type) {
+      e.preventDefault();
+      var fileId = type === 'trip' ? 'fileTrip' : 'fileMaint';
+      if(document.getElementById(fileId).files.length === 0) {
+        alert("الصورة مطلوبة!");
+        return;
+      }
+
+      document.getElementById('loader').style.display = 'flex';
+
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var formData = {};
+        new FormData(e.target).forEach((value, key) => formData[key] = value);
+        formData.fileData = ev.target.result;
+        formData.type = type;
+
+        // دمج بيانات المعمل في الملاحظات بدون تغيير بنية الشيت
+        if(type === 'trip') {
+          var fName = document.getElementById('factoryName').value.trim();
+          var fVoucher = document.getElementById('factoryVoucher').value.trim();
+          var extra = "";
+          if(fName)    extra += "اسم المعمل: " + fName;
+          if(fVoucher) extra += (extra ? " | " : "") + "رقم بوچر المعمل: " + fVoucher;
+          if(extra) {
+            var oldNotes = formData.notes ? String(formData.notes).trim() : "";
+            formData.notes = (oldNotes ? oldNotes + " — " : "") + extra;
+          }
+        }
+
+        google.script.run.withSuccessHandler(function(res){
+          document.getElementById('loader').style.display = 'none';
+
+          if(res.success) {
+            // نجاح: تحديث المحفظة
+            showWallet(res.stats || {trips:0, qty:0, gas:0, netSalary:0});
+            e.target.reset();
+            if(type === 'trip') {
+              document.getElementById('txtTrip').innerText = "اضغط لفتح الكاميرا";
+              document.getElementById('txtTrip').style.color = "#546e7a";
+            } else {
+              document.getElementById('txtMaint').innerText = "اضغط لفتح الكاميرا";
+              document.getElementById('txtMaint').style.color = "#546e7a";
+            }
+          } else {
+            // فشل: تكرار وصل أو خطأ آخر
+            if(type === 'trip' && res.isDuplicate) {
+              var msg = res.message || "هذا الوصل مسجل مسبقاً، يرجى مراجعة رقم الوصل قبل الإرسال.";
+              document.getElementById('alertIcon').className = "fas fa-exclamation-triangle error-icon";
+              document.getElementById('alertIcon').style.color = "#ffb300";
+              document.getElementById('alertTitle').innerText = "وصل مكرر";
+              document.getElementById('alertMsg').innerText = msg;
+              document.getElementById('alertScreen').style.display = 'flex';
+              var docInput = document.getElementById('driverDocNumber');
+              if(docInput) docInput.focus();
+            } else {
+              document.getElementById('alertIcon').className = "fas fa-exclamation-circle error-icon";
+              document.getElementById('alertIcon').style.color = "#d32f2f";
+              document.getElementById('alertTitle').innerText = "تنبيه";
+              document.getElementById('alertMsg').innerText = res.message || "حدث خطأ غير متوقع، حاول مرة أخرى.";
+              document.getElementById('alertScreen').style.display = 'flex';
+            }
+          }
+        }).processForm(formData);
+      };
+      reader.readAsDataURL(document.getElementById(fileId).files[0]);
+    }
+
+    function showWallet(stats) {
+      document.getElementById('walletScreen').style.display = 'flex';
+      document.getElementById('wBalance').innerText = (stats.netSalary || 0).toLocaleString();
+      document.getElementById('wTrips').innerText   = stats.trips || 0;
+      document.getElementById('wQty').innerText     = (stats.qty  || 0).toLocaleString();
+      document.getElementById('wGas').innerText     = (stats.gas  || 0).toLocaleString();
+    }
+  </script>
+</body>
+</html>

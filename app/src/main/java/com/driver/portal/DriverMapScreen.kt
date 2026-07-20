@@ -3,13 +3,16 @@ package com.driver.portal
 import android.Manifest
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.location.Location
+import android.location.LocationManager
 import android.os.Looper
+import android.provider.Settings
 import android.view.MotionEvent
 import android.view.animation.LinearInterpolator
 import androidx.compose.foundation.layout.*
@@ -28,8 +31,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -147,6 +153,9 @@ fun DriverMapScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
+    val locationManager = remember {
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    }
 
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var carMarker by remember { mutableStateOf<Marker?>(null) }
@@ -166,6 +175,7 @@ fun DriverMapScreen(
     var eta by remember { mutableStateOf("-- min") }
     var distanceLeft by remember { mutableStateOf("-- km") }
     var selectedFactory by remember { mutableStateOf("غير محدد") }
+    var showEnableGpsDialog by remember { mutableStateOf(false) }
 
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
@@ -182,6 +192,15 @@ fun DriverMapScreen(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun isGpsEnabled(): Boolean {
+        return try {
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        } catch (_: Exception) {
+            false
+        }
     }
 
     fun stopLocationUpdates() {
@@ -351,6 +370,11 @@ fun DriverMapScreen(
     }
 
     fun startLocationUpdates() {
+        if (!isGpsEnabled()) {
+            showEnableGpsDialog = true
+            return
+        }
+
         if (!hasLocationPermission() || locationCallback != null) return
 
         val request = LocationRequest.Builder(
@@ -436,6 +460,12 @@ fun DriverMapScreen(
             stopLocationUpdates()
             stopPulseAnimation()
             routeJob?.cancel()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!isGpsEnabled()) {
+            showEnableGpsDialog = true
         }
     }
 
@@ -540,8 +570,12 @@ fun DriverMapScreen(
 
             Button(
                 onClick = {
-                    FactoryCatalog.findByName(selectedFactory)?.let {
-                        FactoryCatalog.openInGoogleMaps(context, it)
+                    if (!isGpsEnabled()) {
+                        showEnableGpsDialog = true
+                    } else {
+                        FactoryCatalog.findByName(selectedFactory)?.let {
+                            FactoryCatalog.openInGoogleMaps(context, it)
+                        }
                     }
                 },
                 enabled = FactoryCatalog.findByName(selectedFactory) != null,
@@ -588,6 +622,29 @@ fun DriverMapScreen(
             androidx.compose.material3.Icon(
                 imageVector = Icons.Default.MyLocation,
                 contentDescription = null
+            )
+        }
+
+        if (showEnableGpsDialog) {
+            AlertDialog(
+                onDismissRequest = { showEnableGpsDialog = false },
+                title = { Text("تشغيل GPS") },
+                text = { Text("يرجى تشغيل GPS حتى تعمل الخريطة بشكل صحيح") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showEnableGpsDialog = false
+                            context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                        }
+                    ) {
+                        Text("تشغيل")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEnableGpsDialog = false }) {
+                        Text("لاحقا")
+                    }
+                }
             )
         }
     }

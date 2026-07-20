@@ -1,17 +1,10 @@
 package com.driver.portal
 
-import android.Manifest
-import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.content.pm.PackageManager
-import android.location.LocationManager
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,13 +29,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 
 class MainActivity : ComponentActivity() {
 
-    private val PERMISSION_CODE = 100
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        checkGPS()
-        checkPermissions()
 
         if (DriverSession.isLoggedIn(this)) {
             startLocationService(
@@ -101,6 +89,7 @@ class MainActivity : ComponentActivity() {
                                 )
                                 3 -> DriverDashboardScreen(
                                     driverName = DriverSession.getDriverName(context),
+                                    carNumber = DriverSession.getCarNumber(context),
                                     onLogout = {
                                         DriverSession.logout(context)
                                         stopService(Intent(context, LocationForegroundService::class.java))
@@ -121,7 +110,8 @@ class MainActivity : ComponentActivity() {
                                     onOpenCommunication = { selectedTab = 10 }
                                 )
                                 5 -> TripsHistoryScreen(
-                                    driverName = DriverSession.getDriverName(context)
+                                    driverName = DriverSession.getDriverName(context),
+                                    carNumber = DriverSession.getCarNumber(context)
                                 )
                                 6 -> MaintenanceScreen()
                                 7 -> WalletScreen()
@@ -142,43 +132,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private fun checkGPS() {
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        val gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        if (!gpsEnabled) {
-            AlertDialog.Builder(this)
-                .setTitle("تشغيل الموقع")
-                .setMessage("يجب تشغيل GPS حتى يعمل التتبع")
-                .setPositiveButton("تشغيل") { _, _ ->
-                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-                }
-                .setCancelable(false)
-                .show()
-        }
-    }
-
-    private fun checkPermissions() {
-        if (!hasLocationPermission()) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ),
-                PERMISSION_CODE
-            )
-        }
-    }
-
-    private fun hasLocationPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun startLocationService(driverName: String, carNumber: String) {

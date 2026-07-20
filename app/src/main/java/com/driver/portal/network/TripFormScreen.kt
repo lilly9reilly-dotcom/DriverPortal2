@@ -1,7 +1,9 @@
 package com.driver.portal.network
+import com.driver.portal.R
 
 import android.app.DatePickerDialog
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,8 +30,9 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.OilBarrel
 import androidx.compose.material.icons.filled.Person
@@ -41,7 +44,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -63,9 +66,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.driver.portal.DriverSession
+import java.io.InputStream
 import java.io.ByteArrayOutputStream
 import java.util.Calendar
 
@@ -80,21 +85,64 @@ fun TripFormScreen() {
     var loadDate by remember { mutableStateOf("") }
     var unloadDate by remember { mutableStateOf("") }
     var ownerType by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
+    var driverKroa by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
-    var factoryName by remember { mutableStateOf("") }
-    var factoryVoucher by remember { mutableStateOf("") }
 
-    val stations = remember { listOf("محطة حلفاية", "محطة التاجي", "محطات الشمال", "أخرى") }
+    val tripTonPrice = 35500L
+
+    val stations = remember {
+        listOf(
+            "محطة حلفاية",
+            "محطة التاجي",
+            "محطة الدورة",
+            "محطة الرصافة",
+            "محطات الشمال",
+            "أخرى"
+        )
+    }
     var station by remember { mutableStateOf("") }
     var expandedStation by remember { mutableStateOf(false) }
 
-    val factories = remember { com.driver.portal.FactoryCatalog.all.map { it.name } + "أخرى" }
-    var expandedFactory by remember { mutableStateOf(false) }
+
 
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var imageData by remember { mutableStateOf("") }
     var sending by remember { mutableStateOf(false) }
+
+    fun normalizeNumeric(value: String): String {
+        val arabicDigits = mapOf(
+            '٠' to '0', '١' to '1', '٢' to '2', '٣' to '3', '٤' to '4',
+            '٥' to '5', '٦' to '6', '٧' to '7', '٨' to '8', '٩' to '9'
+        )
+        return buildString {
+            value.forEach { ch ->
+                append(arabicDigits[ch] ?: ch)
+            }
+        }
+    }
+
+    fun sanitizeDecimalInput(value: String): String {
+        val normalized = normalizeNumeric(value)
+        val builder = StringBuilder()
+        var hasDecimal = false
+        normalized.forEach { ch ->
+            when {
+                ch.isDigit() -> builder.append(ch)
+                (ch == '.' || ch == ',') && !hasDecimal -> {
+                    builder.append('.')
+                    hasDecimal = true
+                }
+            }
+        }
+        return builder.toString()
+    }
+
+    fun quantityForMoney(value: Double): Double {
+        return if (value >= 1000.0) value / 1000.0 else value
+    }
+
+    val quantityValue = normalizeNumeric(uiState.quantity).toDoubleOrNull() ?: 0.0
+    val tripTotalAmount = (quantityForMoney(quantityValue) * tripTonPrice).toLong()
 
     val calendar = Calendar.getInstance()
 
@@ -113,14 +161,12 @@ fun TripFormScreen() {
     ) { bitmap ->
         if (bitmap != null) {
             imageBitmap = bitmap
-
             val resized = Bitmap.createScaledBitmap(
                 bitmap,
                 (bitmap.width / 2).coerceAtLeast(1),
                 (bitmap.height / 2).coerceAtLeast(1),
                 true
             )
-
             val stream = ByteArrayOutputStream()
             resized.compress(Bitmap.CompressFormat.JPEG, 70, stream)
             val bytes = stream.toByteArray()
@@ -128,10 +174,36 @@ fun TripFormScreen() {
         }
     }
 
-    val primaryColor = Color(0xFF5B4FD3)
-    val primaryDark = Color(0xFF4338CA)
-    val backgroundTop = Color(0xFFF4F2FF)
-    val backgroundBottom = Color(0xFFE9ECFF)
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val stream: InputStream? = context.contentResolver.openInputStream(uri)
+                val bitmap = stream.use { BitmapFactory.decodeStream(it) }
+                if (bitmap != null) {
+                    imageBitmap = bitmap
+                    val resized = Bitmap.createScaledBitmap(
+                        bitmap,
+                        (bitmap.width / 2).coerceAtLeast(1),
+                        (bitmap.height / 2).coerceAtLeast(1),
+                        true
+                    )
+                    val out = ByteArrayOutputStream()
+                    resized.compress(Bitmap.CompressFormat.JPEG, 70, out)
+                    val bytes = out.toByteArray()
+                    imageData = "data:image/jpeg;base64," + Base64.encodeToString(bytes, Base64.NO_WRAP)
+                }
+            } catch (_: Exception) {
+                Toast.makeText(context, "تعذر تحميل الصورة", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    val primaryColor = Color(0xFF0B7A92)
+    val primaryDark = Color(0xFF075E74)
+    val backgroundTop = Color(0xFFD6EAF3)
+    val backgroundBottom = Color(0xFFEFF7FB)
     val cardColor = Color.White
     val textDark = Color(0xFF1F2430)
     val textMuted = Color(0xFF6E7582)
@@ -149,15 +221,27 @@ fun TripFormScreen() {
         unfocusedContainerColor = Color.White
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(backgroundTop, backgroundBottom)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.driver_trip_bg),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            backgroundTop.copy(alpha = 0.88f),
+                            backgroundBottom.copy(alpha = 0.96f)
+                        )
+                    )
                 )
-            )
-    ) {
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -215,11 +299,11 @@ fun TripFormScreen() {
                         fontWeight = FontWeight.Bold
                     )
 
-                    Divider()
+                    HorizontalDivider()
 
                     OutlinedTextField(
                         value = uiState.docNumber,
-                        onValueChange = { uiState = uiState.copy(docNumber = it) },
+                        onValueChange = { uiState = uiState.copy(docNumber = DocNumberGuard.normalize(it)) },
                         label = { Text("رقم الوصل") },
                         leadingIcon = {
                             Icon(Icons.Default.Numbers, contentDescription = null)
@@ -343,8 +427,8 @@ fun TripFormScreen() {
                     ) {
                         OutlinedTextField(
                             value = uiState.quantity,
-                            onValueChange = { uiState = uiState.updateQuantity(it) },
-                            label = { Text("الكمية (طن)") },
+                            onValueChange = { uiState = uiState.updateQuantity(sanitizeDecimalInput(it)) },
+                            label = { Text("الكمية المحملة (كغم أو طن)") },
                             leadingIcon = {
                                 Icon(Icons.Default.Scale, contentDescription = null)
                             },
@@ -356,7 +440,7 @@ fun TripFormScreen() {
 
                         OutlinedTextField(
                             value = uiState.liters,
-                            onValueChange = { uiState = uiState.updateLiters(it) },
+                            onValueChange = { uiState = uiState.updateLiters(sanitizeDecimalInput(it)) },
                             label = { Text("لترات الكاز") },
                             leadingIcon = {
                                 Icon(Icons.Default.OilBarrel, contentDescription = null)
@@ -367,6 +451,19 @@ fun TripFormScreen() {
                             singleLine = true
                         )
                     }
+
+                    OutlinedTextField(
+                        value = driverKroa,
+                        onValueChange = { driverKroa = sanitizeDecimalInput(it) },
+                        label = { Text("كروة السائق (دينار)") },
+                        leadingIcon = {
+                            Icon(Icons.Default.LocalShipping, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = textFieldColors,
+                        singleLine = true
+                    )
 
                     OutlinedTextField(
                         value = ownerType,
@@ -381,52 +478,27 @@ fun TripFormScreen() {
                         singleLine = true
                     )
 
-                    Box {
-                        OutlinedButton(
-                            onClick = { expandedFactory = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Icon(Icons.Default.Warehouse, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(if (factoryName.isBlank()) "اسم المعمل" else factoryName)
-                        }
-
-                        DropdownMenu(
-                            expanded = expandedFactory,
-                            onDismissRequest = { expandedFactory = false }
-                        ) {
-                            factories.forEach { item ->
-                                DropdownMenuItem(
-                                    text = { Text(item) },
-                                    onClick = {
-                                        factoryName = item
-                                        expandedFactory = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
                     OutlinedTextField(
-                        value = factoryVoucher,
-                        onValueChange = { factoryVoucher = it },
-                        label = { Text("رقم بوچر المعمل") },
+                        value = "%,d".format(tripTonPrice),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("سعر الطن (دينار)") },
                         leadingIcon = {
-                            Icon(Icons.Default.Description, contentDescription = null)
+                            Icon(Icons.Default.LocalShipping, contentDescription = null)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         colors = textFieldColors,
                         singleLine = true
                     )
-
+                    
                     OutlinedTextField(
-                        value = price,
-                        onValueChange = { price = it },
-                        label = { Text("السعر (دينار)") },
+                        value = "%,d".format(tripTotalAmount),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("إجمالي الكمية المحملة (دينار)") },
                         leadingIcon = {
-                            Icon(Icons.Default.LocalShipping, contentDescription = null)
+                            Icon(Icons.Default.Scale, contentDescription = null)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -439,7 +511,7 @@ fun TripFormScreen() {
                         onValueChange = { notes = it },
                         label = { Text("ملاحظات") },
                         leadingIcon = {
-                            Icon(Icons.Default.Notes, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
@@ -467,7 +539,7 @@ fun TripFormScreen() {
                         fontWeight = FontWeight.Bold
                     )
 
-                    Divider()
+                    HorizontalDivider()
 
                     Button(
                         onClick = { cameraLauncher.launch(null) },
@@ -482,6 +554,16 @@ fun TripFormScreen() {
                         Icon(Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("تصوير الوصل", fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(18.dp)
+                    ) {
+                        Icon(Icons.Default.FileUpload, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("تحميل صورة", fontWeight = FontWeight.Bold)
                     }
 
                     if (imageBitmap != null) {
@@ -547,12 +629,14 @@ fun TripFormScreen() {
 
             Button(
                 onClick = {
+                    val normalizedDocNumber = DocNumberGuard.normalize(uiState.docNumber)
+
                     if (driverName.isBlank()) {
                         Toast.makeText(context, "اسم السائق غير محفوظ", Toast.LENGTH_LONG).show()
                         return@Button
                     }
 
-                    if (uiState.docNumber.isBlank()) {
+                    if (normalizedDocNumber.isBlank()) {
                         Toast.makeText(context, "أدخل رقم الوصل", Toast.LENGTH_LONG).show()
                         return@Button
                     }
@@ -567,79 +651,109 @@ fun TripFormScreen() {
                         return@Button
                     }
 
+                    if (unloadDate.isBlank()) {
+                        Toast.makeText(context, "اختر تاريخ التفريغ", Toast.LENGTH_LONG).show()
+                        return@Button
+                    }
+
                     if (uiState.quantity.isBlank()) {
                         Toast.makeText(context, "أدخل الكمية", Toast.LENGTH_LONG).show()
                         return@Button
                     }
 
+                    if ((uiState.quantity.toDoubleOrNull() ?: 0.0) <= 0.0) {
+                        Toast.makeText(context, "الكمية يجب أن تكون أكبر من صفر", Toast.LENGTH_LONG).show()
+                        return@Button
+                    }
+
+                    if (driverKroa.isBlank()) {
+                        Toast.makeText(context, "أدخل كروة السائق", Toast.LENGTH_LONG).show()
+                        return@Button
+                    }
+                    
                     if (ownerType.isBlank()) {
                         Toast.makeText(context, "أدخل اسم المالك أو الشركة", Toast.LENGTH_LONG).show()
                         return@Button
                     }
 
-                    if (price.isBlank()) {
-                        Toast.makeText(context, "أدخل السعر", Toast.LENGTH_LONG).show()
-                        return@Button
-                    }
-
                     if (imageData.isBlank()) {
-                        Toast.makeText(context, "يجب تصوير الوصل", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "يجب تصوير أو تحميل الوصل", Toast.LENGTH_LONG).show()
                         return@Button
                     }
 
                     sending = true
 
-                    TripRepository.checkDocNumber(
-                        uiState.docNumber,
-                        onResult = { exists ->
-                            if (exists) {
+                    fun submitTripNow() {
+                        val trip = TripRequest(
+                            docNumber = normalizedDocNumber,
+                            driverName = driverName,
+                            carNumber = carNumber,
+                            quantity = uiState.quantity,
+                            loadDate = loadDate,
+                            unloadDate = unloadDate,
+                            liters = uiState.liters,
+                            ownerType = ownerType,
+                            destination = station,
+                            factory = "",
+                            bojer = "",
+                            notes = notes,
+                            price = driverKroa,
+                            kroa = driverKroa,
+                            fare = driverKroa,
+                            fileData = imageData
+                        )
+
+                        TripRepository.sendTrip(
+                            trip,
+                            onSuccess = {
+                                DocNumberGuard.markUsed(context, normalizedDocNumber)
                                 sending = false
-                                Toast.makeText(
-                                    context,
-                                    "رقم الوصل مستخدم مسبقاً",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            } else {
-                                val trip = TripRequest(
-                                    docNumber = uiState.docNumber,
-                                    driverName = driverName,
-                                    carNumber = carNumber,
-                                    quantity = uiState.quantity,
-                                    loadDate = loadDate,
-                                    unloadDate = unloadDate,
-                                    liters = uiState.liters,
-                                    ownerType = ownerType,
-                                    destination = station,
-                                    factory = "",
-                                    bojer = "",
-                                    notes = TripNotesFormatter.merge(notes, factoryName, factoryVoucher),
-                                    price = price,
-                                    fileData = imageData
-                                )
+                                Toast.makeText(context, "تم الإرسال", Toast.LENGTH_LONG).show()
 
-                                TripRepository.sendTrip(
-                                    trip,
-                                    onSuccess = {
-                                        sending = false
-                                        Toast.makeText(context, "تم الإرسال", Toast.LENGTH_LONG).show()
+                                uiState = TripUiState()
+                                loadDate = ""
+                                unloadDate = ""
+                                ownerType = ""
+                                driverKroa = ""
+                                notes = ""
+                                station = ""
+                                imageBitmap = null
+                                imageData = ""
+                            },
+                            onError = { error ->
+                                sending = false
+                                Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                            }
+                        )
+                    }
 
-                                        uiState = TripUiState()
-                                        loadDate = ""
-                                        unloadDate = ""
-                                        ownerType = ""
-                                        price = ""
-                                        notes = ""
-                                        factoryName = ""
-                                        factoryVoucher = ""
-                                        station = ""
-                                        imageBitmap = null
-                                        imageData = ""
-                                    },
-                                    onError = { error ->
-                                        sending = false
-                                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
-                                    }
-                                )
+                    TripRepository.checkDocNumber(
+                        normalizedDocNumber,
+                        driverName = driverName,
+                        carNumber = carNumber,
+                        onResult = { result ->
+                            when (result) {
+                                TripRepository.DocCheckResult.EXISTS -> {
+                                    sending = false
+                                    Toast.makeText(
+                                        context,
+                                        "رقم الوصل مستخدم مسبقاً",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+
+                                TripRepository.DocCheckResult.UNVERIFIED -> {
+                                    Toast.makeText(
+                                        context,
+                                        "تعذر التحقق من رقم الوصل، سيتم الإرسال مباشرة والتحقق في الخادم",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    submitTripNow()
+                                }
+
+                                TripRepository.DocCheckResult.AVAILABLE -> {
+                                    submitTripNow()
+                                }
                             }
                         }
                     )

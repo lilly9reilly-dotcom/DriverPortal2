@@ -1,7 +1,18 @@
+import java.util.Properties
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+val hasSigningProperties = keystorePropertiesFile.exists()
+
+if (hasSigningProperties) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
 
 android {
@@ -9,20 +20,42 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.driver.portal"
+        applicationId = "com.driver.portal.wasel"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
+        versionCode = 9
         versionName = "1.0"
+    }
+
+    signingConfigs {
+        if (hasSigningProperties) {
+            create("release") {
+                val storeFilePath = keystoreProperties.getProperty("storeFile")
+                if (!storeFilePath.isNullOrBlank()) {
+                    storeFile = rootProject.file(storeFilePath)
+                }
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            if (hasSigningProperties) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 
@@ -37,10 +70,22 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.10"
+    }
+}
+
+android.applicationVariants.all {
+    outputs.all {
+        val namePart = if (flavorName.isNullOrBlank()) "wasel-driver" else "wasel-driver-${flavorName}"
+        val vName = versionName ?: "0.0.0"
+        val vCode = versionCode
+
+        (this as BaseVariantOutputImpl).outputFileName =
+            "${namePart}-${buildType.name}-v${vName}(${vCode}).apk"
     }
 }
 
@@ -67,7 +112,6 @@ dependencies {
     implementation("com.google.maps.android:maps-compose:2.11.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation("org.osmdroid:osmdroid-android:6.1.16")
-
     testImplementation("junit:junit:4.13.2")
 
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -78,4 +122,3 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
-

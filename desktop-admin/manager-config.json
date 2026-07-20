@@ -1,0 +1,27 @@
+{
+  "appTitle": "لوحة مدير الحسابات",
+  "security": {
+    "passwordHash": "9b9ad37f481c3acf62fa4144f04891ead1f2d409efaa2a23153f5e05b5e015e7",
+    "passwordHint": "تم تحديث كلمة المرور لمدير الحسابات"
+  },
+  "tabs": [
+    {
+      "id": "admin_dashboard",
+      "label": "لوحة المدير العام",
+      "url": "https://script.google.com/macros/s/AKfycbwCreVvebaAN7C4W2OZu6ura7cza42P2lIssNt4sVBv1raDqZkQYY-ZZyNNcl9_iynhAw/exec?page=admin",
+      "openMode": "embedded"
+    },
+    {
+      "id": "demand_template",
+      "label": "مولد المطالبات",
+      "url": "https://script.google.com/macros/s/AKfycbw-3wKRuKImCvvB4ip3PGokDP18yJz6HDW2QylDmvQGxAbyn8Wq-FIlHQ9ms-i7wlCEQA/exec?page=demand_template",
+      "openMode": "external"
+    },
+    {
+      "id": "google_sheet",
+      "label": "Google Sheet الرئيسي",
+      "url": "https://docs.google.com/spreadsheets/d/1adlJxYSgBftTcagTAyl9GrwNwrBTPOrTDQbYeBhqCiM/edit",
+      "openMode": "external"
+    }
+  ]
+}

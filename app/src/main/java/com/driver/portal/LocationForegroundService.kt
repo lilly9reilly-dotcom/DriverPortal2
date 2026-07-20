@@ -173,12 +173,24 @@ class LocationForegroundService : Service() {
             }
         }
 
+        if (!hasLocationPermission()) {
+            updateNotification("⚠️ لا توجد صلاحية موقع")
+            stopTracking()
+            return
+        }
+
         locationCallback?.let {
-            fusedLocationClient.requestLocationUpdates(
-                request,
-                it,
-                Looper.getMainLooper()
-            )
+            try {
+                fusedLocationClient.requestLocationUpdates(
+                    request,
+                    it,
+                    Looper.getMainLooper()
+                )
+            } catch (_: SecurityException) {
+                updateNotification("⚠️ تعذر تشغيل تتبع الموقع")
+                stopTracking()
+                return
+            }
         }
 
         isTracking = true
@@ -332,6 +344,6 @@ class LocationForegroundService : Service() {
         const val EXTRA_CAR_NUMBER = "carNumber"
 
         private const val WEB_APP_URL =
-            com.driver.portal.network.GoogleSheetConfig.EXEC_ENDPOINT
+            com.driver.portal.network.GoogleSheetConfig.GPS_EXEC_ENDPOINT
     }
 }

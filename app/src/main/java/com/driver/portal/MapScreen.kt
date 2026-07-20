@@ -108,7 +108,7 @@ fun MapScreen(driverName: String, lat: Double, lng: Double) {
 // ================== جلب مواقع السائقين ==================
 suspend fun fetchDrivers(): List<DriverLocation> {
     return try {
-        val url = com.driver.portal.network.GoogleSheetConfig.execUrl("drivers")
+        val url = com.driver.portal.network.GoogleSheetConfig.gpsExecUrl("drivers")
         val response = URL(url).readText()
         val json = JSONObject(response)
         val driversArray = json.getJSONArray("drivers")
@@ -138,7 +138,7 @@ suspend fun fetchDrivers(): List<DriverLocation> {
 // ================== جلب مسار السائق ==================
 suspend fun fetchRoute(driverName: String): List<DriverLocation> {
     return try {
-        val url = com.driver.portal.network.GoogleSheetConfig.execUrl(
+        val url = com.driver.portal.network.GoogleSheetConfig.gpsExecUrl(
             "route",
             "driverName" to driverName
         )
