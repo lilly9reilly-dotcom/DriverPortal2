@@ -169,6 +169,19 @@ test("company cars get a separate 10-receipt statement", function() {
   assert.strictEqual(company.totals.stationAmount, 2 * 34300);
 });
 
+test("organization covers June through current months and lists every car under its agent", function() {
+  var months = MinistryCore.monthsFromInclusive(["2026_05", "2026_06", "F_2026_07", "2026_09", "2026_06"], "2026_06");
+  assert.deepStrictEqual(months, ["2026_06", "2026_07", "2026_09"]);
+  var inventory = MinistryCore.buildOrganizationInventoryRows();
+  var cars = inventory.map(function(r) { return r.carNumber; });
+  assert.ok(cars.indexOf("15871") >= 0);
+  assert.ok(cars.indexOf("24189") >= 0);
+  assert.ok(cars.indexOf("22973") >= 0);
+  assert.strictEqual(inventory.filter(function(r) { return r.agentName === "علي صبار"; }).length, 11);
+  assert.strictEqual(inventory.filter(function(r) { return r.dbSheet === "DB_شركة"; }).length, 9);
+  assert.strictEqual(inventory.filter(function(r) { return r.agentName === "قيصر شمري"; }).length, 4);
+});
+
 test("سجاد صويره cars 15871 16414 16416 route to his database", function() {
   var seed = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
   assert.strictEqual(seed.length, 7);

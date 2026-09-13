@@ -211,6 +211,85 @@ function bootstrapAgentRegistry(data) {
   };
 }
 
+function organizeHistoricalAgentLedgers(data) {
+  data = data || {};
+  var startMonth = MinistryCore.resolveMonthKey(data.startMonth || MinistryCore.HISTORY_START_MONTH) || MinistryCore.HISTORY_START_MONTH;
+  var boot = bootstrapAgentRegistry({ applySeed: true });
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var available = getAvailableMonths() || [];
+  var months = MinistryCore.monthsFromInclusive(available, startMonth);
+  var monthResults = [];
+
+  for (var i = 0; i < months.length; i++) {
+    monthResults.push(syncAgentDatabases({ month: months[i], period: "all" }));
+  }
+
+  writeOrganizationControlSheet_(ss, months, monthResults);
+
+  return {
+    success: true,
+    spreadsheetId: ss.getId(),
+    spreadsheetUrl: ss.getUrl(),
+    startMonth: startMonth,
+    months: months,
+    availableMonths: available,
+    bootstrapped: !!(boot && boot.success),
+    monthResults: monthResults,
+    inventory: MinistryCore.buildOrganizationInventoryRows(),
+    agents: attachAgentDbCounts_(ss, readAgents_(ss)),
+    fleet: readFleet_(ss)
+  };
+}
+
+function writeOrganizationControlSheet_(ss, months, monthResults) {
+  var sheet = ss.getSheetByName(MinistryCore.ORGANIZATION_SHEET);
+  if (!sheet) sheet = ss.insertSheet(MinistryCore.ORGANIZATION_SHEET);
+  sheet.clear();
+
+  var rows = [];
+  rows.push(["تنظيم المعتمدين والسيارات من " + MinistryCore.HISTORY_START_MONTH + " حتى الشهر الحالي"]);
+  rows.push(["الشيت", ss.getName()]);
+  rows.push(["عدد المعتمدين/الجهات", (MinistryCore.officialAgentFleetSeed().agents || []).length]);
+  rows.push([]);
+  rows.push(["سجل كل سيارة ومعتمدها"]);
+  rows.push(["المعتمد / الجهة", "النوع", "رقم السيارة", "ورقة القاعدة"]);
+
+  var inventory = MinistryCore.buildOrganizationInventoryRows();
+  for (var i = 0; i < inventory.length; i++) {
+    rows.push([inventory[i].agentName, inventory[i].kind, inventory[i].carNumber, inventory[i].dbSheet]);
+  }
+
+  rows.push([]);
+  rows.push(["ترحيل الوصولات حسب الشهر"]);
+  rows.push(["الشهر", "وصولات مقروءة", "مرحّل جديد", "مكرر/موجود", "غير مصنف"]);
+  var results = monthResults || [];
+  for (var m = 0; m < results.length; m++) {
+    var r = results[m] || {};
+    rows.push([
+      r.month || (months && months[m]) || "",
+      r.trips || 0,
+      r.routed || 0,
+      r.skipped || 0,
+      r.unclassified || 0
+    ]);
+  }
+
+  rows.push([]);
+  rows.push(["قواعد البيانات المنشأة"]);
+  rows.push(["الجهة", "ورقة القاعدة", "عدد الوصولات في القاعدة"]);
+  var agents = attachAgentDbCounts_(ss, readAgents_(ss));
+  for (var a = 0; a < agents.length; a++) {
+    rows.push([agents[a].name, agents[a].dbSheet, agents[a].receiptCount || 0]);
+  }
+  rows.push(["غير مصنف", MinistryCore.UNCLASSIFIED_DB, ""]);
+
+  sheet.getRange(1, 1, rows.length, 5).setValues(padRows_(rows, 5));
+  sheet.getRange(1, 1, 1, 5).merge();
+  sheet.setFrozenRows(6);
+  sheet.autoResizeColumns(1, 5);
+  return sheet.getName();
+}
+
 function getOfficialAgentSeed(data) {
   var seed = MinistryCore.officialAgentFleetSeed();
   return {

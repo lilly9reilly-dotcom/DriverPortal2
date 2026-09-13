@@ -13,7 +13,9 @@ var MinistryCore = {
   MISSING_DESTINATION: "بلا وجهة",
   AGENT_DB_PREFIX: "DB_",
   COMPANY_DB: "DB_شركة",
-  UNCLASSIFIED_DB: "DB_غير_مصنف"
+  UNCLASSIFIED_DB: "DB_غير_مصنف",
+  HISTORY_START_MONTH: "2026_06",
+  ORGANIZATION_SHEET: "تنظيم_المعتمدين"
 };
 
 MinistryCore.round3 = function(v) {
@@ -480,6 +482,49 @@ MinistryCore.buildPeriodStats = function(rows) {
   };
 };
 
+MinistryCore.monthsFromInclusive = function(availableMonths, startKey) {
+  var start = MinistryCore.resolveMonthKey(startKey || MinistryCore.HISTORY_START_MONTH) || MinistryCore.HISTORY_START_MONTH;
+  var list = availableMonths || [];
+  var out = [];
+  for (var i = 0; i < list.length; i++) {
+    var key = MinistryCore.resolveMonthKey(list[i]);
+    if (key && key >= start) out.push(key);
+  }
+  out.sort();
+  var unique = [];
+  for (var u = 0; u < out.length; u++) {
+    if (unique.indexOf(out[u]) < 0) unique.push(out[u]);
+  }
+  return unique;
+};
+
+MinistryCore.buildOrganizationInventoryRows = function(payload) {
+  var list = MinistryCore.normalizeAgentImportList(payload || MinistryCore.officialAgentFleetSeed());
+  var rows = [];
+  for (var i = 0; i < list.length; i++) {
+    var agent = list[i];
+    var cars = agent.cars || [];
+    if (!cars.length) {
+      rows.push({
+        agentName: agent.name,
+        kind: agent.kind,
+        carNumber: "",
+        dbSheet: agent.dbSheet
+      });
+      continue;
+    }
+    for (var c = 0; c < cars.length; c++) {
+      rows.push({
+        agentName: agent.name,
+        kind: agent.kind,
+        carNumber: cars[c].carNumber,
+        dbSheet: agent.dbSheet
+      });
+    }
+  }
+  return rows;
+};
+
 MinistryCore.officialAgentFleetSeed = function() {
   return {
     agents: [
@@ -668,7 +713,7 @@ MinistryCore.statementSheetName = function(prefix, monthKey, periodFilter, title
 
 MinistryCore.isProtectedRegistrySheet = function(name) {
   var n = String(name || "").trim();
-  return n === "Agents" || n === "Fleet" || MinistryCore.isAgentDatabaseSheet(n);
+  return n === "Agents" || n === "Fleet" || n === MinistryCore.ORGANIZATION_SHEET || MinistryCore.isAgentDatabaseSheet(n);
 };
 
 MinistryCore.isGeneratedSupportSheet = function(name) {

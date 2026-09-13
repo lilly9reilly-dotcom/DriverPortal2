@@ -569,6 +569,7 @@
               <button class="btn-blue" onclick="loadRegistry()">تحديث السجل</button>
               <button class="btn-green" onclick="applyOfficialAgentSeed()">تسجيل المعتمدين المعروفين</button>
               <button class="btn-orange" onclick="syncAgentDatabases()">ترحيل وصولات الشهر</button>
+              <button class="btn-blue" onclick="organizeHistoricalLedgers()">تنظيم من الشهر 6 حتى الآن</button>
             </div>
           </div>
           <div style="overflow:auto">
@@ -2331,6 +2332,30 @@
         await loadRegistry();
       } catch (e) {
         showMessage("فشل حفظ المعتمد: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function organizeHistoricalLedgers() {
+      showLoader(true);
+      try {
+        var res = await runServer("organizeHistoricalAgentLedgers", { startMonth: "2026_06" });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل تنظيم الشهور", "error");
+          showLoader(false);
+          return;
+        }
+        var months = res.months || [];
+        showMessage(
+          "تم تنظيم الشيت من " + (res.startMonth || "2026_06") +
+          " — الأشهر: " + (months.join("، ") || "لا توجد") +
+          " — المعتمدون: " + formatNum((res.agents || []).length, 0),
+          "ok"
+        );
+        await loadRegistry();
+        if (res.spreadsheetUrl) window.open(res.spreadsheetUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل تنظيم الشهور: " + (e && e.message ? e.message : e), "error");
       }
       showLoader(false);
     }
