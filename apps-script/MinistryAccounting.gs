@@ -186,6 +186,81 @@ function saveFleet(data) {
   return { success: true, data: readFleet_(ss) };
 }
 
+function bootstrapAgentRegistry(data) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  ensureAgentsSheet_(ss);
+  ensureFleetSheet_(ss);
+  ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
+  ensureAgentDatabaseSheet_(ss, MinistryCore.UNCLASSIFIED, "");
+  var agents = readAgents_(ss);
+  for (var i = 0; i < agents.length; i++) {
+    ensureAgentDatabaseSheet_(ss, agents[i].name, agents[i].kind);
+  }
+  return {
+    success: true,
+    spreadsheetId: ss.getId(),
+    spreadsheetUrl: ss.getUrl(),
+    agents: attachAgentDbCounts_(ss, readAgents_(ss)),
+    fleet: readFleet_(ss)
+  };
+}
+
+function importAgentFleetList(data) {
+  data = data || {};
+  var list = MinistryCore.normalizeAgentImportList(data);
+  if (!list.length) {
+    return { success: false, message: "أرسل قائمة المعتمدين: agents[{ name, kind, cars:[{ carNumber, defaultDriver }] }]" };
+  }
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  ensureAgentsSheet_(ss);
+  ensureFleetSheet_(ss);
+
+  var createdAgents = 0;
+  var createdCars = 0;
+  var databases = [];
+
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i] || {};
+    var name = String(item.name || item.agentName || "").trim();
+    var kind = MinistryCore.normalizeOwnerKind(item.kind || item.ownerKind) || MinistryCore.AGENT;
+    if (!name) continue;
+
+    saveAgent({ name: name, kind: kind, notes: String(item.notes || ""), active: true });
+    createdAgents += 1;
+    var db = ensureAgentDatabaseSheet_(ss, name, kind);
+    databases.push(db.getName());
+
+    var cars = item.cars || item.vehicles || [];
+    for (var c = 0; c < cars.length; c++) {
+      var car = cars[c];
+      var carNumber = typeof car === "string" ? car : String((car && (car.carNumber || car.number)) || "").trim();
+      if (!carNumber) continue;
+      saveFleet({
+        carNumber: carNumber,
+        defaultDriver: typeof car === "object" ? String(car.defaultDriver || car.driver || "") : "",
+        ownerKind: kind,
+        agentName: name,
+        active: true,
+        notes: typeof car === "object" ? String(car.notes || "") : ""
+      });
+      createdCars += 1;
+    }
+  }
+
+  ensureAgentDatabaseSheet_(ss, MinistryCore.UNCLASSIFIED, "");
+
+  return {
+    success: true,
+    spreadsheetId: ss.getId(),
+    createdAgents: createdAgents,
+    createdCars: createdCars,
+    databases: databases,
+    agents: attachAgentDbCounts_(ss, readAgents_(ss)),
+    fleet: readFleet_(ss)
+  };
+}
+
 function resolveFleetOwnerForCar_(carNumber) {
   var fleet = readFleet_(SpreadsheetApp.openById(SPREADSHEET_ID));
   var match = MinistryCore.resolveFleetMatch(carNumber, fleet);

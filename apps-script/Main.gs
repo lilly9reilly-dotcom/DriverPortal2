@@ -1,4 +1,4 @@
-var SPREADSHEET_ID = "1a7r3rXY7dPyUjKCdvNopK2Y9ufKYhda0o6DCYBukv2o";
+var SPREADSHEET_ID = "1adlJxYSgBftTcagTAyl9GrwNwrBTPOrTDQbYeBhqCiM";
 var PRICE_PER_TON_HALAFAYA = 41800;
 var PRICE_PER_TON_FACTORY = 10000;
 var PRICE_PER_LITER = 430;
@@ -51,6 +51,8 @@ function handleRequest(e) {
     if (action === "getMinistryRegistry") return json(getMinistryRegistry(data));
     if (action === "saveAgent") return json(saveAgent(data));
     if (action === "saveFleet") return json(saveFleet(data));
+    if (action === "importAgentFleetList") return json(importAgentFleetList(data));
+    if (action === "bootstrapAgentRegistry") return json(bootstrapAgentRegistry(data));
     if (action === "getPeriodStats") return json(getPeriodStats(data));
     if (action === "getUnclassifiedReceipts") return json(getUnclassifiedReceipts(data));
     if (action === "generateAgentStatements") return json(generateAgentStatements(data));

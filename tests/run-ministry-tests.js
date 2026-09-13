@@ -169,6 +169,19 @@ test("company cars get a separate 10-receipt statement", function() {
   assert.strictEqual(company.totals.stationAmount, 2 * 34300);
 });
 
+test("agent import list prepares a database per agent and company cars", function() {
+  var list = MinistryCore.normalizeAgentImportList({
+    agents: [
+      { name: "الرافدين", kind: "معتمد", cars: ["ب 11", { carNumber: "ب-12", driver: "أحمد" }] },
+      { name: "شركة", kind: "شركة", cars: ["ك 22"] }
+    ]
+  });
+  assert.strictEqual(list.length, 2);
+  assert.strictEqual(list[0].dbSheet, "DB_الرافدين");
+  assert.strictEqual(list[0].cars.length, 2);
+  assert.strictEqual(list[1].dbSheet, "DB_شركة");
+});
+
 test("each agent and company gets a stable database sheet name", function() {
   assert.strictEqual(MinistryCore.agentDatabaseSheetName("معتمد النور", "معتمد"), "DB_معتمد_النور");
   assert.strictEqual(MinistryCore.agentDatabaseSheetName("شركة", "شركة"), "DB_شركة");

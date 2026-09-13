@@ -480,6 +480,32 @@ MinistryCore.buildPeriodStats = function(rows) {
   };
 };
 
+MinistryCore.normalizeAgentImportList = function(payload) {
+  var raw = payload || {};
+  var list = raw.agents || raw.data || [];
+  if (!Array.isArray(list)) list = [];
+  var out = [];
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i] || {};
+    var name = String(item.name || item.agentName || "").trim();
+    if (!name) continue;
+    var kind = MinistryCore.normalizeOwnerKind(item.kind || item.ownerKind) || MinistryCore.AGENT;
+    var carsIn = item.cars || item.vehicles || [];
+    var cars = [];
+    for (var c = 0; c < carsIn.length; c++) {
+      var car = carsIn[c];
+      var carNumber = typeof car === "string" ? car : String((car && (car.carNumber || car.number)) || "").trim();
+      if (!carNumber) continue;
+      cars.push({
+        carNumber: carNumber,
+        defaultDriver: typeof car === "object" ? String(car.defaultDriver || car.driver || "") : ""
+      });
+    }
+    out.push({ name: name, kind: kind, cars: cars, dbSheet: MinistryCore.agentDatabaseSheetName(name, kind) });
+  }
+  return out;
+};
+
 MinistryCore.agentDatabaseSheetName = function(agentName, ownerKind) {
   var name = String(agentName || "").trim();
   var kind = MinistryCore.normalizeOwnerKind(ownerKind);
