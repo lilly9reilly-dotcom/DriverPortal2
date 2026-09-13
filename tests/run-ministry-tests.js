@@ -184,6 +184,9 @@ test("organization covers June through current months and lists every car under 
   assert.strictEqual(groups.length, 7);
   assert.strictEqual(groups[6].name, "شركة");
   assert.strictEqual(groups[6].dbSheet, "DB_شركة");
+  assert.ok(MinistryCore.isMonthDataSheet("2026_06"));
+  assert.ok(MinistryCore.isMonthDataSheet("F_2026_07"));
+  assert.strictEqual(MinistryCore.extractMonthKeyFromSheetName("F_2026_07") >= MinistryCore.HISTORY_START_MONTH, true);
 });
 
 test("سجاد صويره cars 15871 16414 16416 route to his database", function() {

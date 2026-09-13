@@ -911,6 +911,21 @@ function writePeriodSummarySheet_(ss, loaded, stats) {
   sheet.autoResizeColumns(1, 8);
 }
 
+function listHistoryMonthSheetNames_(ss) {
+  ss = ss || getCompanySpreadsheet_();
+  var start = MinistryCore.HISTORY_START_MONTH;
+  var names = [];
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    var name = String(sheets[i].getName() || "").trim();
+    if (!MinistryCore.isMonthDataSheet(name)) continue;
+    var key = MinistryCore.extractMonthKeyFromSheetName(name);
+    if (key && key >= start) names.push(name);
+  }
+  names.sort();
+  return names;
+}
+
 function getMonthDataSheets_(ss, monthKey) {
   var key = MinistryCore.resolveMonthKey(monthKey);
   if (!key) return [];
