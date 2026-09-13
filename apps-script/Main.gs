@@ -15,6 +15,17 @@ function onOpen() {
   } catch (err) {}
 }
 
+function getCompanySpreadsheet_() {
+  try {
+    var active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active && String(active.getId() || "") === String(SPREADSHEET_ID || "")) {
+      return active;
+    }
+    if (active && !SPREADSHEET_ID) return active;
+  } catch (err) {}
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
 function doGet(e) {
   try {
     var page = e && e.parameter ? String(e.parameter.page || "").trim().toLowerCase() : "";

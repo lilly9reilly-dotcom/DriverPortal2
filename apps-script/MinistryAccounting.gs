@@ -9,7 +9,7 @@ var FLEET_SHEET_NAME = "Fleet";
 var TEMPLATE_60_SHEET_NAME = "60";
 
 function ensureAgentsSheet_(ss) {
-  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  ss = ss || getCompanySpreadsheet_();
   var sheet = ss.getSheetByName(AGENTS_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(AGENTS_SHEET_NAME);
@@ -22,7 +22,7 @@ function ensureAgentsSheet_(ss) {
 }
 
 function ensureFleetSheet_(ss) {
-  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  ss = ss || getCompanySpreadsheet_();
   var sheet = ss.getSheetByName(FLEET_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(FLEET_SHEET_NAME);
@@ -78,17 +78,17 @@ function readFleet_(ss) {
 }
 
 function listAgents(data) {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   return { success: true, data: readAgents_(ss) };
 }
 
 function listFleet(data) {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   return { success: true, data: readFleet_(ss) };
 }
 
 function getMinistryRegistry(data) {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var agents = readAgents_(ss);
   return {
     success: true,
@@ -107,7 +107,7 @@ function saveAgent(data) {
   var kind = MinistryCore.normalizeOwnerKind(data.kind) || MinistryCore.AGENT;
   var active = data.active == null ? true : MinistryCore.isTruthyActive(data.active);
   var notes = String(data.notes || "");
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var sheet = ensureAgentsSheet_(ss);
   var agents = readAgents_(ss);
   var targetRow = Number(data.row || 0);
@@ -147,7 +147,7 @@ function saveFleet(data) {
     return { success: false, message: "اسم المعتمد مطلوب لسيارة المعتمد" };
   }
 
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var sheet = ensureFleetSheet_(ss);
   var fleet = readFleet_(ss);
   var targetRow = Number(data.row || 0);
@@ -191,7 +191,7 @@ function bootstrapAgentRegistry(data) {
   var applySeed = String(data.applySeed == null ? "true" : data.applySeed).toLowerCase() !== "false";
   var imported = applySeed ? importAgentFleetList(MinistryCore.officialAgentFleetSeed()) : { success: true };
 
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   ensureAgentsSheet_(ss);
   ensureFleetSheet_(ss);
   ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
@@ -215,7 +215,7 @@ function organizeHistoricalAgentLedgers(data) {
   data = data || {};
   var startMonth = MinistryCore.resolveMonthKey(data.startMonth || MinistryCore.HISTORY_START_MONTH) || MinistryCore.HISTORY_START_MONTH;
   var boot = bootstrapAgentRegistry({ applySeed: true });
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var available = getAvailableMonths() || [];
   var months = MinistryCore.monthsFromInclusive(available, startMonth);
   var monthResults = [];
@@ -242,7 +242,18 @@ function organizeHistoricalAgentLedgers(data) {
 }
 
 function organizeSheetsNow() {
-  return organizeHistoricalAgentLedgers({ startMonth: MinistryCore.HISTORY_START_MONTH });
+  var result = organizeHistoricalAgentLedgers({ startMonth: MinistryCore.HISTORY_START_MONTH });
+  try {
+    var ui = SpreadsheetApp.getUi();
+    var months = (result.months || []).join("، ") || "لا توجد أشهر من 2026_06";
+    var agents = (result.agents || []).length;
+    ui.alert(
+      "تم ترتيب الشيتات",
+      "الأشهر المنظّمة: " + months + "\nالجهات: " + agents + "\nراجع ورقة تنظيم_المعتمدين وأوراق DB_",
+      ui.ButtonSet.OK
+    );
+  } catch (err) {}
+  return result;
 }
 
 function writeOrganizationControlSheet_(ss, months, monthResults) {
@@ -255,6 +266,7 @@ function writeOrganizationControlSheet_(ss, months, monthResults) {
   rows.push(["الشيت", ss.getName()]);
   rows.push(["عدد الجهات", (MinistryCore.officialAgentFleetSeed().agents || []).length]);
   rows.push(["ملاحظة", "تطبيق المالك الرسمي يُبنى لاحقاً بعد التأكد أن هذا الترتيب يعمل"]);
+  rows.push(["شيتات الأشهر الموجودة من يونيو", listHistoryMonthSheetNames_(ss).join("، ")]);
   rows.push([]);
   rows.push(["كل معتمد وسياراته"]);
   rows.push(["المعتمد / الجهة", "النوع", "رقم السيارة", "ورقة القاعدة"]);
@@ -318,7 +330,7 @@ function importAgentFleetList(data) {
     return { success: false, message: "أرسل قائمة المعتمدين: agents[{ name, kind, cars:[{ carNumber, defaultDriver }] }]" };
   }
 
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   ensureAgentsSheet_(ss);
   ensureFleetSheet_(ss);
 
@@ -368,7 +380,7 @@ function importAgentFleetList(data) {
 }
 
 function resolveFleetOwnerForCar_(carNumber) {
-  var fleet = readFleet_(SpreadsheetApp.openById(SPREADSHEET_ID));
+  var fleet = readFleet_(getCompanySpreadsheet_());
   var match = MinistryCore.resolveFleetMatch(carNumber, fleet);
   if (!match) return null;
   return {
@@ -384,7 +396,7 @@ function resolveFleetOwnerForCar_(carNumber) {
 }
 
 function ensureAgentDatabaseSheet_(ss, agentName, ownerKind) {
-  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  ss = ss || getCompanySpreadsheet_();
   var sheetName = MinistryCore.agentDatabaseSheetName(agentName, ownerKind);
   var sheet = ss.getSheetByName(sheetName);
   var headers = MinistryCore.agentLedgerHeaders();
@@ -430,7 +442,7 @@ function getAgentDbKeySet_(sheet, cache) {
 }
 
 function routeReceiptToAgentDb_(ss, receipt, keyCache) {
-  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  ss = ss || getCompanySpreadsheet_();
   var fleet = readFleet_(ss);
   var enriched = receipt && (receipt.classified != null || receipt.unclassified != null)
     ? receipt
@@ -455,7 +467,7 @@ function routeReceiptToAgentDb_(ss, receipt, keyCache) {
 
 function routeSavedReceipt_(receipt) {
   try {
-    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    var ss = getCompanySpreadsheet_();
     return routeReceiptToAgentDb_(ss, receipt || {});
   } catch (err) {
     return { success: false, message: String(err) };
@@ -465,7 +477,7 @@ function routeSavedReceipt_(receipt) {
 function syncAgentDatabases(data) {
   data = typeof data === "string" ? { month: data } : (data || {});
   var loaded = loadMinistryReceipts_(data.month, data.period || "all");
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   ensureAgentsSheet_(ss);
   ensureFleetSheet_(ss);
   ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
@@ -509,7 +521,7 @@ function syncAgentDatabases(data) {
 
 function getAllReceiptsData(month) {
   var monthKey = MinistryCore.resolveMonthKey(typeof month === "object" && month ? (month.month || month.monthKey) : month);
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   ensureAgentsSheet_(ss);
   ensureFleetSheet_(ss);
 
@@ -614,7 +626,7 @@ function getAllReceiptsData(month) {
 }
 
 function getMaintenanceData(month) {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var sheet = ss.getSheetByName("سجل الصيانة");
   if (!sheet) return { success: true, data: [] };
 
@@ -692,7 +704,7 @@ function generateAgentStatements(data) {
   data = data || {};
   var loaded = loadMinistryReceipts_(data.month, data.period || "all");
   var statements = MinistryCore.buildAgentStatements(loaded.rows, MinistryCore.PAGE_SIZE);
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var written = writeStatementSheets_(ss, statements, "AGT10", loaded.month, loaded.period);
   return {
     success: true,
@@ -709,7 +721,7 @@ function generateCompanyStatements(data) {
   data = data || {};
   var loaded = loadMinistryReceipts_(data.month, data.period || "all");
   var statement = MinistryCore.buildCompanyStatement(loaded.rows, MinistryCore.PAGE_SIZE);
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var written = writeStatementSheets_(ss, [statement], "CO10", loaded.month, loaded.period);
   return {
     success: true,
@@ -739,7 +751,7 @@ function exportMinistryPack(data) {
     };
   }
 
-  var sourceSs = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sourceSs = getCompanySpreadsheet_();
   var stamp = Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyyMMdd_HHmmss");
   var packName = "MINISTRY_" + loaded.month + "_" + String(loaded.period || "all") + "_" + stamp;
   var pack = SpreadsheetApp.create(packName);
@@ -1011,7 +1023,7 @@ function padRows_(rows, width) {
 function cleanupSafetyPreview(data) {
   data = data || {};
   var monthKey = MinistryCore.resolveMonthKey(data.month);
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var generated = listGeneratedSheets_(ss, monthKey);
   return {
     success: true,
@@ -1033,7 +1045,7 @@ function cleanupSafetyApply(data) {
   var backupFileId = String(data.backupFileId || "").trim();
   if (!backupFileId) return { success: false, message: "يجب إنشاء نسخة احتياطية أولاً" };
 
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ss = getCompanySpreadsheet_();
   var generated = listGeneratedSheets_(ss, monthKey);
   var deleted = [];
   for (var i = 0; i < generated.length; i++) {
