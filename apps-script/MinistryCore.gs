@@ -10,7 +10,10 @@ var MinistryCore = {
   UNCLASSIFIED: "غير مصنف",
   COMPANY: "شركة",
   AGENT: "معتمد",
-  MISSING_DESTINATION: "بلا وجهة"
+  MISSING_DESTINATION: "بلا وجهة",
+  AGENT_DB_PREFIX: "DB_",
+  COMPANY_DB: "DB_شركة",
+  UNCLASSIFIED_DB: "DB_غير_مصنف"
 };
 
 MinistryCore.round3 = function(v) {
@@ -477,6 +480,105 @@ MinistryCore.buildPeriodStats = function(rows) {
   };
 };
 
+MinistryCore.agentDatabaseSheetName = function(agentName, ownerKind) {
+  var name = String(agentName || "").trim();
+  var kind = MinistryCore.normalizeOwnerKind(ownerKind);
+  if (!name || name === MinistryCore.UNCLASSIFIED || !kind && name === MinistryCore.UNCLASSIFIED) {
+    return MinistryCore.UNCLASSIFIED_DB;
+  }
+  if (kind === MinistryCore.COMPANY || name === MinistryCore.COMPANY) {
+    return MinistryCore.COMPANY_DB;
+  }
+  var safe = MinistryCore.sanitizeSheetName(name.replace(/\s+/g, "_"));
+  if (!safe || safe === "كشف") return MinistryCore.UNCLASSIFIED_DB;
+  return MinistryCore.sanitizeSheetName(MinistryCore.AGENT_DB_PREFIX + safe);
+};
+
+MinistryCore.isAgentDatabaseSheet = function(name) {
+  return /^DB_/.test(String(name || "").trim());
+};
+
+MinistryCore.receiptRoutingKey = function(row) {
+  var r = row || {};
+  return [
+    String(r.docNumber || "").trim(),
+    MinistryCore.normalizeCarNumber(r.carNumber || r.carNumberNormalized),
+    String(r.loadDate || r.unloadDate || "").trim(),
+    r.isFactory ? "factory" : "station"
+  ].join("|");
+};
+
+MinistryCore.resolveRoutingTarget = function(receipt, fleetRows) {
+  var row = receipt || {};
+  var enriched = row.classified != null || row.unclassified != null
+    ? row
+    : MinistryCore.enrichReceipt(row, fleetRows);
+  var sheetName = MinistryCore.agentDatabaseSheetName(enriched.agentName, enriched.ownerKind);
+  return {
+    sheetName: sheetName,
+    agentName: enriched.agentName || MinistryCore.UNCLASSIFIED,
+    ownerKind: enriched.ownerKind || "",
+    classified: !!enriched.classified,
+    unclassified: !enriched.classified,
+    routingKey: MinistryCore.receiptRoutingKey(enriched)
+  };
+};
+
+MinistryCore.agentLedgerHeaders = function() {
+  return [
+    "رقم الوصل",
+    "السائق",
+    "رقم السيارة",
+    "تاريخ التحميل",
+    "تاريخ التفريغ",
+    "الكمية طن",
+    "الوجهة",
+    "نوع الحركة",
+    "الشهر",
+    "الفترة",
+    "سعر الطن",
+    "المبلغ",
+    "لترات الكاز",
+    "قيمة الكاز",
+    "المعتمد",
+    "وقت الترحيل",
+    "مفتاح الترحيل"
+  ];
+};
+
+MinistryCore.buildAgentLedgerRow = function(receipt, routedAt) {
+  var row = receipt || {};
+  var qty = MinistryCore.normalizeQtyTon(row.ministryQty != null ? row.ministryQty : row.quantity);
+  var isFactory = !!row.isFactory;
+  var price = row.ministryPricePerTon != null
+    ? MinistryCore.round0(row.ministryPricePerTon)
+    : MinistryCore.ministryPricePerTon(isFactory);
+  var amount = row.ministryAmount != null
+    ? MinistryCore.round0(row.ministryAmount)
+    : MinistryCore.round0(qty * price);
+  var liters = MinistryCore.normalizeLiters(row.liters);
+  var gas = row.ministryGas != null ? MinistryCore.round0(row.ministryGas) : MinistryCore.gasAmount(liters);
+  return [
+    String(row.docNumber || ""),
+    String(row.driverName || ""),
+    String(row.carNumberNormalized || row.carNumber || ""),
+    String(row.loadDate || ""),
+    String(row.unloadDate || ""),
+    qty,
+    String(row.destination || row.station || row.factory || ""),
+    isFactory ? "معمل" : "محطة",
+    String(row.month || ""),
+    MinistryCore.periodLabel(row.period15),
+    price,
+    amount,
+    liters,
+    gas,
+    String(row.agentName || MinistryCore.UNCLASSIFIED),
+    String(routedAt || ""),
+    MinistryCore.receiptRoutingKey(row)
+  ];
+};
+
 MinistryCore.sanitizeSheetName = function(name) {
   var s = String(name || "")
     .replace(/[:\\\/\?\*\[\]]/g, " ")
@@ -498,7 +600,7 @@ MinistryCore.statementSheetName = function(prefix, monthKey, periodFilter, title
 
 MinistryCore.isProtectedRegistrySheet = function(name) {
   var n = String(name || "").trim();
-  return n === "Agents" || n === "Fleet";
+  return n === "Agents" || n === "Fleet" || MinistryCore.isAgentDatabaseSheet(n);
 };
 
 MinistryCore.isGeneratedSupportSheet = function(name) {

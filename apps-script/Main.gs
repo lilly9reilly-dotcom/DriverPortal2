@@ -56,6 +56,7 @@ function handleRequest(e) {
     if (action === "generateAgentStatements") return json(generateAgentStatements(data));
     if (action === "generateCompanyStatements") return json(generateCompanyStatements(data));
     if (action === "exportMinistryPack") return json(exportMinistryPack(data));
+    if (action === "syncAgentDatabases") return json(syncAgentDatabases(data));
     if (action === "cleanupSafetyPreview") return json(cleanupSafetyPreview(data));
     if (action === "cleanupSafetyApply") return json(cleanupSafetyApply(data));
     if (action === "trip") return json(saveTripMain_(data));
@@ -130,7 +131,27 @@ function saveTripMain_(data) {
     String(data.notes || "")
   ]);
 
-  return { success: true, message: "تم حفظ النقلة", month: monthKey.monthKey };
+  var routed = routeSavedReceipt_({
+    docNumber: docNumber,
+    driverName: data.driverName,
+    carNumber: data.carNumber,
+    loadDate: data.loadDate,
+    unloadDate: data.unloadDate,
+    quantity: quantity,
+    destination: data.destination || data.station,
+    liters: liters,
+    month: monthKey.monthKey,
+    sheetName: monthKey.monthKey,
+    notes: data.notes
+  });
+
+  return {
+    success: true,
+    message: "تم حفظ النقلة",
+    month: monthKey.monthKey,
+    routedTo: routed && routed.sheetName ? routed.sheetName : "",
+    agentName: routed && routed.agentName ? routed.agentName : ""
+  };
 }
 
 function saveFactoryMain_(data) {
@@ -169,7 +190,29 @@ function saveFactoryMain_(data) {
     price
   ]);
 
-  return { success: true, message: "تم حفظ وصلة المعمل", month: monthKey.monthKey };
+  var routed = routeSavedReceipt_({
+    docNumber: docNumber,
+    driverName: data.driverName,
+    carNumber: data.carNumber,
+    loadDate: data.loadDate || data.unloadDate,
+    unloadDate: data.unloadDate || data.loadDate,
+    quantity: quantity,
+    destination: data.factory || data.destination,
+    factory: data.factory || data.destination,
+    source: "factory",
+    isFactory: true,
+    month: monthKey.monthKey,
+    sheetName: "F_" + monthKey.monthKey,
+    notes: data.notes
+  });
+
+  return {
+    success: true,
+    message: "تم حفظ وصلة المعمل",
+    month: monthKey.monthKey,
+    routedTo: routed && routed.sheetName ? routed.sheetName : "",
+    agentName: routed && routed.agentName ? routed.agentName : ""
+  };
 }
 
 function ensureTripsSheet_(ss, name) {
@@ -409,7 +452,8 @@ function resetAllDataWithArchive(data) {
       n === "AuthorizedDrivers" ||
       n === "Agents" ||
       n === "Fleet" ||
-      n === "60"
+      n === "60" ||
+      /^DB_/.test(n)
     ) continue;
 
     if (/^(F_)?\d{4}_\d{2}$/i.test(n)) {

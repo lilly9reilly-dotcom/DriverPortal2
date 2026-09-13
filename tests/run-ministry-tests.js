@@ -169,6 +169,66 @@ test("company cars get a separate 10-receipt statement", function() {
   assert.strictEqual(company.totals.stationAmount, 2 * 34300);
 });
 
+test("each agent and company gets a stable database sheet name", function() {
+  assert.strictEqual(MinistryCore.agentDatabaseSheetName("معتمد النور", "معتمد"), "DB_معتمد_النور");
+  assert.strictEqual(MinistryCore.agentDatabaseSheetName("شركة", "شركة"), "DB_شركة");
+  assert.strictEqual(MinistryCore.agentDatabaseSheetName("", ""), "DB_غير_مصنف");
+  assert.strictEqual(MinistryCore.agentDatabaseSheetName("غير مصنف", ""), "DB_غير_مصنف");
+  assert.strictEqual(MinistryCore.isAgentDatabaseSheet("DB_معتمد_النور"), true);
+  assert.strictEqual(MinistryCore.isProtectedRegistrySheet("DB_شركة"), true);
+});
+
+test("car number routes the receipt to that agent's database", function() {
+  var fleet = [
+    { carNumber: "ب 11", ownerKind: "معتمد", agentName: "الرافدين", active: 1 },
+    { carNumber: "ك-22", ownerKind: "شركة", agentName: "شركة", active: 1 }
+  ];
+  var agent = MinistryCore.resolveRoutingTarget({
+    docNumber: "500",
+    carNumber: "ب-11",
+    loadDate: "2026-09-04",
+    destination: "حلفاية",
+    sheetName: "2026_09"
+  }, fleet);
+  var company = MinistryCore.resolveRoutingTarget({
+    docNumber: "501",
+    carNumber: "ك 22",
+    loadDate: "2026-09-04",
+    destination: "معمل",
+    sheetName: "F_2026_09"
+  }, fleet);
+  var unknown = MinistryCore.resolveRoutingTarget({
+    docNumber: "502",
+    carNumber: "ز99",
+    loadDate: "2026-09-04",
+    sheetName: "2026_09"
+  }, fleet);
+
+  assert.strictEqual(agent.sheetName, "DB_الرافدين");
+  assert.strictEqual(agent.classified, true);
+  assert.strictEqual(company.sheetName, "DB_شركة");
+  assert.strictEqual(unknown.sheetName, "DB_غير_مصنف");
+  assert.strictEqual(unknown.unclassified, true);
+  assert.strictEqual(
+    MinistryCore.receiptRoutingKey({ docNumber: "500", carNumber: "ب 11", loadDate: "2026-09-04" }),
+    MinistryCore.receiptRoutingKey({ docNumber: "500", carNumber: "ب-11", loadDate: "2026-09-04" })
+  );
+  var ledger = MinistryCore.buildAgentLedgerRow(MinistryCore.enrichReceipt({
+    docNumber: "500",
+    carNumber: "ب-11",
+    driverName: "أحمد",
+    quantity: 18920,
+    destination: "حلفاية",
+    loadDate: "2026-09-04",
+    sheetName: "2026_09",
+    month: "2026_09"
+  }, fleet), "2026-09-04 10:00:00");
+  assert.strictEqual(ledger[5], 18.92);
+  assert.strictEqual(ledger[11], Math.round(18.92 * 34300));
+  assert.strictEqual(ledger[14], "الرافدين");
+  assert.strictEqual(ledger[16], agent.routingKey);
+});
+
 test("ministry pack blocks unclassified receipts unless forced", function() {
   var stats = { unclassified: [{ docNumber: "1" }] };
   assert.strictEqual(MinistryCore.shouldBlockMinistryExport(stats, false), true);

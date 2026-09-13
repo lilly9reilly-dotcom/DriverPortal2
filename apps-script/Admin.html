@@ -567,6 +567,7 @@
               <input id="agentNotesInput" type="text" placeholder="ملاحظة">
               <button class="btn-green" onclick="saveAgentRow()">حفظ المعتمد</button>
               <button class="btn-blue" onclick="loadRegistry()">تحديث السجل</button>
+              <button class="btn-orange" onclick="syncAgentDatabases()">ترحيل وصولات الشهر</button>
             </div>
           </div>
           <div style="overflow:auto">
@@ -577,6 +578,8 @@
                   <th>الاسم</th>
                   <th>النوع</th>
                   <th>الحالة</th>
+                  <th>قاعدة البيانات</th>
+                  <th>عدد الوصولات</th>
                   <th>ملاحظات</th>
                 </tr>
               </thead>
@@ -599,7 +602,7 @@
               <button class="btn-green" onclick="saveFleetRow()">حفظ السيارة</button>
             </div>
           </div>
-          <p class="k-sub">عند قراءة الوصل يُربط رقم السيارة تلقائياً. إن لم توجد في السجل تظهر «غير مصنف».</p>
+          <p class="k-sub">رقم السيارة يحدد المعتمد. عند إرسال الوصل يُحفظ في شيت الشهر ويُرحَّل إلى ورقة المعتمد (DB_...). السيارة غير المسجّلة تذهب إلى DB_غير_مصنف.</p>
           <div style="overflow:auto">
             <table id="fleetTable" class="list-table">
               <thead>
@@ -2267,7 +2270,7 @@
       if (!tbody) return;
       tbody.innerHTML = "";
       if (!agentsData.length) {
-        tbody.innerHTML = "<tr><td colspan='5' class='empty'>لا يوجد معتمدون بعد. أضف معتمداً أو سيارة شركة.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='7' class='empty'>لا يوجد معتمدون بعد. أضف معتمداً أو سيارة شركة.</td></tr>";
         return;
       }
       agentsData.forEach(function(item, i) {
@@ -2277,6 +2280,8 @@
           "<td>" + safe(item.name || "") + "</td>" +
           "<td>" + safe(item.kind || "") + "</td>" +
           "<td>" + safe(item.active ? "فعال" : "موقوف") + "</td>" +
+          "<td><span class='badge'>" + safe(item.dbSheet || "") + "</span></td>" +
+          "<td>" + formatNum(item.receiptCount || 0, 0) + "</td>" +
           "<td>" + safe(item.notes || "") + "</td>";
         tbody.appendChild(tr);
       });
@@ -2321,10 +2326,37 @@
         }
         document.getElementById("agentNameInput").value = "";
         document.getElementById("agentNotesInput").value = "";
-        showMessage("تم حفظ المعتمد", "ok");
+        showMessage("تم حفظ المعتمد وأنشئت قاعدته: " + (res.dbSheet || ""), "ok");
         await loadRegistry();
       } catch (e) {
         showMessage("فشل حفظ المعتمد: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function syncAgentDatabases() {
+      var month = currentMonthValue();
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+      showLoader(true);
+      try {
+        var res = await runServer("syncAgentDatabases", { month: month, period: "all" });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل ترحيل الوصولات", "error");
+          showLoader(false);
+          return;
+        }
+        showMessage(
+          "تم الترحيل: " + formatNum(res.routed || 0, 0) +
+          " وصل جديد — تم تخطي " + formatNum(res.skipped || 0, 0) +
+          " مكرر — غير مصنف: " + formatNum(res.unclassified || 0, 0),
+          "ok"
+        );
+        await loadRegistry();
+      } catch (e) {
+        showMessage("فشل ترحيل الوصولات: " + (e && e.message ? e.message : e), "error");
       }
       showLoader(false);
     }

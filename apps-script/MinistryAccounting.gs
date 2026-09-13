@@ -40,12 +40,14 @@ function readAgents_(ss) {
   for (var i = 1; i < values.length; i++) {
     var name = String(values[i][0] || "").trim();
     if (!name) continue;
+    var kind = MinistryCore.normalizeOwnerKind(values[i][1]) || MinistryCore.AGENT;
     out.push({
       row: i + 1,
       name: name,
-      kind: MinistryCore.normalizeOwnerKind(values[i][1]) || MinistryCore.AGENT,
+      kind: kind,
       active: MinistryCore.isTruthyActive(values[i][2]),
-      notes: String(values[i][3] || "")
+      notes: String(values[i][3] || ""),
+      dbSheet: MinistryCore.agentDatabaseSheetName(name, kind)
     });
   }
   return out;
@@ -87,10 +89,13 @@ function listFleet(data) {
 
 function getMinistryRegistry(data) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var agents = readAgents_(ss);
   return {
     success: true,
-    agents: readAgents_(ss),
-    fleet: readFleet_(ss)
+    agents: attachAgentDbCounts_(ss, agents),
+    fleet: readFleet_(ss),
+    unclassifiedDb: MinistryCore.UNCLASSIFIED_DB,
+    companyDb: MinistryCore.COMPANY_DB
   };
 }
 
@@ -122,7 +127,12 @@ function saveAgent(data) {
     sheet.appendRow([name, kind, active ? "1" : "0", notes]);
   }
 
-  return { success: true, data: readAgents_(ss) };
+  var dbSheet = ensureAgentDatabaseSheet_(ss, name, kind);
+  return {
+    success: true,
+    data: readAgents_(ss),
+    dbSheet: dbSheet.getName()
+  };
 }
 
 function saveFleet(data) {
@@ -169,6 +179,8 @@ function saveFleet(data) {
 
   if (ownerKind === MinistryCore.AGENT) {
     saveAgent({ name: agentName, kind: MinistryCore.AGENT, active: true });
+  } else {
+    ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
   }
 
   return { success: true, data: readFleet_(ss) };
@@ -182,7 +194,135 @@ function resolveFleetOwnerForCar_(carNumber) {
     found: true,
     ownerKind: match.ownerKind,
     agentName: match.agentName || (match.ownerKind === MinistryCore.COMPANY ? MinistryCore.COMPANY : ""),
-    defaultDriver: match.defaultDriver || ""
+    defaultDriver: match.defaultDriver || "",
+    dbSheet: MinistryCore.agentDatabaseSheetName(
+      match.agentName || (match.ownerKind === MinistryCore.COMPANY ? MinistryCore.COMPANY : ""),
+      match.ownerKind
+    )
+  };
+}
+
+function ensureAgentDatabaseSheet_(ss, agentName, ownerKind) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheetName = MinistryCore.agentDatabaseSheetName(agentName, ownerKind);
+  var sheet = ss.getSheetByName(sheetName);
+  var headers = MinistryCore.agentLedgerHeaders();
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function attachAgentDbCounts_(ss, agents) {
+  var list = agents || [];
+  for (var i = 0; i < list.length; i++) {
+    var name = list[i].dbSheet || MinistryCore.agentDatabaseSheetName(list[i].name, list[i].kind);
+    var sheet = ss.getSheetByName(name);
+    list[i].dbSheet = name;
+    list[i].receiptCount = sheet && sheet.getLastRow() > 1 ? sheet.getLastRow() - 1 : 0;
+  }
+  return list;
+}
+
+function getAgentDbKeySet_(sheet, cache) {
+  cache = cache || {};
+  var name = sheet.getName();
+  if (cache[name]) return cache[name];
+  var keys = {};
+  var last = sheet.getLastRow();
+  if (last > 1) {
+    var vals = sheet.getRange(2, 17, last - 1, 1).getValues();
+    for (var i = 0; i < vals.length; i++) {
+      var key = String(vals[i][0] || "").trim();
+      if (key) keys[key] = true;
+    }
+  }
+  cache[name] = keys;
+  return keys;
+}
+
+function routeReceiptToAgentDb_(ss, receipt, keyCache) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  var fleet = readFleet_(ss);
+  var enriched = receipt && (receipt.classified != null || receipt.unclassified != null)
+    ? receipt
+    : MinistryCore.enrichReceipt(receipt || {}, fleet);
+  var target = MinistryCore.resolveRoutingTarget(enriched, fleet);
+  var sheet = ensureAgentDatabaseSheet_(ss, enriched.agentName, enriched.ownerKind);
+  var keys = getAgentDbKeySet_(sheet, keyCache || {});
+  if (keys[target.routingKey]) {
+    return { success: true, routed: false, skipped: true, sheetName: sheet.getName(), agentName: target.agentName };
+  }
+  sheet.appendRow(MinistryCore.buildAgentLedgerRow(enriched, nowBaghdad_()));
+  keys[target.routingKey] = true;
+  return {
+    success: true,
+    routed: true,
+    skipped: false,
+    sheetName: sheet.getName(),
+    agentName: target.agentName,
+    unclassified: target.unclassified
+  };
+}
+
+function routeSavedReceipt_(receipt) {
+  try {
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    return routeReceiptToAgentDb_(ss, receipt || {});
+  } catch (err) {
+    return { success: false, message: String(err) };
+  }
+}
+
+function syncAgentDatabases(data) {
+  data = typeof data === "string" ? { month: data } : (data || {});
+  var loaded = loadMinistryReceipts_(data.month, data.period || "all");
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  ensureAgentsSheet_(ss);
+  ensureFleetSheet_(ss);
+  ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
+  ensureAgentDatabaseSheet_(ss, MinistryCore.UNCLASSIFIED, "");
+
+  var agents = readAgents_(ss);
+  for (var a = 0; a < agents.length; a++) {
+    ensureAgentDatabaseSheet_(ss, agents[a].name, agents[a].kind);
+  }
+
+  var cache = {};
+  var routed = 0;
+  var skipped = 0;
+  var unclassified = 0;
+  var bySheet = {};
+  var rows = loaded.rows || [];
+
+  for (var i = 0; i < rows.length; i++) {
+    var result = routeReceiptToAgentDb_(ss, rows[i], cache);
+    if (result && result.routed) routed += 1;
+    else skipped += 1;
+    if (result && result.unclassified) unclassified += 1;
+    if (result && result.sheetName) {
+      bySheet[result.sheetName] = (bySheet[result.sheetName] || 0) + (result.routed ? 1 : 0);
+    }
+  }
+
+  return {
+    success: true,
+    month: loaded.month,
+    period: loaded.period,
+    periodLabel: loaded.periodLabel,
+    trips: rows.length,
+    routed: routed,
+    skipped: skipped,
+    unclassified: unclassified,
+    bySheet: bySheet,
+    agents: attachAgentDbCounts_(ss, readAgents_(ss))
   };
 }
 
