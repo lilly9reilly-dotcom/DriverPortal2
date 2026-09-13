@@ -180,6 +180,10 @@ test("organization covers June through current months and lists every car under 
   assert.strictEqual(inventory.filter(function(r) { return r.agentName === "علي صبار"; }).length, 11);
   assert.strictEqual(inventory.filter(function(r) { return r.dbSheet === "DB_شركة"; }).length, 9);
   assert.strictEqual(inventory.filter(function(r) { return r.agentName === "قيصر شمري"; }).length, 4);
+  var groups = MinistryCore.buildOrganizationGroups();
+  assert.strictEqual(groups.length, 7);
+  assert.strictEqual(groups[6].name, "شركة");
+  assert.strictEqual(groups[6].dbSheet, "DB_شركة");
 });
 
 test("سجاد صويره cars 15871 16414 16416 route to his database", function() {
