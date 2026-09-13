@@ -487,6 +487,11 @@ MinistryCore.officialAgentFleetSeed = function() {
         name: "سجاد صويره",
         kind: "معتمد",
         cars: ["15871", "16414", "16416"]
+      },
+      {
+        name: "ابراهيم",
+        kind: "معتمد",
+        cars: ["31378", "22549", "36375", "32028"]
       }
     ]
   };
