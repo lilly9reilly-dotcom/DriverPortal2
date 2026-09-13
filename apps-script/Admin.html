@@ -95,7 +95,7 @@
 
     .filters, .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .status-strip {
+      .status-strip {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 12px;
@@ -103,7 +103,7 @@
       padding: 10px;
       margin-bottom: 10px;
       display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
       gap: 8px;
     }
 
@@ -364,6 +364,8 @@
       <div class="side-title">شركة المستقبل لنقل الغاز</div>
       <div class="side-menu" id="sideMenu">
         <div class="side-item active" data-section="dashboard">لوحة التحكم</div>
+        <div class="side-item" data-section="ministry">حساب الوزارة</div>
+        <div class="side-item" data-section="registry">سجل المعتمدين والسيارات</div>
         <div class="side-item" data-section="reports">التقارير</div>
         <div class="side-item" data-section="drivers">السواق</div>
         <div class="side-item" data-section="activations">تفعيل الشركات</div>
@@ -407,6 +409,10 @@
         <div class="status-chip">
           <div class="n">سجلات بدون وجهة</div>
           <div class="v" id="stMissingDestination">0</div>
+        </div>
+        <div class="status-chip">
+          <div class="n">وصولات غير مصنفة</div>
+          <div class="v" id="stUnclassified">0</div>
         </div>
         <div class="status-chip">
           <div class="n">آخر تحديث</div>
@@ -454,6 +460,162 @@
             <div class="bars" id="costBars"></div>
           </div>
         </section>
+      </section>
+
+      <section id="section-ministry" class="section">
+        <div class="table-wrap">
+          <div class="table-head">
+            <h2>حساب الوزارة — منتصف ونهاية الشهر</h2>
+            <div class="actions">
+              <button class="btn-blue" onclick="runPeriodStats('1')">إحصاء 1–15</button>
+              <button class="btn-blue" onclick="runPeriodStats('2')">إحصاء 16–نهاية الشهر</button>
+              <button class="btn-orange" onclick="generateAgentStatements()">كشف المعتمدين (10)</button>
+              <button class="btn-orange" onclick="generateCompanyStatements()">كشف سيارات الشركة</button>
+              <button class="btn-green" onclick="exportMinistryPack(false)">حزمة الوزارة</button>
+            </div>
+          </div>
+          <p class="k-sub" id="ministryPeriodLabel">اختر الشهر ثم اضغط إحصاء الفترة. الأسعار: محطة 34,300 — معمل 8,500 — بدون خصم 18% — الكاز 430.</p>
+        </div>
+
+        <section class="cards" style="grid-template-columns:repeat(7,minmax(135px,1fr));margin-top:10px">
+          <div class="card k-blue"><div class="k-label">عدد الوصولات</div><div class="k-value" id="mTrips">0</div></div>
+          <div class="card k-orange"><div class="k-label">الكمية (طن)</div><div class="k-value" id="mQty">0</div></div>
+          <div class="card k-green"><div class="k-label">حساب المحطات</div><div class="k-value" id="mStation">0</div></div>
+          <div class="card k-green"><div class="k-label">حساب المعامل</div><div class="k-value" id="mFactory">0</div></div>
+          <div class="card k-orange"><div class="k-label">الكاز</div><div class="k-value" id="mGas">0</div></div>
+          <div class="card k-blue"><div class="k-label">الصافي</div><div class="k-value" id="mNet">0</div></div>
+          <div class="card k-red"><div class="k-label">غير مصنف</div><div class="k-value" id="mUnclassified">0</div></div>
+        </section>
+
+        <div class="grid-2">
+          <div class="table-wrap">
+            <div class="table-head"><h2 style="font-size:17px">تفصيل المعتمدين</h2></div>
+            <div style="overflow:auto">
+              <table id="ministryAgentsTable" class="list-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>المعتمد</th>
+                    <th>وصولات</th>
+                    <th>كمية</th>
+                    <th>محطات</th>
+                    <th>معامل</th>
+                    <th>كاز</th>
+                    <th>صافي</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <div class="table-head"><h2 style="font-size:17px">سيارات الشركة</h2></div>
+            <div style="overflow:auto">
+              <table id="ministryCompanyTable" class="list-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>رقم السيارة</th>
+                    <th>السائق</th>
+                    <th>وصولات</th>
+                    <th>كمية</th>
+                    <th>محطات</th>
+                    <th>معامل</th>
+                    <th>صافي</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <h2 style="font-size:17px">وصولات غير مصنفة أو بلا وجهة</h2>
+            <div><span class="badge">راجع السجل قبل الاعتماد الرسمي</span></div>
+          </div>
+          <div style="overflow:auto">
+            <table id="unclassifiedTable" class="list-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>رقم الوصل</th>
+                  <th>السائق</th>
+                  <th>رقم السيارة</th>
+                  <th>الوجهة</th>
+                  <th>الكمية</th>
+                  <th>السبب</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-registry" class="section">
+        <div class="table-wrap">
+          <div class="table-head">
+            <h2>سجل المعتمدين</h2>
+            <div class="actions">
+              <input id="agentNameInput" type="text" placeholder="اسم المعتمد">
+              <select id="agentKindInput">
+                <option value="معتمد">معتمد خارجي</option>
+                <option value="شركة">شركة</option>
+              </select>
+              <input id="agentNotesInput" type="text" placeholder="ملاحظة">
+              <button class="btn-green" onclick="saveAgentRow()">حفظ المعتمد</button>
+              <button class="btn-blue" onclick="loadRegistry()">تحديث السجل</button>
+            </div>
+          </div>
+          <div style="overflow:auto">
+            <table id="agentsTable" class="list-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>الحالة</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <div class="table-head">
+            <h2>سجل السيارات</h2>
+            <div class="actions">
+              <input id="fleetCarInput" type="text" placeholder="رقم السيارة">
+              <input id="fleetDriverInput" type="text" placeholder="السائق الافتراضي">
+              <select id="fleetKindInput">
+                <option value="معتمد">تابع لمعتمد</option>
+                <option value="شركة">سيارة شركة</option>
+              </select>
+              <input id="fleetAgentInput" type="text" placeholder="اسم المعتمد">
+              <button class="btn-green" onclick="saveFleetRow()">حفظ السيارة</button>
+            </div>
+          </div>
+          <p class="k-sub">عند قراءة الوصل يُربط رقم السيارة تلقائياً. إن لم توجد في السجل تظهر «غير مصنف».</p>
+          <div style="overflow:auto">
+            <table id="fleetTable" class="list-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>رقم السيارة</th>
+                  <th>السائق</th>
+                  <th>تابع لـ</th>
+                  <th>المعتمد</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       <section id="section-reports" class="section">
@@ -695,6 +857,9 @@
     var tripsData = [];
     var maintenanceData = [];
     var activationCodesData = [];
+    var agentsData = [];
+    var fleetData = [];
+    var lastMinistryStats = null;
     var safeCleanupState = {
       backupFileId: "",
       backupName: ""
@@ -702,6 +867,8 @@
 
     var PRICE_PER_LITER = 430;
     var DEDUCTION_RATE = 0.18;
+    var MINISTRY_STATION_RATE = 34300;
+    var MINISTRY_FACTORY_RATE = 8500;
 
     function setStatus(id, value) {
       var el = document.getElementById(id);
@@ -725,7 +892,7 @@
     }
 
     function openSection(sectionKey) {
-      ["dashboard", "reports", "drivers", "activations", "owners"].forEach(function(key) {
+      ["dashboard", "ministry", "registry", "reports", "drivers", "activations", "owners"].forEach(function(key) {
         var el = document.getElementById("section-" + key);
         if (!el) return;
         if (key === sectionKey) el.classList.add("active");
@@ -734,6 +901,9 @@
 
       if (sectionKey === "activations") {
         loadActivationCodes();
+      }
+      if (sectionKey === "registry") {
+        loadRegistry();
       }
     }
 
@@ -846,6 +1016,9 @@
     }
 
     function resolveOwnerAgentLabel(row) {
+      if (row && row.unclassified) return "غير مصنف";
+      if (row && row.agentName) return String(row.agentName);
+
       var candidates = [
         row.owner,
         row.ownerName,
@@ -1081,7 +1254,18 @@
           kroa: toNum(r.kroa),
           notes: r.notes,
           period15: toNum(r.period15),
-          month: r.month
+          month: r.month,
+          agentName: r.agentName || "",
+          ownerKind: r.ownerKind || "",
+          classified: !!r.classified,
+          unclassified: !!r.unclassified,
+          missingDestination: !!r.missingDestination,
+          carNumberNormalized: r.carNumberNormalized || "",
+          ministryQty: toNum(r.ministryQty),
+          ministryPricePerTon: toNum(r.ministryPricePerTon),
+          ministryAmount: toNum(r.ministryAmount),
+          ministryGas: toNum(r.ministryGas),
+          isFactory: !!r.isFactory
         };
       });
     }
@@ -1129,12 +1313,15 @@
         maintenanceData = maint && maint.success && Array.isArray(maint.data) ? maint.data : [];
 
         var missingDestination = 0;
+        var unclassified = 0;
         tripsData.forEach(function(r) {
-          if (!String(resolveDestinationText(r) || "").trim()) missingDestination += 1;
+          if (!String(resolveDestinationText(r) || "").trim() || r.missingDestination) missingDestination += 1;
+          if (r.unclassified) unclassified += 1;
         });
 
         setStatus("stSourceRows", formatNum(tripsData.length, 0));
         setStatus("stMissingDestination", formatNum(missingDestination, 0));
+        setStatus("stUnclassified", formatNum(unclassified, 0));
         setStatus("stLastSync", nowBaghdadText());
 
         renderAll();
@@ -1144,6 +1331,7 @@
         maintenanceData = [];
         setStatus("stSourceRows", "0");
         setStatus("stMissingDestination", "0");
+        setStatus("stUnclassified", "0");
         setStatus("stLastSync", nowBaghdadText());
         renderAll();
         showMessage("تعذر تحميل البيانات: " + (e && e.message ? e.message : e), "error");
@@ -1179,6 +1367,7 @@
       renderDriversTable(dashboardRows);
       renderOwnersTable(dashboardRows);
       renderMaintenance();
+      renderUnclassifiedFromTrips(reportBaseRows);
     }
 
     function renderCards(rows) {
@@ -2047,6 +2236,349 @@
         }
       } catch (e) {
         showMessage("فشل فحص النظام: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    function currentMonthValue() {
+      return String((document.getElementById("monthSelect") || {}).value || "").trim();
+    }
+
+    async function loadRegistry() {
+      showLoader(true);
+      try {
+        var res = await runServer("getMinistryRegistry", {});
+        agentsData = res && res.success && Array.isArray(res.agents) ? res.agents : [];
+        fleetData = res && res.success && Array.isArray(res.fleet) ? res.fleet : [];
+        renderAgentsTable();
+        renderFleetTable();
+      } catch (e) {
+        agentsData = [];
+        fleetData = [];
+        renderAgentsTable();
+        renderFleetTable();
+        showMessage("فشل تحميل السجل: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    function renderAgentsTable() {
+      var tbody = document.querySelector("#agentsTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!agentsData.length) {
+        tbody.innerHTML = "<tr><td colspan='5' class='empty'>لا يوجد معتمدون بعد. أضف معتمداً أو سيارة شركة.</td></tr>";
+        return;
+      }
+      agentsData.forEach(function(item, i) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(item.name || "") + "</td>" +
+          "<td>" + safe(item.kind || "") + "</td>" +
+          "<td>" + safe(item.active ? "فعال" : "موقوف") + "</td>" +
+          "<td>" + safe(item.notes || "") + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderFleetTable() {
+      var tbody = document.querySelector("#fleetTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!fleetData.length) {
+        tbody.innerHTML = "<tr><td colspan='6' class='empty'>لا توجد سيارات في السجل. أضف رقم السيارة لربط الوصل تلقائياً.</td></tr>";
+        return;
+      }
+      fleetData.forEach(function(item, i) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(item.carNumber || "") + "</td>" +
+          "<td>" + safe(item.defaultDriver || "") + "</td>" +
+          "<td>" + safe(item.ownerKind || "") + "</td>" +
+          "<td>" + safe(item.agentName || "") + "</td>" +
+          "<td>" + safe(item.active ? "فعال" : "موقوف") + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveAgentRow() {
+      var name = String((document.getElementById("agentNameInput").value || "")).trim();
+      var kind = String((document.getElementById("agentKindInput").value || "معتمد"));
+      var notes = String((document.getElementById("agentNotesInput").value || "")).trim();
+      if (!name) {
+        showMessage("أدخل اسم المعتمد", "error");
+        return;
+      }
+      showLoader(true);
+      try {
+        var res = await runServer("saveAgent", { name: name, kind: kind, notes: notes, active: true });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل حفظ المعتمد", "error");
+          showLoader(false);
+          return;
+        }
+        document.getElementById("agentNameInput").value = "";
+        document.getElementById("agentNotesInput").value = "";
+        showMessage("تم حفظ المعتمد", "ok");
+        await loadRegistry();
+      } catch (e) {
+        showMessage("فشل حفظ المعتمد: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function saveFleetRow() {
+      var carNumber = String((document.getElementById("fleetCarInput").value || "")).trim();
+      var defaultDriver = String((document.getElementById("fleetDriverInput").value || "")).trim();
+      var ownerKind = String((document.getElementById("fleetKindInput").value || "معتمد"));
+      var agentName = String((document.getElementById("fleetAgentInput").value || "")).trim();
+      if (!carNumber) {
+        showMessage("أدخل رقم السيارة", "error");
+        return;
+      }
+      showLoader(true);
+      try {
+        var res = await runServer("saveFleet", {
+          carNumber: carNumber,
+          defaultDriver: defaultDriver,
+          ownerKind: ownerKind,
+          agentName: agentName,
+          active: true
+        });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل حفظ السيارة", "error");
+          showLoader(false);
+          return;
+        }
+        document.getElementById("fleetCarInput").value = "";
+        document.getElementById("fleetDriverInput").value = "";
+        document.getElementById("fleetAgentInput").value = "";
+        showMessage("تم حفظ السيارة وربطها بالسجل", "ok");
+        await loadRegistry();
+      } catch (e) {
+        showMessage("فشل حفظ السيارة: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function runPeriodStats(period) {
+      var month = currentMonthValue();
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+      showLoader(true);
+      try {
+        var res = await runServer("getPeriodStats", { month: month, period: period });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل الإحصاء", "error");
+          showLoader(false);
+          return;
+        }
+        lastMinistryStats = res;
+        renderMinistryStats(res);
+        showMessage("تم حساب " + (res.periodLabel || "") + " — صافي " + money((res.totals && res.totals.net) || 0), "ok");
+      } catch (e) {
+        showMessage("فشل الإحصاء: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    function renderMinistryStats(res) {
+      var totals = (res && res.totals) || {};
+      setStatus("mTrips", formatNum(totals.trips || 0, 0));
+      setStatus("mQty", formatNum(totals.qty || 0, 3));
+      setStatus("mStation", money(totals.stationAmount || 0));
+      setStatus("mFactory", money(totals.factoryAmount || 0));
+      setStatus("mGas", money(totals.gas || 0));
+      setStatus("mNet", money(totals.net || 0));
+      setStatus("mUnclassified", formatNum(res.unclassifiedCount || 0, 0));
+      var label = document.getElementById("ministryPeriodLabel");
+      if (label) {
+        label.textContent = "الشهر " + (res.month || "") + " — " + (res.periodLabel || "") +
+          " — محطة " + formatNum(MINISTRY_STATION_RATE, 0) +
+          " / معمل " + formatNum(MINISTRY_FACTORY_RATE, 0) +
+          " بدون خصم 18%.";
+      }
+      renderMinistryAgents(res.agents || []);
+      renderMinistryCompany((res.company && res.company.cars) || []);
+      renderUnclassifiedTable(res.unclassified || [], res.missingDestination || []);
+    }
+
+    function renderMinistryAgents(list) {
+      var tbody = document.querySelector("#ministryAgentsTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!list.length) {
+        tbody.innerHTML = "<tr><td colspan='8' class='empty'>لا يوجد تفصيل معتمدين لهذه الفترة</td></tr>";
+        return;
+      }
+      list.forEach(function(item, i) {
+        var t = item.totals || {};
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(item.name || "") + "</td>" +
+          "<td>" + formatNum(t.trips || 0, 0) + "</td>" +
+          "<td>" + formatNum(t.qty || 0, 3) + "</td>" +
+          "<td>" + money(t.stationAmount || 0) + "</td>" +
+          "<td>" + money(t.factoryAmount || 0) + "</td>" +
+          "<td>" + money(t.gas || 0) + "</td>" +
+          "<td>" + money(t.net || 0) + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMinistryCompany(list) {
+      var tbody = document.querySelector("#ministryCompanyTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      if (!list.length) {
+        tbody.innerHTML = "<tr><td colspan='8' class='empty'>لا توجد سيارات شركة في هذه الفترة</td></tr>";
+        return;
+      }
+      list.forEach(function(item, i) {
+        var t = item.totals || {};
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(item.carNumber || "") + "</td>" +
+          "<td>" + safe(item.driverName || "") + "</td>" +
+          "<td>" + formatNum(t.trips || 0, 0) + "</td>" +
+          "<td>" + formatNum(t.qty || 0, 3) + "</td>" +
+          "<td>" + money(t.stationAmount || 0) + "</td>" +
+          "<td>" + money(t.factoryAmount || 0) + "</td>" +
+          "<td>" + money(t.net || 0) + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderUnclassifiedFromTrips(rows) {
+      var unclassified = [];
+      var missing = [];
+      (rows || []).forEach(function(r) {
+        if (r.unclassified) unclassified.push(r);
+        if (r.missingDestination || !String(resolveDestinationText(r) || "").trim()) missing.push(r);
+      });
+      renderUnclassifiedTable(unclassified, missing);
+    }
+
+    function renderUnclassifiedTable(unclassified, missingDestination) {
+      var tbody = document.querySelector("#unclassifiedTable tbody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      var map = {};
+      function addRow(r, reason) {
+        var key = [r.docNumber, r.carNumber, r.sheetName, r.row].join("|");
+        if (!map[key]) {
+          map[key] = {
+            docNumber: r.docNumber,
+            driverName: r.driverName,
+            carNumber: r.carNumber || r.carNumberRaw,
+            destination: r.destination || "",
+            qty: r.ministryQty != null ? r.ministryQty : r.quantity,
+            reasons: []
+          };
+        }
+        if (map[key].reasons.indexOf(reason) < 0) map[key].reasons.push(reason);
+      }
+      (unclassified || []).forEach(function(r) { addRow(r, "غير مصنف"); });
+      (missingDestination || []).forEach(function(r) { addRow(r, "بلا وجهة"); });
+      var list = Object.keys(map).map(function(k) { return map[k]; });
+      if (!list.length) {
+        tbody.innerHTML = "<tr><td colspan='7' class='empty'>لا توجد وصولات معلّقة</td></tr>";
+        return;
+      }
+      list.forEach(function(item, i) {
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          "<td>" + (i + 1) + "</td>" +
+          "<td>" + safe(item.docNumber || "") + "</td>" +
+          "<td>" + safe(item.driverName || "") + "</td>" +
+          "<td>" + safe(item.carNumber || "") + "</td>" +
+          "<td>" + safe(item.destination || "") + "</td>" +
+          "<td>" + formatNum(item.qty || 0, 3) + "</td>" +
+          "<td>" + safe(item.reasons.join(" / ")) + "</td>";
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function generateAgentStatements() {
+      var month = currentMonthValue();
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+      var period = (lastMinistryStats && lastMinistryStats.period) || document.getElementById("periodSelect").value || "all";
+      showLoader(true);
+      try {
+        var res = await runServer("generateAgentStatements", { month: month, period: period });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل توليد كشوف المعتمدين", "error");
+          showLoader(false);
+          return;
+        }
+        showMessage("تم توليد " + formatNum(res.count || 0, 0) + " كشف معتمد بتسلسل 10 وصولات", "ok");
+        if (res.spreadsheetUrl) window.open(res.spreadsheetUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل توليد كشوف المعتمدين: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function generateCompanyStatements() {
+      var month = currentMonthValue();
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+      var period = (lastMinistryStats && lastMinistryStats.period) || document.getElementById("periodSelect").value || "all";
+      showLoader(true);
+      try {
+        var res = await runServer("generateCompanyStatements", { month: month, period: period });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل توليد كشف سيارات الشركة", "error");
+          showLoader(false);
+          return;
+        }
+        showMessage("تم توليد كشف سيارات الشركة", "ok");
+        if (res.spreadsheetUrl) window.open(res.spreadsheetUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل توليد كشف سيارات الشركة: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function exportMinistryPack(force) {
+      var month = currentMonthValue();
+      if (!month) {
+        showMessage("اختر الشهر أولاً", "error");
+        return;
+      }
+      var period = (lastMinistryStats && lastMinistryStats.period) || document.getElementById("periodSelect").value || "all";
+      showLoader(true);
+      try {
+        var res = await runServer("exportMinistryPack", { month: month, period: period, force: force ? "true" : "false" });
+        if (res && res.blocked && !force) {
+          var proceed = confirm((res.message || "يوجد وصولات غير مصنفة") + "\nهل تريد التصدير رغم ذلك؟");
+          showLoader(false);
+          if (proceed) return exportMinistryPack(true);
+          renderUnclassifiedTable(res.unclassified || [], []);
+          showMessage(res.message || "التصدير توقف بسبب وصولات غير مصنفة", "error");
+          return;
+        }
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل تصدير حزمة الوزارة", "error");
+          showLoader(false);
+          return;
+        }
+        showMessage("تم إنشاء حزمة الوزارة دون تعديل قالب 60", "ok");
+        if (res.packUrl) window.open(res.packUrl, "_blank");
+        else if (res.excelUrl) window.open(res.excelUrl, "_blank");
+      } catch (e) {
+        showMessage("فشل تصدير حزمة الوزارة: " + (e && e.message ? e.message : e), "error");
       }
       showLoader(false);
     }

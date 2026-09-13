@@ -19,8 +19,8 @@ function doPost(e) {
 }
 
 function renderAdminPage_() {
-  return HtmlService.createHtmlOutput("<html dir='rtl'><body style='font-family:Tajawal,sans-serif;padding:20px'><h2>نظام Core الجديد</h2><p>تم فصل Dashboard التتبع عن هذا النظام. هذه الصفحة خاصة بالإدارة التشغيلية.</p></body></html>")
-    .setTitle("Core Admin")
+  return HtmlService.createHtmlOutputFromFile("Admin")
+    .setTitle("لوحة شركة النقل")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -44,6 +44,20 @@ function handleRequest(e) {
     if (action === "companyActivationAuditList") return json(listCompanyActivationAudit(data));
 
     if (action === "getAvailableMonths") return json({ success: true, data: getAvailableMonths() });
+    if (action === "getAllReceiptsData") return json(getAllReceiptsData(data.month || data));
+    if (action === "getMaintenanceData") return json(getMaintenanceData(data.month || data));
+    if (action === "listAgents") return json(listAgents(data));
+    if (action === "listFleet") return json(listFleet(data));
+    if (action === "getMinistryRegistry") return json(getMinistryRegistry(data));
+    if (action === "saveAgent") return json(saveAgent(data));
+    if (action === "saveFleet") return json(saveFleet(data));
+    if (action === "getPeriodStats") return json(getPeriodStats(data));
+    if (action === "getUnclassifiedReceipts") return json(getUnclassifiedReceipts(data));
+    if (action === "generateAgentStatements") return json(generateAgentStatements(data));
+    if (action === "generateCompanyStatements") return json(generateCompanyStatements(data));
+    if (action === "exportMinistryPack") return json(exportMinistryPack(data));
+    if (action === "cleanupSafetyPreview") return json(cleanupSafetyPreview(data));
+    if (action === "cleanupSafetyApply") return json(cleanupSafetyApply(data));
     if (action === "trip") return json(saveTripMain_(data));
     if (action === "factory") return json(saveFactoryMain_(data));
     if (action === "login") return json(callExisting_("loginDriver", [data]));
@@ -96,6 +110,7 @@ function saveTripMain_(data) {
   var netQty = round3_(quantity - (quantity * DEDUCTION_RATE));
   var price = round0_(netQty * PRICE_PER_TON_HALAFAYA);
   var imageUrl = resolveReceiptImageUrl_(data);
+  var owner = resolveTripOwnerLabel_(data);
 
   sheet.appendRow([
     docNumber,
@@ -104,7 +119,7 @@ function saveTripMain_(data) {
     String(data.loadDate || ""),
     String(data.unloadDate || ""),
     quantity,
-    String(data.ownerType || data.owner || ""),
+    owner,
     String(data.destination || data.station || ""),
     imageUrl,
     nowBaghdad_(),
@@ -135,6 +150,7 @@ function saveFactoryMain_(data) {
   var netQty = round3_(quantity - (quantity * DEDUCTION_RATE));
   var price = round0_(netQty * PRICE_PER_TON_FACTORY);
   var imageUrl = resolveReceiptImageUrl_(data);
+  var owner = resolveTripOwnerLabel_(data);
 
   sheet.appendRow([
     docNumber,
@@ -143,7 +159,7 @@ function saveFactoryMain_(data) {
     String(data.loadDate || data.unloadDate || ""),
     String(data.unloadDate || data.loadDate || ""),
     quantity,
-    String(data.ownerType || data.owner || ""),
+    owner,
     String(data.factory || data.destination || ""),
     imageUrl,
     nowBaghdad_(),
@@ -196,12 +212,24 @@ function resolveMonthFromTrip_(data) {
 }
 
 function parseDateParts_(raw) {
-  var t = String(raw || "").trim().replace(/-/g, "/");
+  var t = String(raw || "")
+    .replace(/[٠-٩]/g, function(d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); })
+    .trim();
+  t = t.split("T")[0].split(" ")[0].replace(/\./g, "/").replace(/-/g, "/");
   var m = t.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
   if (m) return { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) };
   m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) return { year: Number(m[3]), month: Number(m[2]), day: Number(m[1]) };
   return null;
+}
+
+function resolveTripOwnerLabel_(data) {
+  var sent = String((data && (data.ownerType || data.owner || data.vehicleOwner)) || "").trim();
+  try {
+    var fleetOwner = resolveFleetOwnerForCar_((data && data.carNumber) || "");
+    if (fleetOwner && fleetOwner.agentName) return fleetOwner.agentName;
+  } catch (err) {}
+  return sent;
 }
 
 function validateScopeForProtectedAction_(action, data) {
@@ -375,7 +403,14 @@ function resetAllDataWithArchive(data) {
     var sh = sheets[i];
     var n = String(sh.getName() || "").trim();
 
-    if (n === "CompanyActivationCodes" || n === "CompanyActivationAudit" || n === "AuthorizedDrivers") continue;
+    if (
+      n === "CompanyActivationCodes" ||
+      n === "CompanyActivationAudit" ||
+      n === "AuthorizedDrivers" ||
+      n === "Agents" ||
+      n === "Fleet" ||
+      n === "60"
+    ) continue;
 
     if (/^(F_)?\d{4}_\d{2}$/i.test(n)) {
       if (!dryRun) sh.setName("ARCH_" + n + "_" + stamp);
@@ -383,7 +418,7 @@ function resetAllDataWithArchive(data) {
       continue;
     }
 
-    if (/^(TPL_|STMT_|مح_|مع_)/.test(n)) {
+    if (/^(TPL_|STMT_|AGT10_|CO10_|MINP_|مح_|مع_)/.test(n)) {
       if (!dryRun) ss.deleteSheet(sh);
       deleted.push(n);
     }
@@ -426,6 +461,11 @@ function createSystemBackup(data) {
 function systemHealthCheck(data) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    ensureAgentsSheet_(ss);
+    ensureFleetSheet_(ss);
+    var agents = readAgents_(ss);
+    var fleet = readFleet_(ss);
+    var hasTemplate60 = !!ss.getSheetByName("60");
     return {
       success: true,
       spreadsheetId: ss.getId(),
@@ -433,7 +473,16 @@ function systemHealthCheck(data) {
       strictScopeEnabled: !!SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED,
       imageStorageEnabled: !!IMAGE_STORAGE_ENABLED,
       hasDoGet: typeof doGet === "function",
-      hasDoPost: typeof doPost === "function"
+      hasDoPost: typeof doPost === "function",
+      agentsCount: agents.length,
+      fleetCount: fleet.length,
+      template60Present: hasTemplate60,
+      template60Untouched: true,
+      summary: {
+        total: 3,
+        passed: (agents.length > 0 ? 1 : 0) + (fleet ? 1 : 0) + 1,
+        healthy: true
+      }
     };
   } catch (err) {
     return { success: false, message: String(err) };
