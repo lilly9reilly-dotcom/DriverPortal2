@@ -9,8 +9,9 @@ var IMAGE_STORAGE_ENABLED = false;
 function onOpen() {
   try {
     SpreadsheetApp.getUi()
-      .createMenu("ترتيب الشيتات")
-      .addItem("تنظيم من الشهر 6 حتى الآن", "organizeSheetsNow")
+      .createMenu("قواعد العملاء")
+      .addItem("إنشاء قواعد بيانات العملاء", "createClientDatabasesNow")
+      .addItem("ترحيل الوصولات من يونيو حتى الآن", "organizeSheetsNow")
       .addToUi();
   } catch (err) {}
 }
@@ -73,6 +74,8 @@ function handleRequest(e) {
     if (action === "saveFleet") return json(saveFleet(data));
     if (action === "importAgentFleetList") return json(importAgentFleetList(data));
     if (action === "bootstrapAgentRegistry") return json(bootstrapAgentRegistry(data));
+    if (action === "createClientDatabasesNow") return json(createClientDatabasesNow());
+    if (action === "ensureOfficialClientsReady") return json(ensureOfficialClientsReady_());
     if (action === "organizeHistoricalAgentLedgers") return json(organizeHistoricalAgentLedgers(data));
     if (action === "getOfficialAgentSeed") return json(getOfficialAgentSeed(data));
     if (action === "getPeriodStats") return json(getPeriodStats(data));
@@ -476,6 +479,8 @@ function resetAllDataWithArchive(data) {
       n === "AuthorizedDrivers" ||
       n === "Agents" ||
       n === "Fleet" ||
+      n === "العملاء" ||
+      n === "السيارات" ||
       n === "60" ||
       n === "تنظيم_المعتمدين" ||
       /^DB_/.test(n)

@@ -4,12 +4,27 @@
  * Does not replace TPL_/STMT_ or modify template sheet 60.
  */
 
-var AGENTS_SHEET_NAME = "Agents";
-var FLEET_SHEET_NAME = "Fleet";
+var AGENTS_SHEET_NAME = MinistryCore.CLIENTS_SHEET;
+var FLEET_SHEET_NAME = MinistryCore.CARS_SHEET;
 var TEMPLATE_60_SHEET_NAME = "60";
+
+function migrateLegacyRegistrySheets_(ss) {
+  ss = ss || getCompanySpreadsheet_();
+  var oldAgents = ss.getSheetByName(MinistryCore.CLIENTS_SHEET_LEGACY);
+  var clients = ss.getSheetByName(AGENTS_SHEET_NAME);
+  if (oldAgents && !clients) {
+    try { oldAgents.setName(AGENTS_SHEET_NAME); } catch (err) {}
+  }
+  var oldFleet = ss.getSheetByName(MinistryCore.CARS_SHEET_LEGACY);
+  var cars = ss.getSheetByName(FLEET_SHEET_NAME);
+  if (oldFleet && !cars) {
+    try { oldFleet.setName(FLEET_SHEET_NAME); } catch (err) {}
+  }
+}
 
 function ensureAgentsSheet_(ss) {
   ss = ss || getCompanySpreadsheet_();
+  migrateLegacyRegistrySheets_(ss);
   var sheet = ss.getSheetByName(AGENTS_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(AGENTS_SHEET_NAME);
@@ -23,12 +38,13 @@ function ensureAgentsSheet_(ss) {
 
 function ensureFleetSheet_(ss) {
   ss = ss || getCompanySpreadsheet_();
+  migrateLegacyRegistrySheets_(ss);
   var sheet = ss.getSheetByName(FLEET_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(FLEET_SHEET_NAME);
-    sheet.appendRow(["رقم السيارة", "السائق الافتراضي", "تابع لـ", "اسم المعتمد", "فعال", "ملاحظات"]);
+    sheet.appendRow(["رقم السيارة", "السائق الافتراضي", "تابع لـ", "اسم العميل", "فعال", "ملاحظات"]);
   } else if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["رقم السيارة", "السائق الافتراضي", "تابع لـ", "اسم المعتمد", "فعال", "ملاحظات"]);
+    sheet.appendRow(["رقم السيارة", "السائق الافتراضي", "تابع لـ", "اسم العميل", "فعال", "ملاحظات"]);
   }
   return sheet;
 }
@@ -186,35 +202,117 @@ function saveFleet(data) {
   return { success: true, data: readFleet_(ss) };
 }
 
-function bootstrapAgentRegistry(data) {
-  data = data || {};
-  var applySeed = String(data.applySeed == null ? "true" : data.applySeed).toLowerCase() !== "false";
-  var imported = applySeed ? importAgentFleetList(MinistryCore.officialAgentFleetSeed()) : { success: true };
+function ensureMissingSeedCars_(ss, fleet) {
+  ss = ss || getCompanySpreadsheet_();
+  fleet = fleet || readFleet_(ss);
+  var have = {};
+  for (var i = 0; i < fleet.length; i++) {
+    var digits = MinistryCore.carDigitsOnly(fleet[i].carNumber);
+    if (digits) have[digits] = true;
+    var key = MinistryCore.normalizeCarNumber(fleet[i].carNumber);
+    if (key) have[key] = true;
+  }
+  var groups = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
+  var added = 0;
+  for (var g = 0; g < groups.length; g++) {
+    saveAgent({ name: groups[g].name, kind: groups[g].kind, active: true });
+    var cars = groups[g].cars || [];
+    for (var c = 0; c < cars.length; c++) {
+      var plate = cars[c].carNumber;
+      var plateDigits = MinistryCore.carDigitsOnly(plate);
+      if (have[plateDigits] || have[MinistryCore.normalizeCarNumber(plate)]) continue;
+      saveFleet({
+        carNumber: plate,
+        defaultDriver: cars[c].defaultDriver || "",
+        ownerKind: groups[g].kind,
+        agentName: groups[g].name,
+        active: true
+      });
+      if (plateDigits) have[plateDigits] = true;
+      added += 1;
+    }
+  }
+  return added;
+}
 
-  var ss = getCompanySpreadsheet_();
+var officialClientsReadyCache_ = null;
+
+function officialSeedCarCount_() {
+  var groups = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
+  var n = 0;
+  for (var i = 0; i < groups.length; i++) n += (groups[i].cars || []).length;
+  return n;
+}
+
+function ensureOfficialClientsReady_(ss) {
+  if (officialClientsReadyCache_) return officialClientsReadyCache_;
+  ss = ss || getCompanySpreadsheet_();
+  migrateLegacyRegistrySheets_(ss);
   ensureAgentsSheet_(ss);
   ensureFleetSheet_(ss);
-  ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
-  ensureAgentDatabaseSheet_(ss, MinistryCore.UNCLASSIFIED, "");
+  var fleet = readFleet_(ss);
+  var seeded = false;
+  var addedCars = 0;
+  if (!fleet.length) {
+    importAgentFleetList(MinistryCore.officialAgentFleetSeed());
+    seeded = true;
+  } else if (fleet.length < officialSeedCarCount_()) {
+    addedCars = ensureMissingSeedCars_(ss, fleet);
+  }
   var agents = readAgents_(ss);
   for (var i = 0; i < agents.length; i++) {
     ensureAgentDatabaseSheet_(ss, agents[i].name, agents[i].kind);
   }
-  return {
+  ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
+  ensureAgentDatabaseSheet_(ss, MinistryCore.UNCLASSIFIED, "");
+  officialClientsReadyCache_ = {
     success: true,
     spreadsheetId: ss.getId(),
     spreadsheetUrl: ss.getUrl(),
-    seedApplied: applySeed,
-    imported: imported,
+    seeded: seeded,
+    addedCars: addedCars,
     agents: attachAgentDbCounts_(ss, readAgents_(ss)),
     fleet: readFleet_(ss)
+  };
+  return officialClientsReadyCache_;
+}
+
+function createClientDatabasesNow() {
+  var result = ensureOfficialClientsReady_(getCompanySpreadsheet_());
+  try {
+    var ui = SpreadsheetApp.getUi();
+    var lines = (result.agents || []).map(function(a) {
+      return String(a.name || "") + " → " + String(a.dbSheet || "");
+    });
+    ui.alert(
+      "قواعد بيانات العملاء",
+      "كل عميل له ورقة خاصة. الوصولات الجديدة تذهب إليها تلقائيًا.\n" + lines.join("\n"),
+      ui.ButtonSet.OK
+    );
+  } catch (err) {}
+  return result;
+}
+
+function bootstrapAgentRegistry(data) {
+  data = data || {};
+  var applySeed = String(data.applySeed == null ? "true" : data.applySeed).toLowerCase() !== "false";
+  var imported = applySeed ? importAgentFleetList(MinistryCore.officialAgentFleetSeed()) : { success: true };
+  var ready = ensureOfficialClientsReady_(getCompanySpreadsheet_());
+  return {
+    success: true,
+    spreadsheetId: ready.spreadsheetId,
+    spreadsheetUrl: ready.spreadsheetUrl,
+    seedApplied: applySeed,
+    imported: imported,
+    agents: ready.agents,
+    fleet: ready.fleet
   };
 }
 
 function organizeHistoricalAgentLedgers(data) {
   data = data || {};
   var startMonth = MinistryCore.resolveMonthKey(data.startMonth || MinistryCore.HISTORY_START_MONTH) || MinistryCore.HISTORY_START_MONTH;
-  var boot = bootstrapAgentRegistry({ applySeed: true });
+  var boot = ensureOfficialClientsReady_(getCompanySpreadsheet_());
   var ss = getCompanySpreadsheet_();
   var available = getAvailableMonths() || [];
   var months = MinistryCore.monthsFromInclusive(available, startMonth);
@@ -248,8 +346,8 @@ function organizeSheetsNow() {
     var months = (result.months || []).join("، ") || "لا توجد أشهر من 2026_06";
     var agents = (result.agents || []).length;
     ui.alert(
-      "تم ترتيب الشيتات",
-      "الأشهر المنظّمة: " + months + "\nالجهات: " + agents + "\nراجع ورقة تنظيم_المعتمدين وأوراق DB_",
+      "تم ترحيل الوصولات إلى قواعد العملاء",
+      "الأشهر: " + months + "\nالعملاء: " + agents + "\nكل عميل له ورقة DB_ — أوراق الشهر لم تُحذف",
       ui.ButtonSet.OK
     );
   } catch (err) {}
@@ -468,6 +566,7 @@ function routeReceiptToAgentDb_(ss, receipt, keyCache) {
 function routeSavedReceipt_(receipt) {
   try {
     var ss = getCompanySpreadsheet_();
+    ensureOfficialClientsReady_(ss);
     return routeReceiptToAgentDb_(ss, receipt || {});
   } catch (err) {
     return { success: false, message: String(err) };
@@ -478,10 +577,7 @@ function syncAgentDatabases(data) {
   data = typeof data === "string" ? { month: data } : (data || {});
   var loaded = loadMinistryReceipts_(data.month, data.period || "all");
   var ss = getCompanySpreadsheet_();
-  ensureAgentsSheet_(ss);
-  ensureFleetSheet_(ss);
-  ensureAgentDatabaseSheet_(ss, MinistryCore.COMPANY, MinistryCore.COMPANY);
-  ensureAgentDatabaseSheet_(ss, MinistryCore.UNCLASSIFIED, "");
+  ensureOfficialClientsReady_(ss);
 
   var agents = readAgents_(ss);
   for (var a = 0; a < agents.length; a++) {

@@ -380,6 +380,11 @@ test("each agent and company gets a stable database sheet name", function() {
   assert.strictEqual(MinistryCore.agentDatabaseSheetName("غير مصنف", ""), "DB_غير_مصنف");
   assert.strictEqual(MinistryCore.isAgentDatabaseSheet("DB_معتمد_النور"), true);
   assert.strictEqual(MinistryCore.isProtectedRegistrySheet("DB_شركة"), true);
+  assert.strictEqual(MinistryCore.normalizeOwnerKind("عميل"), "معتمد");
+  assert.strictEqual(MinistryCore.isProtectedRegistrySheet("العملاء"), true);
+  assert.strictEqual(MinistryCore.isProtectedRegistrySheet("السيارات"), true);
+  assert.strictEqual(MinistryCore.CLIENTS_SHEET, "العملاء");
+  assert.strictEqual(MinistryCore.CARS_SHEET, "السيارات");
 });
 
 test("car number routes the receipt to that agent's database", function() {
@@ -448,6 +453,8 @@ test("generated sheet names stay safe and template 60 is not a generated prefix"
   assert.strictEqual(MinistryCore.isGeneratedSupportSheet("60"), false);
   assert.strictEqual(MinistryCore.isProtectedRegistrySheet("Agents"), true);
   assert.strictEqual(MinistryCore.isProtectedRegistrySheet("Fleet"), true);
+  assert.strictEqual(MinistryCore.isProtectedRegistrySheet("العملاء"), true);
+  assert.strictEqual(MinistryCore.isProtectedRegistrySheet("السيارات"), true);
 });
 
 console.log("");

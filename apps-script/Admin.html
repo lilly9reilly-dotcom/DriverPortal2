@@ -365,7 +365,7 @@
       <div class="side-menu" id="sideMenu">
         <div class="side-item active" data-section="dashboard">لوحة التحكم</div>
         <div class="side-item" data-section="ministry">حساب الوزارة</div>
-        <div class="side-item" data-section="registry">سجل المعتمدين والسيارات</div>
+        <div class="side-item" data-section="registry">قواعد بيانات العملاء</div>
         <div class="side-item" data-section="reports">التقارير</div>
         <div class="side-item" data-section="drivers">السواق</div>
         <div class="side-item" data-section="activations">تفعيل الشركات</div>
@@ -557,19 +557,20 @@
       <section id="section-registry" class="section">
         <div class="table-wrap">
           <div class="table-head">
-            <h2>سجل المعتمدين</h2>
+            <h2>قواعد بيانات العملاء</h2>
             <div class="actions">
-              <input id="agentNameInput" type="text" placeholder="اسم المعتمد">
+              <input id="agentNameInput" type="text" placeholder="اسم العميل">
               <select id="agentKindInput">
-                <option value="معتمد">معتمد خارجي</option>
+                <option value="معتمد">عميل / معتمد</option>
                 <option value="شركة">شركة</option>
               </select>
               <input id="agentNotesInput" type="text" placeholder="ملاحظة">
-              <button class="btn-green" onclick="saveAgentRow()">حفظ المعتمد</button>
+              <button class="btn-green" onclick="saveAgentRow()">حفظ العميل</button>
               <button class="btn-blue" onclick="loadRegistry()">تحديث السجل</button>
-              <button class="btn-green" onclick="applyOfficialAgentSeed()">تسجيل المعتمدين المعروفين</button>
+              <button class="btn-green" onclick="createClientDatabases()">إنشاء قواعد العملاء</button>
+              <button class="btn-green" onclick="applyOfficialAgentSeed()">تسجيل العملاء المعروفين</button>
               <button class="btn-orange" onclick="syncAgentDatabases()">ترحيل وصولات الشهر</button>
-              <button class="btn-blue" onclick="organizeHistoricalLedgers()">تنظيم من الشهر 6 حتى الآن</button>
+              <button class="btn-blue" onclick="organizeHistoricalLedgers()">ترحيل من يونيو حتى الآن</button>
             </div>
           </div>
           <div style="overflow:auto">
@@ -600,11 +601,11 @@
                 <option value="معتمد">تابع لمعتمد</option>
                 <option value="شركة">سيارة شركة</option>
               </select>
-              <input id="fleetAgentInput" type="text" placeholder="اسم المعتمد">
+              <input id="fleetAgentInput" type="text" placeholder="اسم العميل">
               <button class="btn-green" onclick="saveFleetRow()">حفظ السيارة</button>
             </div>
           </div>
-          <p class="k-sub">رقم السيارة يحدد المعتمد. عند إرسال الوصل يُحفظ في شيت الشهر ويُرحَّل إلى ورقة المعتمد (DB_...). السيارة غير المسجّلة تذهب إلى DB_غير_مصنف.</p>
+          <p class="k-sub">رقم السيارة يحدد العميل. الوصل يبقى في ورقة الشهر ويُنسخ فورًا إلى قاعدة ذلك العميل (DB_...). السيارة غير المسجّلة تذهب إلى DB_غير_مصنف. تطبيق العميل لمشاهدة الأرباح يُبنى بعد اعتماد هذه القواعد.</p>
           <div style="overflow:auto">
             <table id="fleetTable" class="list-table">
               <thead>
@@ -613,7 +614,7 @@
                   <th>رقم السيارة</th>
                   <th>السائق</th>
                   <th>تابع لـ</th>
-                  <th>المعتمد</th>
+                  <th>العميل</th>
                   <th>الحالة</th>
                 </tr>
               </thead>
@@ -2328,7 +2329,7 @@
         }
         document.getElementById("agentNameInput").value = "";
         document.getElementById("agentNotesInput").value = "";
-        showMessage("تم حفظ المعتمد وأنشئت قاعدته: " + (res.dbSheet || ""), "ok");
+        showMessage("تم حفظ العميل وأنشئت قاعدته: " + (res.dbSheet || ""), "ok");
         await loadRegistry();
       } catch (e) {
         showMessage("فشل حفظ المعتمد: " + (e && e.message ? e.message : e), "error");
@@ -2349,13 +2350,34 @@
         showMessage(
           "تم تنظيم الشيت من " + (res.startMonth || "2026_06") +
           " — الأشهر: " + (months.join("، ") || "لا توجد") +
-          " — المعتمدون: " + formatNum((res.agents || []).length, 0),
+          " — العملاء: " + formatNum((res.agents || []).length, 0),
           "ok"
         );
         await loadRegistry();
         if (res.spreadsheetUrl) window.open(res.spreadsheetUrl, "_blank");
       } catch (e) {
         showMessage("فشل تنظيم الشهور: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function createClientDatabases() {
+      showLoader(true);
+      try {
+        var res = await runServer("createClientDatabasesNow", {});
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل إنشاء قواعد العملاء", "error");
+          showLoader(false);
+          return;
+        }
+        showMessage(
+          "قواعد العملاء جاهزة: " + formatNum((res.agents || []).length, 0) +
+          " عميل — " + formatNum((res.fleet || []).length, 0) + " سيارة",
+          "ok"
+        );
+        await loadRegistry();
+      } catch (e) {
+        showMessage("فشل إنشاء قواعد العملاء: " + (e && e.message ? e.message : e), "error");
       }
       showLoader(false);
     }

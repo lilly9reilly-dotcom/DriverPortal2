@@ -15,7 +15,11 @@ var MinistryCore = {
   COMPANY_DB: "DB_شركة",
   UNCLASSIFIED_DB: "DB_غير_مصنف",
   HISTORY_START_MONTH: "2026_06",
-  ORGANIZATION_SHEET: "تنظيم_المعتمدين"
+  ORGANIZATION_SHEET: "تنظيم_المعتمدين",
+  CLIENTS_SHEET: "العملاء",
+  CARS_SHEET: "السيارات",
+  CLIENTS_SHEET_LEGACY: "Agents",
+  CARS_SHEET_LEGACY: "Fleet"
 };
 
 MinistryCore.round3 = function(v) {
@@ -162,7 +166,7 @@ MinistryCore.normalizeOwnerKind = function(value) {
   var n = MinistryCore.normalizeText(value);
   if (!n) return "";
   if (n.indexOf("شرك") >= 0 || n === "company") return MinistryCore.COMPANY;
-  if (n.indexOf("معتمد") >= 0 || n === "agent" || n.indexOf("وكيل") >= 0) return MinistryCore.AGENT;
+  if (n.indexOf("معتمد") >= 0 || n.indexOf("عميل") >= 0 || n === "agent" || n.indexOf("وكيل") >= 0) return MinistryCore.AGENT;
   return String(value || "").trim();
 };
 
@@ -745,7 +749,12 @@ MinistryCore.statementSheetName = function(prefix, monthKey, periodFilter, title
 
 MinistryCore.isProtectedRegistrySheet = function(name) {
   var n = String(name || "").trim();
-  return n === "Agents" || n === "Fleet" || n === MinistryCore.ORGANIZATION_SHEET || MinistryCore.isAgentDatabaseSheet(n);
+  return n === MinistryCore.CLIENTS_SHEET
+    || n === MinistryCore.CARS_SHEET
+    || n === MinistryCore.CLIENTS_SHEET_LEGACY
+    || n === MinistryCore.CARS_SHEET_LEGACY
+    || n === MinistryCore.ORGANIZATION_SHEET
+    || MinistryCore.isAgentDatabaseSheet(n);
 };
 
 MinistryCore.isGeneratedSupportSheet = function(name) {
