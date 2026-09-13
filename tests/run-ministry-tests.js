@@ -171,7 +171,7 @@ test("company cars get a separate 10-receipt statement", function() {
 
 test("سجاد صويره cars 15871 16414 16416 route to his database", function() {
   var seed = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
-  assert.strictEqual(seed.length, 6);
+  assert.strictEqual(seed.length, 7);
   assert.strictEqual(seed[0].name, "سجاد صويره");
   assert.deepStrictEqual(seed[0].cars.map(function(c) { return c.carNumber; }), ["15871", "16414", "16416"]);
   assert.strictEqual(seed[0].dbSheet, "DB_سجاد_صويره");
@@ -190,6 +190,10 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
   assert.strictEqual(seed[5].name, "قيصر شمري");
   assert.deepStrictEqual(seed[5].cars.map(function(c) { return c.carNumber; }), ["20585", "27685", "20756", "20858"]);
   assert.strictEqual(seed[5].dbSheet, "DB_قيصر_شمري");
+  assert.strictEqual(seed[6].name, "شركة");
+  assert.strictEqual(seed[6].kind, "شركة");
+  assert.deepStrictEqual(seed[6].cars.map(function(c) { return c.carNumber; }), ["22973", "24057", "24382", "25710", "30353", "29744", "29555", "13417", "27740"]);
+  assert.strictEqual(seed[6].dbSheet, "DB_شركة");
 
   var fleet = seed[0].cars.map(function(c) {
     return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "سجاد صويره", active: 1 };
@@ -265,6 +269,36 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
     }, aliFleet);
     assert.strictEqual(target.sheetName, "DB_علي_صبار");
     assert.strictEqual(target.agentName, "علي صبار");
+  });
+
+  var shamriFleet = seed[5].cars.map(function(c) {
+    return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "قيصر شمري", active: 1 };
+  });
+  ["20585", "27685", "20756", "20858"].forEach(function(car) {
+    var target = MinistryCore.resolveRoutingTarget({
+      docNumber: "6",
+      carNumber: car,
+      loadDate: "2026-09-04",
+      destination: "حلفاية",
+      sheetName: "2026_09"
+    }, shamriFleet);
+    assert.strictEqual(target.sheetName, "DB_قيصر_شمري");
+    assert.strictEqual(target.agentName, "قيصر شمري");
+  });
+
+  var companyFleet = seed[6].cars.map(function(c) {
+    return { carNumber: c.carNumber, ownerKind: "شركة", agentName: "شركة", active: 1 };
+  });
+  ["22973", "24057", "24382", "25710", "30353", "29744", "29555", "13417", "27740"].forEach(function(car) {
+    var target = MinistryCore.resolveRoutingTarget({
+      docNumber: "7",
+      carNumber: car,
+      loadDate: "2026-09-04",
+      destination: "حلفاية",
+      sheetName: "2026_09"
+    }, companyFleet);
+    assert.strictEqual(target.sheetName, "DB_شركة");
+    assert.strictEqual(target.ownerKind, "شركة");
   });
 });
 
