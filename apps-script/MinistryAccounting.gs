@@ -241,22 +241,35 @@ function organizeHistoricalAgentLedgers(data) {
   };
 }
 
+function organizeSheetsNow() {
+  return organizeHistoricalAgentLedgers({ startMonth: MinistryCore.HISTORY_START_MONTH });
+}
+
 function writeOrganizationControlSheet_(ss, months, monthResults) {
   var sheet = ss.getSheetByName(MinistryCore.ORGANIZATION_SHEET);
   if (!sheet) sheet = ss.insertSheet(MinistryCore.ORGANIZATION_SHEET);
   sheet.clear();
 
   var rows = [];
-  rows.push(["تنظيم المعتمدين والسيارات من " + MinistryCore.HISTORY_START_MONTH + " حتى الشهر الحالي"]);
+  rows.push(["ترتيب الشيتات — المعتمدون والسيارات من " + MinistryCore.HISTORY_START_MONTH + " حتى الشهر الحالي"]);
   rows.push(["الشيت", ss.getName()]);
-  rows.push(["عدد المعتمدين/الجهات", (MinistryCore.officialAgentFleetSeed().agents || []).length]);
+  rows.push(["عدد الجهات", (MinistryCore.officialAgentFleetSeed().agents || []).length]);
+  rows.push(["ملاحظة", "تطبيق المالك الرسمي يُبنى لاحقاً بعد التأكد أن هذا الترتيب يعمل"]);
   rows.push([]);
-  rows.push(["سجل كل سيارة ومعتمدها"]);
+  rows.push(["كل معتمد وسياراته"]);
   rows.push(["المعتمد / الجهة", "النوع", "رقم السيارة", "ورقة القاعدة"]);
 
-  var inventory = MinistryCore.buildOrganizationInventoryRows();
-  for (var i = 0; i < inventory.length; i++) {
-    rows.push([inventory[i].agentName, inventory[i].kind, inventory[i].carNumber, inventory[i].dbSheet]);
+  var groups = MinistryCore.buildOrganizationGroups();
+  for (var g = 0; g < groups.length; g++) {
+    var group = groups[g];
+    var cars = group.cars || [];
+    if (!cars.length) {
+      rows.push([group.name, group.kind, "", group.dbSheet]);
+      continue;
+    }
+    for (var c = 0; c < cars.length; c++) {
+      rows.push([group.name, group.kind, cars[c].carNumber, group.dbSheet]);
+    }
   }
 
   rows.push([]);

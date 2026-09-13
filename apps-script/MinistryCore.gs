@@ -498,6 +498,10 @@ MinistryCore.monthsFromInclusive = function(availableMonths, startKey) {
   return unique;
 };
 
+MinistryCore.buildOrganizationGroups = function(payload) {
+  return MinistryCore.normalizeAgentImportList(payload || MinistryCore.officialAgentFleetSeed());
+};
+
 MinistryCore.buildOrganizationInventoryRows = function(payload) {
   var list = MinistryCore.normalizeAgentImportList(payload || MinistryCore.officialAgentFleetSeed());
   var rows = [];

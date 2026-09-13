@@ -6,6 +6,15 @@ var DEDUCTION_RATE = 0.18;
 var SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED = true;
 var IMAGE_STORAGE_ENABLED = false;
 
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu("ترتيب الشيتات")
+      .addItem("تنظيم من الشهر 6 حتى الآن", "organizeSheetsNow")
+      .addToUi();
+  } catch (err) {}
+}
+
 function doGet(e) {
   try {
     var page = e && e.parameter ? String(e.parameter.page || "").trim().toLowerCase() : "";
