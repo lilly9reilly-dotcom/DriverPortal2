@@ -36,6 +36,44 @@ test("car numbers collapse to one key", function() {
   var c = MinistryCore.normalizeCarNumber("ب١٢٣٤٥");
   assert.strictEqual(a, b);
   assert.strictEqual(b, c);
+  assert.strictEqual(MinistryCore.normalizeCarNumber(36375.0), "36375");
+  assert.strictEqual(MinistryCore.normalizeCarNumber("36375.0"), "36375");
+  assert.strictEqual(MinistryCore.carDigitsOnly("22B35837"), "2235837");
+});
+
+test("live sheet plates match registered 5-digit cars", function() {
+  var seed = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
+  var fleet = [];
+  seed.forEach(function(agent) {
+    (agent.cars || []).forEach(function(car) {
+      fleet.push({
+        carNumber: car.carNumber,
+        ownerKind: agent.kind,
+        agentName: agent.name,
+        active: 1
+      });
+    });
+  });
+
+  function agentOf(car) {
+    var match = MinistryCore.resolveFleetMatch(car, fleet);
+    return match ? match.agentName : MinistryCore.UNCLASSIFIED;
+  }
+
+  assert.strictEqual(agentOf(36375.0), "ابراهيم");
+  assert.strictEqual(agentOf("36375.0"), "ابراهيم");
+  assert.strictEqual(agentOf("22B35837"), "علي صبار");
+  assert.strictEqual(agentOf("21F12207"), "علي صبار");
+  assert.strictEqual(agentOf("22K22006"), "علي صبار");
+  assert.strictEqual(agentOf("21h16416"), "سجاد صويره");
+  assert.strictEqual(agentOf("21j13417"), "شركة");
+  assert.strictEqual(agentOf(24057.0), "شركة");
+  assert.strictEqual(agentOf(20756.0), "قيصر شمري");
+  assert.strictEqual(agentOf(28123.0), "رواد ريادة");
+  assert.strictEqual(agentOf(9635.0), "قيصر وارد");
+  assert.strictEqual(agentOf("22e22339"), MinistryCore.UNCLASSIFIED);
+  assert.strictEqual(agentOf("22K2206"), MinistryCore.UNCLASSIFIED);
+  assert.strictEqual(agentOf(22219.0), MinistryCore.UNCLASSIFIED);
 });
 
 test("period15 splits mid-month and month-end", function() {

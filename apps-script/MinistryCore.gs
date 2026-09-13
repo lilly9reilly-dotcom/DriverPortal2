@@ -52,16 +52,24 @@ MinistryCore.normalizeHeaderToken = function(value) {
 };
 
 MinistryCore.normalizeCarNumber = function(value) {
+  if (typeof value === "number" && isFinite(value)) {
+    value = value === Math.floor(value) ? String(Math.floor(value)) : String(value);
+  }
   var s = String(value == null ? "" : value)
     .replace(/[٠-٩]/g, function(d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); })
     .replace(/[أإآ]/g, "ا")
     .replace(/ة/g, "ه")
     .replace(/ى/g, "ي")
     .replace(/[\u064B-\u065F\u0670]/g, "")
+    .replace(/\.0+$/, "")
     .replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, "")
     .trim()
     .toUpperCase();
   return s;
+};
+
+MinistryCore.carDigitsOnly = function(value) {
+  return String(MinistryCore.normalizeCarNumber(value) || "").replace(/\D/g, "");
 };
 
 MinistryCore.normalizeQtyTon = function(value) {
@@ -170,13 +178,33 @@ MinistryCore.isTruthyActive = function(value) {
 MinistryCore.resolveFleetMatch = function(carNumber, fleetRows) {
   var key = MinistryCore.normalizeCarNumber(carNumber);
   if (!key) return null;
+  var keyDigits = MinistryCore.carDigitsOnly(carNumber);
   var list = fleetRows || [];
+  var suffixMatch = null;
+  var suffixLen = 0;
   for (var i = 0; i < list.length; i++) {
     var row = list[i] || {};
     if (!MinistryCore.isTruthyActive(row.active == null ? 1 : row.active)) continue;
-    if (MinistryCore.normalizeCarNumber(row.carNumber) === key) return row;
+    var plate = MinistryCore.normalizeCarNumber(row.carNumber);
+    if (plate && plate === key) return row;
+    var plateDigits = MinistryCore.carDigitsOnly(row.carNumber);
+    if (!keyDigits || !plateDigits || plateDigits.length < 4) continue;
+    var hit = keyDigits === plateDigits;
+    if (!hit && keyDigits.length >= plateDigits.length) {
+      hit = keyDigits.slice(-plateDigits.length) === plateDigits;
+    }
+    if (!hit && plateDigits.length > keyDigits.length && keyDigits.length >= 4) {
+      hit = plateDigits.slice(-keyDigits.length) === keyDigits;
+    }
+    if (hit) {
+      var overlap = Math.min(keyDigits.length, plateDigits.length);
+      if (overlap > suffixLen) {
+        suffixLen = overlap;
+        suffixMatch = row;
+      }
+    }
   }
-  return null;
+  return suffixMatch;
 };
 
 MinistryCore.classifyReceipt = function(receipt, fleetRows) {
