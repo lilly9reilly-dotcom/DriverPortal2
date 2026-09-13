@@ -497,6 +497,11 @@ MinistryCore.officialAgentFleetSeed = function() {
         name: "رواد ريادة",
         kind: "معتمد",
         cars: ["22351", "31669", "28123"]
+      },
+      {
+        name: "قيصر وارد",
+        kind: "معتمد",
+        cars: ["29684", "33687", "29635", "36290"]
       }
     ]
   };
