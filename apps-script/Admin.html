@@ -567,6 +567,7 @@
               <input id="agentNotesInput" type="text" placeholder="ملاحظة">
               <button class="btn-green" onclick="saveAgentRow()">حفظ المعتمد</button>
               <button class="btn-blue" onclick="loadRegistry()">تحديث السجل</button>
+              <button class="btn-green" onclick="applyOfficialAgentSeed()">تسجيل المعتمدين المعروفين</button>
               <button class="btn-orange" onclick="syncAgentDatabases()">ترحيل وصولات الشهر</button>
             </div>
           </div>
@@ -2330,6 +2331,29 @@
         await loadRegistry();
       } catch (e) {
         showMessage("فشل حفظ المعتمد: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function applyOfficialAgentSeed() {
+      showLoader(true);
+      try {
+        var res = await runServer("bootstrapAgentRegistry", { applySeed: "true" });
+        if (!(res && res.success)) {
+          showMessage((res && res.message) || "فشل تسجيل المعتمدين المعروفين", "error");
+          showLoader(false);
+          return;
+        }
+        var imported = res.imported || {};
+        showMessage(
+          "تم تسجيل المعتمدين المعروفين: " +
+          formatNum(imported.createdAgents || 0, 0) + " معتمد — " +
+          formatNum(imported.createdCars || 0, 0) + " سيارة",
+          "ok"
+        );
+        await loadRegistry();
+      } catch (e) {
+        showMessage("فشل تسجيل المعتمدين: " + (e && e.message ? e.message : e), "error");
       }
       showLoader(false);
     }

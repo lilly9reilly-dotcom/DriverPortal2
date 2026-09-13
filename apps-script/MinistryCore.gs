@@ -480,6 +480,18 @@ MinistryCore.buildPeriodStats = function(rows) {
   };
 };
 
+MinistryCore.officialAgentFleetSeed = function() {
+  return {
+    agents: [
+      {
+        name: "سجاد صويره",
+        kind: "معتمد",
+        cars: ["15871", "16414", "16416"]
+      }
+    ]
+  };
+};
+
 MinistryCore.normalizeAgentImportList = function(payload) {
   var raw = payload || {};
   var list = raw.agents || raw.data || [];

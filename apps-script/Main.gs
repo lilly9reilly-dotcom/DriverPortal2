@@ -53,6 +53,7 @@ function handleRequest(e) {
     if (action === "saveFleet") return json(saveFleet(data));
     if (action === "importAgentFleetList") return json(importAgentFleetList(data));
     if (action === "bootstrapAgentRegistry") return json(bootstrapAgentRegistry(data));
+    if (action === "getOfficialAgentSeed") return json(getOfficialAgentSeed(data));
     if (action === "getPeriodStats") return json(getPeriodStats(data));
     if (action === "getUnclassifiedReceipts") return json(getUnclassifiedReceipts(data));
     if (action === "generateAgentStatements") return json(generateAgentStatements(data));

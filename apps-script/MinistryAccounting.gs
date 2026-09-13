@@ -187,6 +187,10 @@ function saveFleet(data) {
 }
 
 function bootstrapAgentRegistry(data) {
+  data = data || {};
+  var applySeed = String(data.applySeed == null ? "true" : data.applySeed).toLowerCase() !== "false";
+  var imported = applySeed ? importAgentFleetList(MinistryCore.officialAgentFleetSeed()) : { success: true };
+
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   ensureAgentsSheet_(ss);
   ensureFleetSheet_(ss);
@@ -200,8 +204,18 @@ function bootstrapAgentRegistry(data) {
     success: true,
     spreadsheetId: ss.getId(),
     spreadsheetUrl: ss.getUrl(),
+    seedApplied: applySeed,
+    imported: imported,
     agents: attachAgentDbCounts_(ss, readAgents_(ss)),
     fleet: readFleet_(ss)
+  };
+}
+
+function getOfficialAgentSeed(data) {
+  var seed = MinistryCore.officialAgentFleetSeed();
+  return {
+    success: true,
+    agents: MinistryCore.normalizeAgentImportList(seed)
   };
 }
 
