@@ -171,7 +171,7 @@ test("company cars get a separate 10-receipt statement", function() {
 
 test("سجاد صويره cars 15871 16414 16416 route to his database", function() {
   var seed = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
-  assert.strictEqual(seed.length, 4);
+  assert.strictEqual(seed.length, 5);
   assert.strictEqual(seed[0].name, "سجاد صويره");
   assert.deepStrictEqual(seed[0].cars.map(function(c) { return c.carNumber; }), ["15871", "16414", "16416"]);
   assert.strictEqual(seed[0].dbSheet, "DB_سجاد_صويره");
@@ -184,6 +184,9 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
   assert.strictEqual(seed[3].name, "قيصر وارد");
   assert.deepStrictEqual(seed[3].cars.map(function(c) { return c.carNumber; }), ["29684", "33687", "29635", "36290"]);
   assert.strictEqual(seed[3].dbSheet, "DB_قيصر_وارد");
+  assert.strictEqual(seed[4].name, "علي صبار");
+  assert.deepStrictEqual(seed[4].cars.map(function(c) { return c.carNumber; }), ["12207", "31896", "27591", "36341", "23589", "35837", "22006", "30706", "27912", "23917", "24189"]);
+  assert.strictEqual(seed[4].dbSheet, "DB_علي_صبار");
 
   var fleet = seed[0].cars.map(function(c) {
     return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "سجاد صويره", active: 1 };
@@ -244,6 +247,21 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
     }, qaysarFleet);
     assert.strictEqual(target.sheetName, "DB_قيصر_وارد");
     assert.strictEqual(target.agentName, "قيصر وارد");
+  });
+
+  var aliFleet = seed[4].cars.map(function(c) {
+    return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "علي صبار", active: 1 };
+  });
+  ["12207", "31896", "27591", "36341", "23589", "35837", "22006", "30706", "27912", "23917", "24189"].forEach(function(car) {
+    var target = MinistryCore.resolveRoutingTarget({
+      docNumber: "5",
+      carNumber: car,
+      loadDate: "2026-09-04",
+      destination: "حلفاية",
+      sheetName: "2026_09"
+    }, aliFleet);
+    assert.strictEqual(target.sheetName, "DB_علي_صبار");
+    assert.strictEqual(target.agentName, "علي صبار");
   });
 });
 
