@@ -1197,9 +1197,16 @@
       }
 
       var s = String(value || "").trim();
-      var m2 = s.match(/(\d{4}[\/-]\d{1,2}[\/-]\d{1,2})/);
-      if (m2) return m2[1].replace(/\//g, "-");
-      return s;
+      // أزل الوقت إن وُجد: 2026-06-02 0:00:00 -> 2026-06-02
+      var m2 = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+      if (m2) {
+        return m2[1] + "-" + String(m2[2]).padStart(2, "0") + "-" + String(m2[3]).padStart(2, "0");
+      }
+      m2 = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+      if (m2) {
+        return m2[3] + "-" + String(m2[2]).padStart(2, "0") + "-" + String(m2[1]).padStart(2, "0");
+      }
+      return s.split("T")[0].split(" ")[0];
     }
 
     function formatTimeOnly(value) {

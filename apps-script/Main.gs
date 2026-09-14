@@ -143,12 +143,15 @@ function saveTripMain_(data) {
   var notes = String(data.notes || "");
   if (data.bogerNumber) notes = (notes ? notes + " " : "") + "بوجر:" + String(data.bogerNumber);
 
+  var loadDateOnly = MinistryCore.formatDateOnly(data.loadDate || "");
+  var unloadDateOnly = MinistryCore.formatDateOnly(data.unloadDate || "");
+
   sheet.appendRow([
     docNumber,
     String(data.driverName || ""),
     String(data.carNumber || ""),
-    String(data.loadDate || ""),
-    String(data.unloadDate || ""),
+    loadDateOnly,
+    unloadDateOnly,
     quantity,
     owner,
     String(data.destination || data.station || ""),
@@ -164,8 +167,8 @@ function saveTripMain_(data) {
     docNumber: docNumber,
     driverName: data.driverName,
     carNumber: data.carNumber,
-    loadDate: data.loadDate,
-    unloadDate: data.unloadDate,
+    loadDate: loadDateOnly,
+    unloadDate: unloadDateOnly,
     quantity: quantity,
     destination: data.destination || data.station,
     liters: liters,
@@ -201,13 +204,15 @@ function saveFactoryMain_(data) {
   var price = round0_(netQty * PRICE_PER_TON_FACTORY);
   var imageUrl = resolveReceiptImageUrl_(data);
   var owner = resolveTripOwnerLabel_(data);
+  var loadDateOnly = MinistryCore.formatDateOnly(data.loadDate || data.unloadDate || "");
+  var unloadDateOnly = MinistryCore.formatDateOnly(data.unloadDate || data.loadDate || "");
 
   sheet.appendRow([
     docNumber,
     String(data.driverName || ""),
     String(data.carNumber || ""),
-    String(data.loadDate || data.unloadDate || ""),
-    String(data.unloadDate || data.loadDate || ""),
+    loadDateOnly,
+    unloadDateOnly,
     quantity,
     owner,
     String(data.factory || data.destination || ""),
@@ -223,8 +228,8 @@ function saveFactoryMain_(data) {
     docNumber: docNumber,
     driverName: data.driverName,
     carNumber: data.carNumber,
-    loadDate: data.loadDate || data.unloadDate,
-    unloadDate: data.unloadDate || data.loadDate,
+    loadDate: loadDateOnly,
+    unloadDate: unloadDateOnly,
     quantity: quantity,
     destination: data.factory || data.destination,
     factory: data.factory || data.destination,

@@ -111,6 +111,27 @@ MinistryCore.parseDateParts = function(raw) {
   return null;
 };
 
+/** تاريخ فقط بدون وقت: yyyy-MM-dd */
+MinistryCore.formatDateOnly = function(raw) {
+  if (raw == null || raw === "") return "";
+  var parts = MinistryCore.parseDateParts(raw);
+  if (parts && parts.year && parts.month && parts.day) {
+    return parts.year + "-" + ("0" + parts.month).slice(-2) + "-" + ("0" + parts.day).slice(-2);
+  }
+  var text = String(raw)
+    .replace(/[٠-٩]/g, function(d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); })
+    .trim();
+  var m = text.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if (m) {
+    return m[1] + "-" + ("0" + Number(m[2])).slice(-2) + "-" + ("0" + Number(m[3])).slice(-2);
+  }
+  m = text.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+  if (m) {
+    return m[3] + "-" + ("0" + Number(m[2])).slice(-2) + "-" + ("0" + Number(m[1])).slice(-2);
+  }
+  return text.split("T")[0].split(" ")[0].trim();
+};
+
 MinistryCore.getPeriod15 = function(dateValue) {
   var parts = MinistryCore.parseDateParts(dateValue);
   if (!parts || !parts.day) return 1;
@@ -274,6 +295,8 @@ MinistryCore.enrichReceipt = function(receipt, fleetRows) {
   out.ministryAmount = amount;
   out.ministryGas = gas;
   out.period15 = period15;
+  out.loadDate = MinistryCore.formatDateOnly(row.loadDate || "");
+  out.unloadDate = MinistryCore.formatDateOnly(row.unloadDate || "");
   return out;
 };
 
@@ -401,8 +424,8 @@ MinistryCore.statementRow = function(row, index) {
     docNumber: String((row && row.docNumber) || ""),
     driverName: String((row && row.driverName) || ""),
     carNumber: String((row && (row.carNumberNormalized || row.carNumber)) || ""),
-    loadDate: String((row && row.loadDate) || ""),
-    unloadDate: String((row && row.unloadDate) || ""),
+    loadDate: MinistryCore.formatDateOnly((row && row.loadDate) || ""),
+    unloadDate: MinistryCore.formatDateOnly((row && row.unloadDate) || ""),
     qty: qty,
     pricePerTon: price,
     amount: amount
@@ -657,7 +680,7 @@ MinistryCore.receiptRoutingKey = function(row) {
   return [
     String(r.docNumber || "").trim(),
     MinistryCore.normalizeCarNumber(r.carNumber || r.carNumberNormalized),
-    String(r.loadDate || r.unloadDate || "").trim(),
+    MinistryCore.formatDateOnly(r.loadDate || r.unloadDate || ""),
     r.isFactory ? "factory" : "station"
   ].join("|");
 };
@@ -716,8 +739,8 @@ MinistryCore.buildAgentLedgerRow = function(receipt, routedAt) {
     String(row.docNumber || ""),
     String(row.driverName || ""),
     String(row.carNumberNormalized || row.carNumber || ""),
-    String(row.loadDate || ""),
-    String(row.unloadDate || ""),
+    MinistryCore.formatDateOnly(row.loadDate || ""),
+    MinistryCore.formatDateOnly(row.unloadDate || ""),
     qty,
     String(row.destination || row.station || row.factory || ""),
     isFactory ? "معمل" : "محطة",

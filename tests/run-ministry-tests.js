@@ -456,14 +456,24 @@ test("car number routes the receipt to that agent's database", function() {
     driverName: "أحمد",
     quantity: 18920,
     destination: "حلفاية",
-    loadDate: "2026-09-04",
+    loadDate: "2026-09-04 10:15:00",
+    unloadDate: "2026-09-05T08:00:00",
     sheetName: "2026_09",
     month: "2026_09"
   }, fleet), "2026-09-04 10:00:00");
+  assert.strictEqual(ledger[3], "2026-09-04");
+  assert.strictEqual(ledger[4], "2026-09-05");
   assert.strictEqual(ledger[5], 18.92);
   assert.strictEqual(ledger[11], Math.round(18.92 * 34300));
   assert.strictEqual(ledger[14], "الرافدين");
   assert.strictEqual(ledger[16], agent.routingKey);
+});
+
+test("load and unload dates are stored without time", function() {
+  assert.strictEqual(MinistryCore.formatDateOnly("2026-06-02 0:00:00"), "2026-06-02");
+  assert.strictEqual(MinistryCore.formatDateOnly("2026-06-02T18:30:00"), "2026-06-02");
+  assert.strictEqual(MinistryCore.formatDateOnly(new Date(2026, 5, 2, 15, 45)), "2026-06-02");
+  assert.strictEqual(MinistryCore.formatDateOnly("02/06/2026"), "2026-06-02");
 });
 
 test("ministry pack blocks unclassified receipts unless forced", function() {

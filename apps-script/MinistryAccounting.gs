@@ -1093,7 +1093,7 @@ function formatSheetDate_(value) {
   if (value && Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
     return Utilities.formatDate(value, "Asia/Baghdad", "yyyy-MM-dd");
   }
-  return String(value || "").trim();
+  return MinistryCore.formatDateOnly(value);
 }
 
 function sameMonthKey_(dateValue, monthKey) {
