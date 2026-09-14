@@ -141,7 +141,8 @@ function saveTripMain_(data) {
   var owner = resolveTripOwnerLabel_(data);
 
   var notes = String(data.notes || "");
-  if (data.bogerNumber) notes = (notes ? notes + " " : "") + "بوجر:" + String(data.bogerNumber);
+  var boger = data.bogerNumber || data.bojer || data.boger || "";
+  if (boger) notes = (notes ? notes + " " : "") + "بوجر:" + String(boger);
 
   var loadDateOnly = MinistryCore.formatDateOnly(data.loadDate || "");
   var unloadDateOnly = MinistryCore.formatDateOnly(data.unloadDate || "");
@@ -629,7 +630,7 @@ function loginDriver(data) {
   try {
     // حاول العثور على السيارة في جدول السيارات المصرح بها
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheet = ss.getSheetByName("AuthorizedCars") || ss.getSheetByName("Cars") || ss.getSheetByName("Vehicles");
+    var sheet = ss.getSheetByName("السيارات") || ss.getSheetByName("AuthorizedDrivers") || ss.getSheetByName("AuthorizedCars") || ss.getSheetByName("Cars") || ss.getSheetByName("Vehicles");
     
     var found = false;
     if (sheet) {
