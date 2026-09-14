@@ -140,6 +140,9 @@ function saveTripMain_(data) {
   var imageUrl = resolveReceiptImageUrl_(data);
   var owner = resolveTripOwnerLabel_(data);
 
+  var notes = String(data.notes || "");
+  if (data.bogerNumber) notes = (notes ? notes + " " : "") + "بوجر:" + String(data.bogerNumber);
+
   sheet.appendRow([
     docNumber,
     String(data.driverName || ""),
@@ -152,10 +155,9 @@ function saveTripMain_(data) {
     imageUrl,
     nowBaghdad_(),
     liters,
-    String(data.bogerNumber || ""),
     toNumber_(data.distance),
     price,
-    String(data.notes || "")
+    notes
   ]);
 
   var routed = routeSavedReceipt_({
@@ -246,7 +248,22 @@ function ensureTripsSheet_(ss, name) {
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    sheet.appendRow(["رقم الوصل", "اسم السائق", "رقم السيارة", "تاريخ التحميل", "تاريخ التفريغ", "الكمية", "المالك", "المحطة", "رابط الصورة", "وقت الإرسال", "لترات الكاز", "رقم البوجر", "المسافة", "سعر النقل", "ملاحظات"]);
+    sheet.appendRow([
+      "رقم الوصل",
+      "اسم السائق",
+      "رقم السيارة",
+      "تاريخ التحميل",
+      "تاريخ التفريغ",
+      "الكمية",
+      "المالك",
+      "المحطة",
+      "رابط الصورة",
+      "وقت الإرسال",
+      "لترات الكاز",
+      "المسافة",
+      "سعر النقل",
+      "ملاحظات"
+    ]);
   }
   return sheet;
 }
