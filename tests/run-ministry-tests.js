@@ -71,9 +71,12 @@ test("live sheet plates match registered 5-digit cars", function() {
   assert.strictEqual(agentOf(20756.0), "قيصر شمري");
   assert.strictEqual(agentOf(28123.0), "رواد ريادة");
   assert.strictEqual(agentOf(9635.0), "قيصر وارد");
-  assert.strictEqual(agentOf("22e22339"), MinistryCore.UNCLASSIFIED);
+  assert.strictEqual(agentOf("22e22339"), "شركة يونيغاز");
+  assert.strictEqual(agentOf("E22219"), "شركة يونيغاز");
+  assert.strictEqual(agentOf("E22084"), "شركة يونيغاز");
+  assert.strictEqual(agentOf("E22076"), "شركة يونيغاز");
+  assert.strictEqual(agentOf(22219.0), "شركة يونيغاز");
   assert.strictEqual(agentOf("22K2206"), MinistryCore.UNCLASSIFIED);
-  assert.strictEqual(agentOf(22219.0), MinistryCore.UNCLASSIFIED);
 });
 
 test("period15 splits mid-month and month-end", function() {
@@ -215,13 +218,18 @@ test("organization covers June through current months and lists every car under 
   assert.ok(cars.indexOf("15871") >= 0);
   assert.ok(cars.indexOf("24189") >= 0);
   assert.ok(cars.indexOf("22973") >= 0);
+  assert.ok(cars.indexOf("22219") >= 0);
+  assert.ok(cars.indexOf("22339") >= 0);
   assert.strictEqual(inventory.filter(function(r) { return r.agentName === "علي صبار"; }).length, 11);
   assert.strictEqual(inventory.filter(function(r) { return r.dbSheet === "DB_شركة"; }).length, 9);
   assert.strictEqual(inventory.filter(function(r) { return r.agentName === "قيصر شمري"; }).length, 4);
+  assert.strictEqual(inventory.filter(function(r) { return r.agentName === "شركة يونيغاز"; }).length, 4);
   var groups = MinistryCore.buildOrganizationGroups();
-  assert.strictEqual(groups.length, 7);
+  assert.strictEqual(groups.length, 8);
   assert.strictEqual(groups[6].name, "شركة");
   assert.strictEqual(groups[6].dbSheet, "DB_شركة");
+  assert.strictEqual(groups[7].name, "شركة يونيغاز");
+  assert.strictEqual(groups[7].dbSheet, "DB_شركة_يونيغاز");
   assert.ok(MinistryCore.isMonthDataSheet("2026_06"));
   assert.ok(MinistryCore.isMonthDataSheet("F_2026_07"));
   assert.strictEqual(MinistryCore.extractMonthKeyFromSheetName("F_2026_07") >= MinistryCore.HISTORY_START_MONTH, true);
@@ -229,7 +237,7 @@ test("organization covers June through current months and lists every car under 
 
 test("سجاد صويره cars 15871 16414 16416 route to his database", function() {
   var seed = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
-  assert.strictEqual(seed.length, 7);
+  assert.strictEqual(seed.length, 8);
   assert.strictEqual(seed[0].name, "سجاد صويره");
   assert.deepStrictEqual(seed[0].cars.map(function(c) { return c.carNumber; }), ["15871", "16414", "16416"]);
   assert.strictEqual(seed[0].dbSheet, "DB_سجاد_صويره");
@@ -252,6 +260,10 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
   assert.strictEqual(seed[6].kind, "شركة");
   assert.deepStrictEqual(seed[6].cars.map(function(c) { return c.carNumber; }), ["22973", "24057", "24382", "25710", "30353", "29744", "29555", "13417", "27740"]);
   assert.strictEqual(seed[6].dbSheet, "DB_شركة");
+  assert.strictEqual(seed[7].name, "شركة يونيغاز");
+  assert.strictEqual(seed[7].kind, "معتمد");
+  assert.deepStrictEqual(seed[7].cars.map(function(c) { return c.carNumber; }), ["22219", "22084", "22076", "22339"]);
+  assert.strictEqual(seed[7].dbSheet, "DB_شركة_يونيغاز");
 
   var fleet = seed[0].cars.map(function(c) {
     return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "سجاد صويره", active: 1 };
@@ -357,6 +369,22 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
     }, companyFleet);
     assert.strictEqual(target.sheetName, "DB_شركة");
     assert.strictEqual(target.ownerKind, "شركة");
+  });
+
+  var unigasFleet = seed[7].cars.map(function(c) {
+    return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "شركة يونيغاز", active: 1 };
+  });
+  ["22219", "22084", "22076", "22339", "E22219", "E22084", "E22076", "E22339", "22e22339"].forEach(function(car) {
+    var target = MinistryCore.resolveRoutingTarget({
+      docNumber: "8",
+      carNumber: car,
+      loadDate: "2026-09-04",
+      destination: "حلفاية",
+      sheetName: "2026_09"
+    }, unigasFleet);
+    assert.strictEqual(target.sheetName, "DB_شركة_يونيغاز");
+    assert.strictEqual(target.agentName, "شركة يونيغاز");
+    assert.strictEqual(target.classified, true);
   });
 });
 

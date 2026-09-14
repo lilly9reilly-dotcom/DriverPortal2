@@ -53,13 +53,19 @@ var CLIENTS = [
     kind: "شركة",
     dbSheet: "DB_شركة",
     cars: ["22973", "24057", "24382", "25710", "30353", "29744", "29555", "13417", "27740"]
+  },
+  {
+    name: "شركة يونيغاز",
+    kind: "معتمد",
+    dbSheet: "DB_شركة_يونيغاز",
+    cars: ["22219", "22084", "22076", "22339"]
   }
 ];
 
 var seed = MinistryCore.normalizeAgentImportList(MinistryCore.officialAgentFleetSeed());
 
-assert.strictEqual(CLIENTS.length, 7);
-assert.strictEqual(seed.length, 7);
+assert.strictEqual(CLIENTS.length, 8);
+assert.strictEqual(seed.length, 8);
 
 var totalCars = 0;
 console.log("========================================");
@@ -86,8 +92,8 @@ for (var i = 0; i < CLIENTS.length; i++) {
   console.log("   السيارات (" + client.cars.length + "): " + client.cars.join(" ، "));
 }
 
-assert.strictEqual(totalCars, 38);
+assert.strictEqual(totalCars, 42);
 console.log("");
 console.log("========================================");
-console.log("النتيجة: 7 عملاء — 38 سيارة — مطابق للقائمة الرسمية");
+console.log("النتيجة: 8 عملاء — 42 سيارة — مطابق للقائمة الرسمية");
 console.log("========================================");
