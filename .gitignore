@@ -47,3 +47,7 @@ temp-clone/
 temp-bound-target/
 temp-prod-sync/
 temp-prod-deploy-clean/
+
+# routing experiment dumps
+artifacts/routing-experiment/*.tsv
+artifacts/routing-experiment/summary.json
