@@ -7,6 +7,45 @@
 var AGENTS_SHEET_NAME = MinistryCore.CLIENTS_SHEET;
 var FLEET_SHEET_NAME = MinistryCore.CARS_SHEET;
 var TEMPLATE_60_SHEET_NAME = "60";
+var BRAND_FONT_FAMILY = "Alyamama";
+
+function applyBrandFontToRange_(range) {
+  if (!range) return;
+  try {
+    range.setFontFamily(BRAND_FONT_FAMILY);
+  } catch (err) {}
+}
+
+function applyBrandFontToSheet_(sheet) {
+  if (!sheet) return;
+  try {
+    var lastRow = Math.max(sheet.getMaxRows(), 1);
+    var lastCol = Math.max(sheet.getMaxColumns(), 1);
+    applyBrandFontToRange_(sheet.getRange(1, 1, lastRow, lastCol));
+  } catch (err) {}
+}
+
+/**
+ * Applies Alyamama as the primary font across the company spreadsheet.
+ * Safe to re-run; Sheets uses Google Fonts family name "Alyamama" when available.
+ */
+function applyAlyamamaBrandFont(data) {
+  data = data || {};
+  var ss = getCompanySpreadsheet_();
+  var sheets = ss.getSheets();
+  var updated = [];
+  for (var i = 0; i < sheets.length; i++) {
+    applyBrandFontToSheet_(sheets[i]);
+    updated.push(sheets[i].getName());
+  }
+  return {
+    success: true,
+    font: BRAND_FONT_FAMILY,
+    sheetsUpdated: updated.length,
+    sheets: updated,
+    message: "تم تطبيق خط Alyamama على " + updated.length + " ورقة"
+  };
+}
 
 function migrateLegacyRegistrySheets_(ss) {
   ss = ss || getCompanySpreadsheet_();
@@ -410,6 +449,7 @@ function writeOrganizationControlSheet_(ss, months, monthResults) {
   sheet.getRange(1, 1, 1, 5).merge();
   sheet.setFrozenRows(6);
   sheet.autoResizeColumns(1, 5);
+  applyBrandFontToSheet_(sheet);
   return sheet.getName();
 }
 
@@ -502,12 +542,14 @@ function ensureAgentDatabaseSheet_(ss, agentName, ownerKind) {
     sheet = ss.insertSheet(sheetName);
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
+    applyBrandFontToSheet_(sheet);
     return sheet;
   }
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
   }
+  applyBrandFontToSheet_(sheet);
   return sheet;
 }
 
@@ -961,6 +1003,7 @@ function writeStatementSheet_(sheet, statement, monthKey, period) {
   sheet.getRange(1, 1, 1, 9).merge();
   sheet.setFrozenRows(7);
   sheet.autoResizeColumns(1, 9);
+  applyBrandFontToSheet_(sheet);
 }
 
 function writePeriodSummarySheet_(ss, loaded, stats) {
@@ -1005,6 +1048,7 @@ function writePeriodSummarySheet_(ss, loaded, stats) {
   sheet.getRange(1, 1, rows.length, 8).setValues(padRows_(rows, 8));
   sheet.getRange(1, 1, 1, 8).merge();
   sheet.autoResizeColumns(1, 8);
+  applyBrandFontToSheet_(sheet);
 }
 
 function listHistoryMonthSheetNames_(ss) {

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>لوحة شركة النقل</title>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -28,7 +28,7 @@
 
     body {
       margin: 0;
-      font-family: "Tajawal", sans-serif;
+      font-family: "Alyamama", "Tajawal", Tahoma, sans-serif;
       background: linear-gradient(180deg, #f7f8fc, #edf1f8);
       color: var(--text);
       min-height: 100vh;
@@ -131,7 +131,7 @@
       border-radius: 10px;
       min-height: 40px;
       padding: 8px 12px;
-      font-family: "Tajawal", sans-serif;
+      font-family: "Alyamama", "Tajawal", Tahoma, sans-serif;
       font-size: 14px;
     }
 
@@ -636,6 +636,7 @@
               <button class="btn-blue" onclick="previewSafeCleanup()">معاينة تنظيف آمن</button>
               <button class="btn-red" onclick="applySafeCleanup()">تنظيف آمن (تأكيد)</button>
               <button class="btn-red" onclick="runHealth()">فحص النظام</button>
+              <button class="btn-blue" onclick="applyAlyamamaFont()">خط Alyamama للشيت</button>
             </div>
           </div>
           <div class="table-head">
@@ -2249,6 +2250,21 @@
         }
       } catch (e) {
         showMessage("فشل فحص النظام: " + (e && e.message ? e.message : e), "error");
+      }
+      showLoader(false);
+    }
+
+    async function applyAlyamamaFont() {
+      showLoader(true);
+      try {
+        var res = await runServer("applyAlyamamaBrandFont", {});
+        if (res && res.success) {
+          showMessage(res.message || ("تم تطبيق خط " + (res.font || "Alyamama")), "ok");
+        } else {
+          showMessage((res && res.message) || "تعذر تطبيق الخط على الشيت", "error");
+        }
+      } catch (e) {
+        showMessage("تعذر تطبيق الخط: " + (e && e.message ? e.message : e), "error");
       }
       showLoader(false);
     }
