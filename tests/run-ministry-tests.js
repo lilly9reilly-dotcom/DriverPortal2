@@ -62,9 +62,9 @@ test("live sheet plates match registered 5-digit cars", function() {
 
   assert.strictEqual(agentOf(36375.0), "ابراهيم");
   assert.strictEqual(agentOf("36375.0"), "ابراهيم");
-  assert.strictEqual(agentOf("22B35837"), "علي صبار");
-  assert.strictEqual(agentOf("21F12207"), "علي صبار");
-  assert.strictEqual(agentOf("22K22006"), "علي صبار");
+  assert.strictEqual(agentOf("22B35837"), "شركة ارض الهادي");
+  assert.strictEqual(agentOf("21F12207"), "شركة ارض الهادي");
+  assert.strictEqual(agentOf("22K22006"), "شركة ارض الهادي");
   assert.strictEqual(agentOf("21h16416"), "سجاد صويره");
   assert.strictEqual(agentOf("21j13417"), "شركة");
   assert.strictEqual(agentOf(24057.0), "شركة");
@@ -220,7 +220,7 @@ test("organization covers June through current months and lists every car under 
   assert.ok(cars.indexOf("22973") >= 0);
   assert.ok(cars.indexOf("22219") >= 0);
   assert.ok(cars.indexOf("22339") >= 0);
-  assert.strictEqual(inventory.filter(function(r) { return r.agentName === "علي صبار"; }).length, 11);
+  assert.strictEqual(inventory.filter(function(r) { return r.agentName === "شركة ارض الهادي"; }).length, 11);
   assert.strictEqual(inventory.filter(function(r) { return r.dbSheet === "DB_شركة"; }).length, 9);
   assert.strictEqual(inventory.filter(function(r) { return r.agentName === "قيصر شمري"; }).length, 4);
   assert.strictEqual(inventory.filter(function(r) { return r.agentName === "شركة يونيغاز"; }).length, 4);
@@ -250,9 +250,9 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
   assert.strictEqual(seed[3].name, "قيصر وارد");
   assert.deepStrictEqual(seed[3].cars.map(function(c) { return c.carNumber; }), ["29684", "33687", "29635", "36290"]);
   assert.strictEqual(seed[3].dbSheet, "DB_قيصر_وارد");
-  assert.strictEqual(seed[4].name, "علي صبار");
+  assert.strictEqual(seed[4].name, "شركة ارض الهادي");
   assert.deepStrictEqual(seed[4].cars.map(function(c) { return c.carNumber; }), ["12207", "31896", "27591", "36341", "23589", "35837", "22006", "30706", "27912", "23917", "24189"]);
-  assert.strictEqual(seed[4].dbSheet, "DB_علي_صبار");
+  assert.strictEqual(seed[4].dbSheet, "DB_شركة_ارض_الهادي");
   assert.strictEqual(seed[5].name, "قيصر شمري");
   assert.deepStrictEqual(seed[5].cars.map(function(c) { return c.carNumber; }), ["20585", "27685", "20756", "20858"]);
   assert.strictEqual(seed[5].dbSheet, "DB_قيصر_شمري");
@@ -327,7 +327,7 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
   });
 
   var aliFleet = seed[4].cars.map(function(c) {
-    return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "علي صبار", active: 1 };
+    return { carNumber: c.carNumber, ownerKind: "معتمد", agentName: "شركة ارض الهادي", active: 1 };
   });
   ["12207", "31896", "27591", "36341", "23589", "35837", "22006", "30706", "27912", "23917", "24189"].forEach(function(car) {
     var target = MinistryCore.resolveRoutingTarget({
@@ -337,8 +337,8 @@ test("سجاد صويره cars 15871 16414 16416 route to his database", functio
       destination: "حلفاية",
       sheetName: "2026_09"
     }, aliFleet);
-    assert.strictEqual(target.sheetName, "DB_علي_صبار");
-    assert.strictEqual(target.agentName, "علي صبار");
+    assert.strictEqual(target.sheetName, "DB_شركة_ارض_الهادي");
+    assert.strictEqual(target.agentName, "شركة ارض الهادي");
   });
 
   var shamriFleet = seed[5].cars.map(function(c) {

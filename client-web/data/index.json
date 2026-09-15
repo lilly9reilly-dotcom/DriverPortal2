@@ -44,15 +44,6 @@
     "stationTrips": 90,
     "factoryTrips": 60
   },
-  "DB_علي_صبار": {
-    "count": 547,
-    "quantity": 10289.79,
-    "amount": 241821777.0,
-    "gasLiters": 58197.0,
-    "gasValue": 25024710.0,
-    "stationTrips": 318,
-    "factoryTrips": 229
-  },
   "DB_قيصر_شمري": {
     "count": 200,
     "quantity": 3770.6,
@@ -70,5 +61,14 @@
     "gasValue": 4266030.0,
     "stationTrips": 66,
     "factoryTrips": 49
+  },
+  "DB_شركة_ارض_الهادي": {
+    "count": 547,
+    "quantity": 10289.79,
+    "amount": 241821777.0,
+    "gasLiters": 58197.0,
+    "gasValue": 25024710.0,
+    "stationTrips": 318,
+    "factoryTrips": 229
   }
 }
