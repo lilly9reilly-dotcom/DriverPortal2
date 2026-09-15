@@ -33,7 +33,7 @@ html {
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif;
+  font-family: "Alyamama", "Tajawal", "Segoe UI", Tahoma, sans-serif;
   color: var(--text);
   background: linear-gradient(135deg, #F0F4F8 0%, #E8F1F7 50%, #F0F4F8 100%);
   min-height: 100vh;

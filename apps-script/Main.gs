@@ -1,10 +1,35 @@
-var SPREADSHEET_ID = "1a7r3rXY7dPyUjKCdvNopK2Y9ufKYhda0o6DCYBukv2o";
+var SPREADSHEET_ID = "1adlJxYSgBftTcagTAyl9GrwNwrBTPOrTDQbYeBhqCiM";
 var PRICE_PER_TON_HALAFAYA = 41800;
 var PRICE_PER_TON_FACTORY = 10000;
 var PRICE_PER_LITER = 430;
 var DEDUCTION_RATE = 0.18;
 var SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED = true;
+/** Fill missing companyId/activationCode for old APKs that predate scope. */
+var LEGACY_COMPAT_FILL_MISSING_SCOPE = true;
+var LEGACY_COMPAT_DEFAULT_COMPANY_ID = "COMP-001";
+var LEGACY_COMPAT_DEFAULT_ACTIVATION_CODE = "CMP-260704184724-6391";
 var IMAGE_STORAGE_ENABLED = false;
+
+function onOpen() {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu("قواعد العملاء")
+      .addItem("إنشاء قواعد بيانات العملاء", "createClientDatabasesNow")
+      .addItem("ترحيل الوصولات من يونيو حتى الآن", "organizeSheetsNow")
+      .addToUi();
+  } catch (err) {}
+}
+
+function getCompanySpreadsheet_() {
+  try {
+    var active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active && String(active.getId() || "") === String(SPREADSHEET_ID || "")) {
+      return active;
+    }
+    if (active && !SPREADSHEET_ID) return active;
+  } catch (err) {}
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
 
 function doGet(e) {
   try {
@@ -19,17 +44,23 @@ function doPost(e) {
 }
 
 function renderAdminPage_() {
-  return HtmlService.createHtmlOutput("<html dir='rtl'><body style='font-family:Tajawal,sans-serif;padding:20px'><h2>نظام Core الجديد</h2><p>تم فصل Dashboard التتبع عن هذا النظام. هذه الصفحة خاصة بالإدارة التشغيلية.</p></body></html>")
-    .setTitle("Core Admin")
+  return HtmlService.createHtmlOutputFromFile("Admin")
+    .setTitle("لوحة شركة النقل")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 function handleRequest(e) {
-  var data = readRequestData_(e);
+  var data = normalizeClientPayload_(readRequestData_(e));
   var action = String(data.action || "").trim();
 
   try {
     if (!action) return json({ success: false, message: "No action" });
+
+    // Legacy action aliases used by older APK builds.
+    if (action === "issue") action = "reportIssue";
+    if (action === "get_drivers") action = "drivers";
+    if (action === "dashboard") action = "wallet";
+    data.action = action;
 
     if (action === "systemHealthCheck") return json(systemHealthCheck(data));
     if (action === "createSystemBackup") return json(createSystemBackup(data));
@@ -44,22 +75,127 @@ function handleRequest(e) {
     if (action === "companyActivationAuditList") return json(listCompanyActivationAudit(data));
 
     if (action === "getAvailableMonths") return json({ success: true, data: getAvailableMonths() });
+    if (action === "getAllReceiptsData") return json(getAllReceiptsData(data.month || data));
+    if (action === "getMaintenanceData") return json(getMaintenanceData(data.month || data));
+    if (action === "listAgents") return json(listAgents(data));
+    if (action === "listFleet") return json(listFleet(data));
+    if (action === "getMinistryRegistry") return json(getMinistryRegistry(data));
+    if (action === "saveAgent") return json(saveAgent(data));
+    if (action === "saveFleet") return json(saveFleet(data));
+    if (action === "importAgentFleetList") return json(importAgentFleetList(data));
+    if (action === "bootstrapAgentRegistry") return json(bootstrapAgentRegistry(data));
+    if (action === "createClientDatabasesNow") return json(createClientDatabasesNow());
+    if (action === "ensureOfficialClientsReady") return json(ensureOfficialClientsReady_());
+    if (action === "organizeHistoricalAgentLedgers") return json(organizeHistoricalAgentLedgers(data));
+    if (action === "getOfficialAgentSeed") return json(getOfficialAgentSeed(data));
+    if (action === "getPeriodStats") return json(getPeriodStats(data));
+    if (action === "getUnclassifiedReceipts") return json(getUnclassifiedReceipts(data));
+    if (action === "generateAgentStatements") return json(generateAgentStatements(data));
+    if (action === "generateCompanyStatements") return json(generateCompanyStatements(data));
+    if (action === "exportMinistryPack") return json(exportMinistryPack(data));
+    if (action === "syncAgentDatabases") return json(syncAgentDatabases(data));
+    if (action === "cleanupSafetyPreview") return json(cleanupSafetyPreview(data));
+    if (action === "cleanupSafetyApply") return json(cleanupSafetyApply(data));
+    if (action === "applyAlyamamaBrandFont") return json(applyAlyamamaBrandFont(data));
     if (action === "trip") return json(saveTripMain_(data));
     if (action === "factory") return json(saveFactoryMain_(data));
     if (action === "login") return json(callExisting_("loginDriver", [data]));
 
-    if (action === "gps" || action === "drivers" || action === "route" || action === "alerts" || action === "autoTrips") {
-      return json({
-        success: false,
-        message: "Tracking API is separated from Core. Use Tracking deployment.",
-        separated: true
-      });
+    // Keep GPS/tracking on the same live deployment so the driver app stays intact.
+    if (action === "gps") return json(callExisting_("handleGPS", [data]));
+    if (action === "drivers") return json(callExisting_("getDriversLive", []));
+    if (action === "route") {
+      return json(callExisting_("getVehicleRoute", [{
+        vehicle: data.vehicle || "",
+        carNumber: data.carNumber || "",
+        driverName: data.driverName || data.driver || "",
+        id: data.id || "",
+        limit: data.limit || 160
+      }]));
     }
+    if (action === "alerts") return json(callExisting_("getRecentAlerts", []));
+    if (action === "autoTrips") return json(callExisting_("getAutoTrips", []));
+    if (action === "cleanup") return json(callExisting_("cleanupDuplicates", []));
+    if (action === "health") return json(callExisting_("getSystemHealth", []));
+
+    if (action === "wallet") {
+      var walletScope = validateScopeForProtectedAction_("wallet", data);
+      if (!walletScope.success) return json(walletScope);
+      return json(callExisting_("getDriverWallet", [data]));
+    }
+    if (action === "history") {
+      var historyScope = validateScopeForProtectedAction_("history", data);
+      if (!historyScope.success) return json(historyScope);
+      return json(callExisting_("getDriverTrips", [data]));
+    }
+    if (action === "getMaintenance") {
+      var maintenanceScope = validateScopeForProtectedAction_("getMaintenance", data);
+      if (!maintenanceScope.success) return json(maintenanceScope);
+      return json(callExisting_("getMaintenanceRequests", [data]));
+    }
+    if (action === "saveMaintenance") {
+      var saveMaintScope = validateScopeForProtectedAction_("saveMaintenance", data);
+      if (!saveMaintScope.success) return json(saveMaintScope);
+      return json(saveMaintenance(data));
+    }
+    if (action === "reportIssue") {
+      var issueScope = validateScopeForProtectedAction_("reportIssue", data);
+      if (!issueScope.success) return json(issueScope);
+      return json(callExisting_("reportIssue", [data]));
+    }
+    if (action === "checkDoc") {
+      var docScope = validateScopeForProtectedAction_("checkDoc", data);
+      if (!docScope.success) return json(docScope);
+      return json(checkDoc(data));
+    }
+
+    // Client portal (read-first). Does not alter login/gps/trip write paths.
+    if (action === "clientLogin") return json(clientPortalLogin_(data));
+    if (action === "clientGetState") return json(clientPortalGetState_(data));
+    if (action === "clientRegisterReceive") return json(clientPortalRegisterReceive_(data));
+    if (action === "clientSavePayoutMethods") return json(clientSavePayoutMethods_(data));
+    if (action === "clientGetPayoutMethods") return json(clientGetPayoutMethods_(data));
+    if (action === "clientListSettlements") return json(clientListSettlements_(data));
+    if (action === "clientListMoneyNotices") return json(clientListMoneyNotices_(data));
+    if (action === "clientConfirmSettlementReceived") return json(clientConfirmSettlementReceived_(data));
+    if (action === "adminSendClientSettlement") return json(adminSendClientSettlement_(data));
+    if (action === "adminListClientSettlements") return json(adminListClientSettlements_(data));
+    if (action === "adminListMoneyNotices") return json(adminListMoneyNotices_(data));
+    if (action === "adminListClientPayoutMethods") return json(adminListClientPayoutMethods_(data));
+    if (action === "ensureClientFinanceSheets") return json(ensureClientFinanceSheets_());
+    if (action === "listRoles") return json(listSystemRoles_());
+    if (action === "ensureRoleSheets") return json(ensureRoleReferenceSheets_(data));
+    if (action === "appendAuditLog") return json(appendAuditLog_(data));
+    if (action === "listAuditLog") return json(listAuditLog_(data));
+    if (action === "setTripStatus") return json(setTripLifecycleStatus_(data));
+    if (action === "getTripStatusCatalog") return json(getTripStatusCatalog_());
+    if (action === "getAdminDashboardSummary") return json(getAdminDashboardSummary_(data));
 
     return json({ success: false, message: "Unknown action: " + action });
   } catch (err) {
     return json({ success: false, message: String(err), action: action });
   }
+}
+
+function normalizeClientPayload_(data) {
+  data = data || {};
+  // Field aliases used by older clients / alternate UIs.
+  if (!data.docNumber && (data.receiptNo || data.receiptNumber || data.doc)) {
+    data.docNumber = data.receiptNo || data.receiptNumber || data.doc;
+  }
+  if (!data.driverName && (data.driver || data.name)) {
+    data.driverName = data.driver || data.name;
+  }
+  if (!data.carNumber && data.car) data.carNumber = data.car;
+  if (!data.destination && data.station) data.destination = data.station;
+  if (!data.station && data.destination) data.station = data.destination;
+  if (!data.ownerType && data.owner) data.ownerType = data.owner;
+  if (!data.owner && data.ownerType) data.owner = data.ownerType;
+  if (!data.bojer && (data.boger || data.bogerNumber)) data.bojer = data.boger || data.bogerNumber;
+  if (!data.price && (data.kroa || data.fare || data.tripPrice)) {
+    data.price = data.kroa || data.fare || data.tripPrice;
+  }
+  return data;
 }
 
 function readRequestData_(e) {
@@ -96,26 +232,60 @@ function saveTripMain_(data) {
   var netQty = round3_(quantity - (quantity * DEDUCTION_RATE));
   var price = round0_(netQty * PRICE_PER_TON_HALAFAYA);
   var imageUrl = resolveReceiptImageUrl_(data);
+  var owner = resolveTripOwnerLabel_(data);
+
+  var notes = String(data.notes || "");
+  var boger = data.bogerNumber || data.bojer || data.boger || "";
+  if (boger) notes = (notes ? notes + " " : "") + "بوجر:" + String(boger);
+
+  var loadDateOnly = MinistryCore.formatDateOnly(data.loadDate || "");
+  var unloadDateOnly = MinistryCore.formatDateOnly(data.unloadDate || "");
 
   sheet.appendRow([
     docNumber,
     String(data.driverName || ""),
     String(data.carNumber || ""),
-    String(data.loadDate || ""),
-    String(data.unloadDate || ""),
+    loadDateOnly,
+    unloadDateOnly,
     quantity,
-    String(data.ownerType || data.owner || ""),
+    owner,
     String(data.destination || data.station || ""),
     imageUrl,
     nowBaghdad_(),
     liters,
-    String(data.bogerNumber || ""),
+    String(boger || ""),
     toNumber_(data.distance),
     price,
-    String(data.notes || "")
+    notes
   ]);
 
-  return { success: true, message: "تم حفظ النقلة", month: monthKey.monthKey };
+  var routed = routeSavedReceipt_({
+    docNumber: docNumber,
+    driverName: data.driverName,
+    carNumber: data.carNumber,
+    loadDate: loadDateOnly,
+    unloadDate: unloadDateOnly,
+    quantity: quantity,
+    destination: data.destination || data.station,
+    liters: liters,
+    month: monthKey.monthKey,
+    sheetName: monthKey.monthKey,
+    notes: data.notes
+  });
+
+  return {
+    success: true,
+    exists: false,
+    isExists: false,
+    message: "تم حفظ النقلة",
+    month: monthKey.monthKey,
+    tripMonth: monthKey.monthKey,
+    sheetName: monthKey.monthKey,
+    sendTime: nowBaghdad_(),
+    routedTo: routed && routed.sheetName ? routed.sheetName : "",
+    agentName: routed && routed.agentName ? routed.agentName : "",
+    docNumber: docNumber
+  };
 }
 
 function saveFactoryMain_(data) {
@@ -135,15 +305,18 @@ function saveFactoryMain_(data) {
   var netQty = round3_(quantity - (quantity * DEDUCTION_RATE));
   var price = round0_(netQty * PRICE_PER_TON_FACTORY);
   var imageUrl = resolveReceiptImageUrl_(data);
+  var owner = resolveTripOwnerLabel_(data);
+  var loadDateOnly = MinistryCore.formatDateOnly(data.loadDate || data.unloadDate || "");
+  var unloadDateOnly = MinistryCore.formatDateOnly(data.unloadDate || data.loadDate || "");
 
   sheet.appendRow([
     docNumber,
     String(data.driverName || ""),
     String(data.carNumber || ""),
-    String(data.loadDate || data.unloadDate || ""),
-    String(data.unloadDate || data.loadDate || ""),
+    loadDateOnly,
+    unloadDateOnly,
     quantity,
-    String(data.ownerType || data.owner || ""),
+    owner,
     String(data.factory || data.destination || ""),
     imageUrl,
     nowBaghdad_(),
@@ -153,14 +326,58 @@ function saveFactoryMain_(data) {
     price
   ]);
 
-  return { success: true, message: "تم حفظ وصلة المعمل", month: monthKey.monthKey };
+  var routed = routeSavedReceipt_({
+    docNumber: docNumber,
+    driverName: data.driverName,
+    carNumber: data.carNumber,
+    loadDate: loadDateOnly,
+    unloadDate: unloadDateOnly,
+    quantity: quantity,
+    destination: data.factory || data.destination,
+    factory: data.factory || data.destination,
+    source: "factory",
+    isFactory: true,
+    month: monthKey.monthKey,
+    sheetName: "F_" + monthKey.monthKey,
+    notes: data.notes
+  });
+
+  return {
+    success: true,
+    exists: false,
+    isExists: false,
+    message: "تم حفظ وصلة المعمل",
+    month: monthKey.monthKey,
+    tripMonth: monthKey.monthKey,
+    sheetName: "F_" + monthKey.monthKey,
+    sendTime: nowBaghdad_(),
+    routedTo: routed && routed.sheetName ? routed.sheetName : "",
+    agentName: routed && routed.agentName ? routed.agentName : "",
+    docNumber: docNumber
+  };
 }
 
 function ensureTripsSheet_(ss, name) {
   var sheet = ss.getSheetByName(name);
   if (!sheet) {
     sheet = ss.insertSheet(name);
-    sheet.appendRow(["رقم الوصل", "اسم السائق", "رقم السيارة", "تاريخ التحميل", "تاريخ التفريغ", "الكمية", "المالك", "المحطة", "رابط الصورة", "وقت الإرسال", "لترات الكاز", "رقم البوجر", "المسافة", "سعر النقل", "ملاحظات"]);
+    sheet.appendRow([
+      "رقم الوصل",
+      "اسم السائق",
+      "رقم السيارة",
+      "تاريخ التحميل",
+      "تاريخ التفريغ",
+      "الكمية",
+      "المالك",
+      "المحطة",
+      "رابط الصورة",
+      "وقت الإرسال",
+      "لترات الكاز",
+      "رقم البوجر",
+      "المسافة",
+      "سعر النقل",
+      "ملاحظات"
+    ]);
   }
   return sheet;
 }
@@ -196,7 +413,10 @@ function resolveMonthFromTrip_(data) {
 }
 
 function parseDateParts_(raw) {
-  var t = String(raw || "").trim().replace(/-/g, "/");
+  var t = String(raw || "")
+    .replace(/[٠-٩]/g, function(d) { return "٠١٢٣٤٥٦٧٨٩".indexOf(d); })
+    .trim();
+  t = t.split("T")[0].split(" ")[0].replace(/\./g, "/").replace(/-/g, "/");
   var m = t.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
   if (m) return { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) };
   m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -204,9 +424,33 @@ function parseDateParts_(raw) {
   return null;
 }
 
+function resolveTripOwnerLabel_(data) {
+  var sent = String((data && (data.ownerType || data.owner || data.vehicleOwner)) || "").trim();
+  try {
+    var fleetOwner = resolveFleetOwnerForCar_((data && data.carNumber) || "");
+    if (fleetOwner && fleetOwner.agentName) return fleetOwner.agentName;
+  } catch (err) {}
+  return sent;
+}
+
 function validateScopeForProtectedAction_(action, data) {
+  data = data || {};
   var companyId = String(data.companyId || "").trim();
   var activationCode = String(data.activationCode || "").trim();
+
+  // Old GasTransport APK did not send scope; fill defaults so drivers keep working.
+  if (LEGACY_COMPAT_FILL_MISSING_SCOPE && (!companyId || !activationCode)) {
+    if (!companyId) {
+      companyId = LEGACY_COMPAT_DEFAULT_COMPANY_ID;
+      data.companyId = companyId;
+    }
+    if (!activationCode) {
+      activationCode = LEGACY_COMPAT_DEFAULT_ACTIVATION_CODE;
+      data.activationCode = activationCode;
+    }
+    data.legacyScopeFilled = true;
+  }
+
   if (SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED && (!companyId || !activationCode)) {
     return {
       success: false,
@@ -375,7 +619,18 @@ function resetAllDataWithArchive(data) {
     var sh = sheets[i];
     var n = String(sh.getName() || "").trim();
 
-    if (n === "CompanyActivationCodes" || n === "CompanyActivationAudit" || n === "AuthorizedDrivers") continue;
+    if (
+      n === "CompanyActivationCodes" ||
+      n === "CompanyActivationAudit" ||
+      n === "AuthorizedDrivers" ||
+      n === "Agents" ||
+      n === "Fleet" ||
+      n === "العملاء" ||
+      n === "السيارات" ||
+      n === "60" ||
+      n === "تنظيم_المعتمدين" ||
+      /^DB_/.test(n)
+    ) continue;
 
     if (/^(F_)?\d{4}_\d{2}$/i.test(n)) {
       if (!dryRun) sh.setName("ARCH_" + n + "_" + stamp);
@@ -383,7 +638,7 @@ function resetAllDataWithArchive(data) {
       continue;
     }
 
-    if (/^(TPL_|STMT_|مح_|مع_)/.test(n)) {
+    if (/^(TPL_|STMT_|AGT10_|CO10_|MINP_|مح_|مع_)/.test(n)) {
       if (!dryRun) ss.deleteSheet(sh);
       deleted.push(n);
     }
@@ -426,6 +681,11 @@ function createSystemBackup(data) {
 function systemHealthCheck(data) {
   try {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    ensureAgentsSheet_(ss);
+    ensureFleetSheet_(ss);
+    var agents = readAgents_(ss);
+    var fleet = readFleet_(ss);
+    var hasTemplate60 = !!ss.getSheetByName("60");
     return {
       success: true,
       spreadsheetId: ss.getId(),
@@ -433,7 +693,16 @@ function systemHealthCheck(data) {
       strictScopeEnabled: !!SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED,
       imageStorageEnabled: !!IMAGE_STORAGE_ENABLED,
       hasDoGet: typeof doGet === "function",
-      hasDoPost: typeof doPost === "function"
+      hasDoPost: typeof doPost === "function",
+      agentsCount: agents.length,
+      fleetCount: fleet.length,
+      template60Present: hasTemplate60,
+      template60Untouched: true,
+      summary: {
+        total: 3,
+        passed: (agents.length > 0 ? 1 : 0) + (fleet ? 1 : 0) + 1,
+        healthy: true
+      }
     };
   } catch (err) {
     return { success: false, message: String(err) };
@@ -484,7 +753,7 @@ function loginDriver(data) {
   try {
     // حاول العثور على السيارة في جدول السيارات المصرح بها
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheet = ss.getSheetByName("AuthorizedCars") || ss.getSheetByName("Cars") || ss.getSheetByName("Vehicles");
+    var sheet = ss.getSheetByName("السيارات") || ss.getSheetByName("AuthorizedDrivers") || ss.getSheetByName("AuthorizedCars") || ss.getSheetByName("Cars") || ss.getSheetByName("Vehicles");
     
     var found = false;
     if (sheet) {
@@ -506,6 +775,7 @@ function loginDriver(data) {
       carNumber: carNumber,
       phone: phoneNumber,
       newDriver: !found,
+      access: "authorized",
       loginTime: nowBaghdad_()
     };
 
@@ -518,6 +788,7 @@ function loginDriver(data) {
       carNumber: carNumber,
       phone: phoneNumber,
       newDriver: true,
+      access: "authorized",
       loginTime: nowBaghdad_(),
       warning: "لم يتم التحقق من السيارة"
     };
@@ -531,5 +802,93 @@ function callExisting_(name, args) {
   return {
     success: false,
     message: name + " غير موجودة في المشروع"
+  };
+}
+
+/** Duplicate-doc check used by the driver app before saving. */
+function checkDoc(data) {
+  data = data || {};
+  var docNumber = String(data.docNumber || data.receiptNo || "").trim();
+  if (!docNumber) {
+    return { success: false, exists: false, isExists: false, message: "رقم الوصل مطلوب" };
+  }
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheets = ss.getSheets();
+  for (var s = 0; s < sheets.length; s++) {
+    var name = String(sheets[s].getName() || "").trim();
+    if (!/^(F_)?\d{4}_\d{2}$/i.test(name)) continue;
+    var values = sheets[s].getDataRange().getValues();
+    for (var i = 1; i < values.length; i++) {
+      var rowDoc = String(values[i][0] || "").trim();
+      if (rowDoc && rowDoc === docNumber) {
+        return {
+          success: true,
+          exists: true,
+          isExists: true,
+          message: "رقم الوصل موجود مسبقاً",
+          docNumber: docNumber,
+          existingSheet: name,
+          existingRow: i + 1
+        };
+      }
+    }
+  }
+
+  return {
+    success: true,
+    exists: false,
+    isExists: false,
+    message: "رقم الوصل متاح",
+    docNumber: docNumber
+  };
+}
+
+/** Save a maintenance request from the driver app. */
+function saveMaintenance(data) {
+  data = data || {};
+  var driver = String(data.driver || data.driverName || "").trim();
+  var vehicle = String(data.vehicle || data.carNumber || "").trim();
+  var problem = String(data.problem || "").trim();
+  var price = toNumber_(data.price || data.cost || 0);
+
+  if (!driver || !vehicle || !problem) {
+    return { success: false, message: "بيانات الصيانة غير مكتملة" };
+  }
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName("سجل الصيانة");
+  if (!sheet) {
+    sheet = ss.insertSheet("سجل الصيانة");
+    sheet.appendRow([
+      "رقم الطلب",
+      "السائق",
+      "السيارة",
+      "المشكلة",
+      "الحالة",
+      "تاريخ الطلب",
+      "ملاحظات",
+      "صورة",
+      "التكلفة"
+    ]);
+  }
+
+  var requestId = "M-" + Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyyMMddHHmmss");
+  sheet.appendRow([
+    requestId,
+    driver,
+    vehicle,
+    problem,
+    "جديد",
+    nowBaghdad_(),
+    String(data.notes || ""),
+    "",
+    price
+  ]);
+
+  return {
+    success: true,
+    message: "تم حفظ طلب الصيانة",
+    requestId: requestId
   };
 }

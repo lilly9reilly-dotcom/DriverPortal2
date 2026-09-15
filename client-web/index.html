@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b4f63" />
+  <title>بوابة العميل — الناقلات النموذجية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="config.js"></script>
+</head>
+<body>
+  <div id="app">
+    <section id="loginView" class="login-view">
+      <div class="login-atmosphere" aria-hidden="true"></div>
+      <div class="login-panel">
+        <p class="brand">الناقلات النموذجية</p>
+        <h1>بوابة العميل</h1>
+        <p class="lead">دخول بالكود الخاص فقط. ترى سياراتك ووصولاتك وحسابك وحدك.</p>
+
+        <label for="loginCode">كود الدخول</label>
+        <input id="loginCode" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="مثال: C2221" />
+
+        <button id="loginBtn" class="btn-primary" type="button">دخول</button>
+        <p id="loginError" class="error" hidden></p>
+        <p class="hint">وضع المعاينة: يونيغاز <strong>C2221</strong> · شركة ارض الهادي <strong>C1220</strong></p>
+      </div>
+    </section>
+
+    <section id="appView" class="app-view hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">بوابة العميل</p>
+          <h2 id="clientTitle">—</h2>
+          <p id="clientMeta" class="muted">—</p>
+        </div>
+        <div class="top-actions">
+          <button id="notifBtn" class="btn-ghost notif-btn" type="button">الإشعارات <span id="notifBadge" class="badge-count hidden">0</span></button>
+          <button id="refreshBtn" class="btn-ghost" type="button">تحديث</button>
+          <button id="logoutBtn" class="btn-ghost" type="button">خروج</button>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="أقسام البوابة">
+        <button class="tab active" data-tab="home" type="button">الرئيسية</button>
+        <button class="tab" data-tab="trips" type="button">نقلاتي</button>
+        <button class="tab" data-tab="account" type="button">حسابي</button>
+        <button class="tab" data-tab="statements" type="button">كشوفي</button>
+        <button class="tab" data-tab="reports" type="button">تقارير</button>
+        <button class="tab" data-tab="settings" type="button">الإعدادات</button>
+      </nav>
+
+      <main>
+        <section id="tab-home" class="tab-panel">
+          <div id="moneyNotice" class="notice hidden"></div>
+          <div class="stats">
+            <div class="stat"><span>المتبقي التقديري</span><strong id="statBalance">0</strong></div>
+            <div class="stat"><span>الوصولات</span><strong id="statCount">0</strong></div>
+            <div class="stat"><span>الكمية (طن)</span><strong id="statQty">0</strong></div>
+            <div class="stat"><span>إجمالي المبالغ</span><strong id="statAmount">0</strong></div>
+          </div>
+          <div class="split">
+            <div class="stat soft"><span>محطات</span><strong id="statStation">0</strong></div>
+            <div class="stat soft"><span>معامل</span><strong id="statFactory">0</strong></div>
+          </div>
+          <div class="card settle-card">
+            <h3>المبلغ الذي استلمته</h3>
+            <p class="muted">يُخصم من المتبقي ويظهر للإدارة بعد الربط الحي.</p>
+            <div class="form-row">
+              <input id="receiveAmount" type="number" min="0" step="1000" placeholder="المبلغ د.ع" />
+              <select id="receiveMethod">
+                <option value="زين كاش">زين كاش</option>
+                <option value="ماستركارد">ماستركارد</option>
+                <option value="بطاقة مصرفية">بطاقة مصرفية</option>
+                <option value="حساب مصرفي">حساب مصرفي</option>
+                <option value="نقداً">نقداً</option>
+              </select>
+            </div>
+            <button id="receiveBtn" class="btn-primary" type="button">تسجيل الاستلام</button>
+            <p id="receiveMsg" class="hint"></p>
+          </div>
+          <p class="note">القاعدة: <span id="dbName">—</span> · العزل حسب كود العميل فقط.</p>
+        </section>
+
+        <section id="tab-trips" class="tab-panel hidden">
+          <div class="filters">
+            <label>الشهر<select id="monthFilter"></select></label>
+            <label>النوع
+              <select id="typeFilter">
+                <option value="all">الكل</option>
+                <option value="محطة">محطات</option>
+                <option value="معمل">معامل</option>
+              </select>
+            </label>
+            <input id="searchInput" type="search" placeholder="بحث برقم الوصل / السيارة / السائق" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوصل</th>
+                  <th>السيارة</th>
+                  <th>السائق</th>
+                  <th>الوجهة</th>
+                  <th>النوع</th>
+                  <th>الحالة</th>
+                  <th>الكمية</th>
+                  <th>المبلغ</th>
+                  <th>التفريغ</th>
+                </tr>
+              </thead>
+              <tbody id="tripsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="tab-account" class="tab-panel hidden">
+          <div class="stats">
+            <div class="stat"><span>إجمالي الاستحقاق</span><strong id="accEarned">0</strong></div>
+            <div class="stat"><span>المستلم</span><strong id="accReceived">0</strong></div>
+            <div class="stat"><span>المتبقي</span><strong id="accBalance">0</strong></div>
+            <div class="stat"><span>قيمة الكاز</span><strong id="accGas">0</strong></div>
+          </div>
+          <div class="payout-grid">
+            <div class="card"><h3>ماستركارد</h3><p id="payoutCard" class="muted">أضفها من الإعدادات</p></div>
+            <div class="card"><h3>حساب/بطاقة مصرفية</h3><p id="payoutBank" class="muted">أضفها من الإعدادات</p></div>
+            <div class="card"><h3>زين كاش</h3><p id="payoutZain" class="muted">أضفها من الإعدادات</p></div>
+          </div>
+          <h3 class="section-title">حركات الحساب</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>التاريخ</th><th>النوع</th><th>الوسيلة</th><th>المبلغ</th><th>ملاحظة</th></tr></thead>
+              <tbody id="movesBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="tab-statements" class="tab-panel hidden">
+          <p class="note">كشف المحطات فقط (بدون وصولات المعامل) — حسب قاعدة العمل.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوصل</th>
+                  <th>السيارة</th>
+                  <th>الوجهة</th>
+                  <th>الكمية</th>
+                  <th>المبلغ</th>
+                  <th>التفريغ</th>
+                </tr>
+              </thead>
+              <tbody id="statementsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="tab-reports" class="tab-panel hidden">
+          <div class="split">
+            <div class="stat soft"><span>نقلات المحطات</span><strong id="repStation">0</strong></div>
+            <div class="stat soft"><span>نقلات المعامل</span><strong id="repFactory">0</strong></div>
+          </div>
+          <div class="card chart-card">
+            <canvas id="tripsChart" height="160"></canvas>
+          </div>
+          <div class="toolbar">
+            <button id="exportBtn" class="btn-ghost" type="button">تصدير Excel (CSV)</button>
+          </div>
+          <div id="carsGrid" class="cars-grid"></div>
+        </section>
+
+        <section id="tab-settings" class="tab-panel hidden">
+          <article class="card">
+            <h3>وسائل استلام أموالي</h3>
+            <p class="muted">أضف بياناتك حتى تتمكن الإدارة من تحويل مستحقاتك إلى الوسيلة التي تختارها.</p>
+            <div class="settings-grid">
+              <label>زين كاش
+                <input id="payZain" type="text" inputmode="tel" placeholder="07xxxxxxxxx" />
+              </label>
+              <label>ماستركارد
+                <input id="payMaster" type="text" placeholder="رقم البطاقة أو آخر 4 أرقام + الاسم" />
+              </label>
+              <label>بطاقة مصرفية
+                <input id="payBankCard" type="text" placeholder="رقم البطاقة المصرفية / الاسم على البطاقة" />
+              </label>
+              <label>اسم المصرف
+                <input id="payBankName" type="text" placeholder="مثال: مصرف الرافدين" />
+              </label>
+              <label>رقم الحساب / IBAN
+                <input id="payBankAccount" type="text" placeholder="رقم الحساب أو IBAN" />
+              </label>
+              <label>ملاحظات
+                <input id="payNotes" type="text" placeholder="اختياري" />
+              </label>
+            </div>
+            <button id="savePayoutBtn" class="btn-primary" type="button">حفظ وسائل الاستلام</button>
+            <p id="payoutSaveMsg" class="hint"></p>
+          </article>
+
+          <article class="card">
+            <h3>تسوية حسابي</h3>
+            <p class="muted">كل تحويل من الإدارة يظهر هنا. أكّد الاستلام بعد وصول المبلغ إلى وسيلتك.</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>المعرف</th>
+                    <th>المبلغ</th>
+                    <th>الوسيلة</th>
+                    <th>التفاصيل</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="settlementsBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+      </main>
+    </section>
+  </div>
+
+    <aside id="notifDrawer" class="notif-drawer hidden" aria-label="الإشعارات">
+      <div class="notif-head">
+        <h3>إشعارات الأموال</h3>
+        <button id="closeNotifBtn" class="btn-ghost" type="button">إغلاق</button>
+      </div>
+      <div id="notifList" class="notif-list"></div>
+    </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>

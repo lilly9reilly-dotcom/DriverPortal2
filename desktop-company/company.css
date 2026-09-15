@@ -13,6 +13,7 @@
   --surface-soft: #f3f7fb;
   --shadow-soft: 0 14px 38px rgba(19, 46, 71, 0.1);
   --shadow-card: 0 18px 34px rgba(18, 55, 86, 0.14);
+  --font-brand: "Alyamama", "Tajawal", "Cairo", "Segoe UI", Tahoma, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -20,7 +21,7 @@
 body {
   margin: 0;
   color: var(--text);
-  font-family: "Cairo", "Tajawal", "Segoe UI", Tahoma, sans-serif;
+  font-family: var(--font-brand);
   overflow-x: hidden;
   background:
     radial-gradient(circle at top right, rgba(26, 84, 136, 0.12), transparent 30%),
