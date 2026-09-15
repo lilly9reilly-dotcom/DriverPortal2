@@ -149,7 +149,11 @@ fun TripFormScreen() {
     fun showDatePicker(onDateSelected: (String) -> Unit) {
         DatePickerDialog(
             context,
-            { _, year, month, day -> onDateSelected("$year-${month + 1}-$day") },
+            { _, year, month, day ->
+                onDateSelected(
+                    "%04d-%02d-%02d".format(year, month + 1, day)
+                )
+            },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)

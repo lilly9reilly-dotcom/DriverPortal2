@@ -416,7 +416,8 @@ fun DriverDashboardScreen(
                         "archiveMonth",
                         "driverName" to driverName,
                         "month" to lastMonth.toString(),
-                        "year" to lastYear.toString()
+                        "year" to lastYear.toString(),
+                        *com.driver.portal.network.DriverScopeConfig.asQueryPairs()
                     )
                     URL(archiveUrl).readText()
                 } catch (e: Exception) {

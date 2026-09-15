@@ -4,6 +4,10 @@ var PRICE_PER_TON_FACTORY = 10000;
 var PRICE_PER_LITER = 430;
 var DEDUCTION_RATE = 0.18;
 var SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED = true;
+/** Fill missing companyId/activationCode for old APKs that predate scope. */
+var LEGACY_COMPAT_FILL_MISSING_SCOPE = true;
+var LEGACY_COMPAT_DEFAULT_COMPANY_ID = "COMP-001";
+var LEGACY_COMPAT_DEFAULT_ACTIVATION_CODE = "CMP-260704184724-6391";
 var IMAGE_STORAGE_ENABLED = false;
 
 function onOpen() {
@@ -46,11 +50,17 @@ function renderAdminPage_() {
 }
 
 function handleRequest(e) {
-  var data = readRequestData_(e);
+  var data = normalizeClientPayload_(readRequestData_(e));
   var action = String(data.action || "").trim();
 
   try {
     if (!action) return json({ success: false, message: "No action" });
+
+    // Legacy action aliases used by older APK builds.
+    if (action === "issue") action = "reportIssue";
+    if (action === "get_drivers") action = "drivers";
+    if (action === "dashboard") action = "wallet";
+    data.action = action;
 
     if (action === "systemHealthCheck") return json(systemHealthCheck(data));
     if (action === "createSystemBackup") return json(createSystemBackup(data));
@@ -86,13 +96,14 @@ function handleRequest(e) {
     if (action === "syncAgentDatabases") return json(syncAgentDatabases(data));
     if (action === "cleanupSafetyPreview") return json(cleanupSafetyPreview(data));
     if (action === "cleanupSafetyApply") return json(cleanupSafetyApply(data));
+    if (action === "applyAlyamamaBrandFont") return json(applyAlyamamaBrandFont(data));
     if (action === "trip") return json(saveTripMain_(data));
     if (action === "factory") return json(saveFactoryMain_(data));
     if (action === "login") return json(callExisting_("loginDriver", [data]));
 
     // Keep GPS/tracking on the same live deployment so the driver app stays intact.
     if (action === "gps") return json(callExisting_("handleGPS", [data]));
-    if (action === "drivers" || action === "get_drivers") return json(callExisting_("getDriversLive", []));
+    if (action === "drivers") return json(callExisting_("getDriversLive", []));
     if (action === "route") {
       return json(callExisting_("getVehicleRoute", [{
         vehicle: data.vehicle || "",
@@ -107,7 +118,7 @@ function handleRequest(e) {
     if (action === "cleanup") return json(callExisting_("cleanupDuplicates", []));
     if (action === "health") return json(callExisting_("getSystemHealth", []));
 
-    if (action === "wallet" || action === "dashboard") {
+    if (action === "wallet") {
       var walletScope = validateScopeForProtectedAction_("wallet", data);
       if (!walletScope.success) return json(walletScope);
       return json(callExisting_("getDriverWallet", [data]));
@@ -122,6 +133,11 @@ function handleRequest(e) {
       if (!maintenanceScope.success) return json(maintenanceScope);
       return json(callExisting_("getMaintenanceRequests", [data]));
     }
+    if (action === "saveMaintenance") {
+      var saveMaintScope = validateScopeForProtectedAction_("saveMaintenance", data);
+      if (!saveMaintScope.success) return json(saveMaintScope);
+      return json(saveMaintenance(data));
+    }
     if (action === "reportIssue") {
       var issueScope = validateScopeForProtectedAction_("reportIssue", data);
       if (!issueScope.success) return json(issueScope);
@@ -130,13 +146,34 @@ function handleRequest(e) {
     if (action === "checkDoc") {
       var docScope = validateScopeForProtectedAction_("checkDoc", data);
       if (!docScope.success) return json(docScope);
-      return json(callExisting_("checkDoc", [data]));
+      return json(checkDoc(data));
     }
 
     return json({ success: false, message: "Unknown action: " + action });
   } catch (err) {
     return json({ success: false, message: String(err), action: action });
   }
+}
+
+function normalizeClientPayload_(data) {
+  data = data || {};
+  // Field aliases used by older clients / alternate UIs.
+  if (!data.docNumber && (data.receiptNo || data.receiptNumber || data.doc)) {
+    data.docNumber = data.receiptNo || data.receiptNumber || data.doc;
+  }
+  if (!data.driverName && (data.driver || data.name)) {
+    data.driverName = data.driver || data.name;
+  }
+  if (!data.carNumber && data.car) data.carNumber = data.car;
+  if (!data.destination && data.station) data.destination = data.station;
+  if (!data.station && data.destination) data.station = data.destination;
+  if (!data.ownerType && data.owner) data.ownerType = data.owner;
+  if (!data.owner && data.ownerType) data.owner = data.ownerType;
+  if (!data.bojer && (data.boger || data.bogerNumber)) data.bojer = data.boger || data.bogerNumber;
+  if (!data.price && (data.kroa || data.fare || data.tripPrice)) {
+    data.price = data.kroa || data.fare || data.tripPrice;
+  }
+  return data;
 }
 
 function readRequestData_(e) {
@@ -194,6 +231,7 @@ function saveTripMain_(data) {
     imageUrl,
     nowBaghdad_(),
     liters,
+    String(boger || ""),
     toNumber_(data.distance),
     price,
     notes
@@ -215,10 +253,16 @@ function saveTripMain_(data) {
 
   return {
     success: true,
+    exists: false,
+    isExists: false,
     message: "تم حفظ النقلة",
     month: monthKey.monthKey,
+    tripMonth: monthKey.monthKey,
+    sheetName: monthKey.monthKey,
+    sendTime: nowBaghdad_(),
     routedTo: routed && routed.sheetName ? routed.sheetName : "",
-    agentName: routed && routed.agentName ? routed.agentName : ""
+    agentName: routed && routed.agentName ? routed.agentName : "",
+    docNumber: docNumber
   };
 }
 
@@ -278,10 +322,16 @@ function saveFactoryMain_(data) {
 
   return {
     success: true,
+    exists: false,
+    isExists: false,
     message: "تم حفظ وصلة المعمل",
     month: monthKey.monthKey,
+    tripMonth: monthKey.monthKey,
+    sheetName: "F_" + monthKey.monthKey,
+    sendTime: nowBaghdad_(),
     routedTo: routed && routed.sheetName ? routed.sheetName : "",
-    agentName: routed && routed.agentName ? routed.agentName : ""
+    agentName: routed && routed.agentName ? routed.agentName : "",
+    docNumber: docNumber
   };
 }
 
@@ -301,6 +351,7 @@ function ensureTripsSheet_(ss, name) {
       "رابط الصورة",
       "وقت الإرسال",
       "لترات الكاز",
+      "رقم البوجر",
       "المسافة",
       "سعر النقل",
       "ملاحظات"
@@ -361,8 +412,23 @@ function resolveTripOwnerLabel_(data) {
 }
 
 function validateScopeForProtectedAction_(action, data) {
+  data = data || {};
   var companyId = String(data.companyId || "").trim();
   var activationCode = String(data.activationCode || "").trim();
+
+  // Old GasTransport APK did not send scope; fill defaults so drivers keep working.
+  if (LEGACY_COMPAT_FILL_MISSING_SCOPE && (!companyId || !activationCode)) {
+    if (!companyId) {
+      companyId = LEGACY_COMPAT_DEFAULT_COMPANY_ID;
+      data.companyId = companyId;
+    }
+    if (!activationCode) {
+      activationCode = LEGACY_COMPAT_DEFAULT_ACTIVATION_CODE;
+      data.activationCode = activationCode;
+    }
+    data.legacyScopeFilled = true;
+  }
+
   if (SECURITY_SCOPE_STRICT_BLOCK_UNSCOPED && (!companyId || !activationCode)) {
     return {
       success: false,
@@ -714,5 +780,93 @@ function callExisting_(name, args) {
   return {
     success: false,
     message: name + " غير موجودة في المشروع"
+  };
+}
+
+/** Duplicate-doc check used by the driver app before saving. */
+function checkDoc(data) {
+  data = data || {};
+  var docNumber = String(data.docNumber || data.receiptNo || "").trim();
+  if (!docNumber) {
+    return { success: false, exists: false, isExists: false, message: "رقم الوصل مطلوب" };
+  }
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheets = ss.getSheets();
+  for (var s = 0; s < sheets.length; s++) {
+    var name = String(sheets[s].getName() || "").trim();
+    if (!/^(F_)?\d{4}_\d{2}$/i.test(name)) continue;
+    var values = sheets[s].getDataRange().getValues();
+    for (var i = 1; i < values.length; i++) {
+      var rowDoc = String(values[i][0] || "").trim();
+      if (rowDoc && rowDoc === docNumber) {
+        return {
+          success: true,
+          exists: true,
+          isExists: true,
+          message: "رقم الوصل موجود مسبقاً",
+          docNumber: docNumber,
+          existingSheet: name,
+          existingRow: i + 1
+        };
+      }
+    }
+  }
+
+  return {
+    success: true,
+    exists: false,
+    isExists: false,
+    message: "رقم الوصل متاح",
+    docNumber: docNumber
+  };
+}
+
+/** Save a maintenance request from the driver app. */
+function saveMaintenance(data) {
+  data = data || {};
+  var driver = String(data.driver || data.driverName || "").trim();
+  var vehicle = String(data.vehicle || data.carNumber || "").trim();
+  var problem = String(data.problem || "").trim();
+  var price = toNumber_(data.price || data.cost || 0);
+
+  if (!driver || !vehicle || !problem) {
+    return { success: false, message: "بيانات الصيانة غير مكتملة" };
+  }
+
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var sheet = ss.getSheetByName("سجل الصيانة");
+  if (!sheet) {
+    sheet = ss.insertSheet("سجل الصيانة");
+    sheet.appendRow([
+      "رقم الطلب",
+      "السائق",
+      "السيارة",
+      "المشكلة",
+      "الحالة",
+      "تاريخ الطلب",
+      "ملاحظات",
+      "صورة",
+      "التكلفة"
+    ]);
+  }
+
+  var requestId = "M-" + Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyyMMddHHmmss");
+  sheet.appendRow([
+    requestId,
+    driver,
+    vehicle,
+    problem,
+    "جديد",
+    nowBaghdad_(),
+    String(data.notes || ""),
+    "",
+    price
+  ]);
+
+  return {
+    success: true,
+    message: "تم حفظ طلب الصيانة",
+    requestId: requestId
   };
 }

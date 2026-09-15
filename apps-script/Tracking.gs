@@ -689,13 +689,15 @@ function getDriverWallet(data) {
     liters: liters,
     profit: profit,
     maintenance: maintenanceCost,
-    netProfit: profit - maintenanceCost
+    netProfit: profit - maintenanceCost,
+    netSalary: profit - maintenanceCost
   };
 }
 
 function getDriverTrips(data) {
   var rawName = data.driverName || data.name || data.driver || "";
   var driverName = normalizeText_(rawName);
+  var carFilter = String(data.carNumber || data.car || "").trim();
 
   if (!driverName) {
     return { success: false, message: "driverName is required" };
@@ -717,22 +719,28 @@ function getDriverTrips(data) {
     for (var i = 1; i < values.length; i++) {
       var row = values[i];
       var rowDriver = normalizeText_(row[1]);
+      var rowCar = String(row[2] || "").trim();
 
       if (!rowDriver || rowDriver !== driverName) continue;
+      if (carFilter && rowCar && rowCar !== carFilter) continue;
 
       trips.push({
         docNumber: String(row[0] || ""),
         driverName: String(row[1] || ""),
-        carNumber: String(row[2] || ""),
+        carNumber: rowCar,
         loadDate: String(row[3] || ""),
         unloadDate: String(row[4] || ""),
         quantity: String(row[5] || ""),
         owner: String(row[6] || ""),
+        ownerType: String(row[6] || ""),
         station: String(row[7] || ""),
+        destination: String(row[7] || ""),
         imageUrl: String(row[8] || ""),
+        fileUrl: String(row[8] || ""),
         sendTime: String(row[9] || ""),
         liters: String(row[10] || ""),
         bogerNumber: String(row[11] || ""),
+        bojer: String(row[11] || ""),
         distance: String(row[12] || ""),
         price: String(row[13] || ""),
         notes: String(row[14] || ""),

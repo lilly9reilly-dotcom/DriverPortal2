@@ -45,6 +45,7 @@ import java.util.Calendar
 fun WalletScreen() {
     val context = LocalContext.current
     val driverName = DriverSession.getDriverName(context).ifEmpty { "غير معروف" }
+    val carNumber = DriverSession.getCarNumber(context)
 
     var totalKroa by remember { mutableStateOf("0") }
     var totalTrips by remember { mutableStateOf("0") }
@@ -130,7 +131,10 @@ fun WalletScreen() {
                 val monthKey = "${year}_${month}"
                 val url = com.driver.portal.network.GoogleSheetConfig.execUrl(
                     "getAllReceiptsData",
-                    "month" to monthKey
+                    "month" to monthKey,
+                    "carNumber" to carNumber,
+                    "driverName" to driverName,
+                    *com.driver.portal.network.DriverScopeConfig.asQueryPairs()
                 )
                 URL(url).readText()
             }
@@ -152,6 +156,8 @@ fun WalletScreen() {
 
                     val rowDriver = normalizeArabicText(item.optString("driverName"))
                     if (rowDriver != normalizeArabicText(driverName)) continue
+                    val rowCar = item.optString("carNumber").trim()
+                    if (carNumber.isNotBlank() && rowCar.isNotBlank() && rowCar != carNumber.trim()) continue
 
                     val destinationRaw = item.optString("destination").ifBlank { item.optString("station") }
                     val destination = normalizeArabicText(destinationRaw)
