@@ -51,3 +51,4 @@ temp-prod-deploy-clean/
 # routing experiment dumps
 artifacts/routing-experiment/*.tsv
 artifacts/routing-experiment/summary.json
+.npm-global/
