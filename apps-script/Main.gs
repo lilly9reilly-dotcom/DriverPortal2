@@ -149,6 +149,18 @@ function handleRequest(e) {
       return json(checkDoc(data));
     }
 
+    // Client portal (read-first). Does not alter login/gps/trip write paths.
+    if (action === "clientLogin") return json(clientPortalLogin_(data));
+    if (action === "clientGetState") return json(clientPortalGetState_(data));
+    if (action === "clientRegisterReceive") return json(clientPortalRegisterReceive_(data));
+    if (action === "listRoles") return json(listSystemRoles_());
+    if (action === "ensureRoleSheets") return json(ensureRoleReferenceSheets_(data));
+    if (action === "appendAuditLog") return json(appendAuditLog_(data));
+    if (action === "listAuditLog") return json(listAuditLog_(data));
+    if (action === "setTripStatus") return json(setTripLifecycleStatus_(data));
+    if (action === "getTripStatusCatalog") return json(getTripStatusCatalog_());
+    if (action === "getAdminDashboardSummary") return json(getAdminDashboardSummary_(data));
+
     return json({ success: false, message: "Unknown action: " + action });
   } catch (err) {
     return json({ success: false, message: String(err), action: action });
