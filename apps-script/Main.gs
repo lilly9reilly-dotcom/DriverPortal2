@@ -90,12 +90,47 @@ function handleRequest(e) {
     if (action === "factory") return json(saveFactoryMain_(data));
     if (action === "login") return json(callExisting_("loginDriver", [data]));
 
-    if (action === "gps" || action === "drivers" || action === "route" || action === "alerts" || action === "autoTrips") {
-      return json({
-        success: false,
-        message: "Tracking API is separated from Core. Use Tracking deployment.",
-        separated: true
-      });
+    // Keep GPS/tracking on the same live deployment so the driver app stays intact.
+    if (action === "gps") return json(callExisting_("handleGPS", [data]));
+    if (action === "drivers" || action === "get_drivers") return json(callExisting_("getDriversLive", []));
+    if (action === "route") {
+      return json(callExisting_("getVehicleRoute", [{
+        vehicle: data.vehicle || "",
+        carNumber: data.carNumber || "",
+        driverName: data.driverName || data.driver || "",
+        id: data.id || "",
+        limit: data.limit || 160
+      }]));
+    }
+    if (action === "alerts") return json(callExisting_("getRecentAlerts", []));
+    if (action === "autoTrips") return json(callExisting_("getAutoTrips", []));
+    if (action === "cleanup") return json(callExisting_("cleanupDuplicates", []));
+    if (action === "health") return json(callExisting_("getSystemHealth", []));
+
+    if (action === "wallet" || action === "dashboard") {
+      var walletScope = validateScopeForProtectedAction_("wallet", data);
+      if (!walletScope.success) return json(walletScope);
+      return json(callExisting_("getDriverWallet", [data]));
+    }
+    if (action === "history") {
+      var historyScope = validateScopeForProtectedAction_("history", data);
+      if (!historyScope.success) return json(historyScope);
+      return json(callExisting_("getDriverTrips", [data]));
+    }
+    if (action === "getMaintenance") {
+      var maintenanceScope = validateScopeForProtectedAction_("getMaintenance", data);
+      if (!maintenanceScope.success) return json(maintenanceScope);
+      return json(callExisting_("getMaintenanceRequests", [data]));
+    }
+    if (action === "reportIssue") {
+      var issueScope = validateScopeForProtectedAction_("reportIssue", data);
+      if (!issueScope.success) return json(issueScope);
+      return json(callExisting_("reportIssue", [data]));
+    }
+    if (action === "checkDoc") {
+      var docScope = validateScopeForProtectedAction_("checkDoc", data);
+      if (!docScope.success) return json(docScope);
+      return json(callExisting_("checkDoc", [data]));
     }
 
     return json({ success: false, message: "Unknown action: " + action });
@@ -652,6 +687,7 @@ function loginDriver(data) {
       carNumber: carNumber,
       phone: phoneNumber,
       newDriver: !found,
+      access: "authorized",
       loginTime: nowBaghdad_()
     };
 
@@ -664,6 +700,7 @@ function loginDriver(data) {
       carNumber: carNumber,
       phone: phoneNumber,
       newDriver: true,
+      access: "authorized",
       loginTime: nowBaghdad_(),
       warning: "لم يتم التحقق من السيارة"
     };
