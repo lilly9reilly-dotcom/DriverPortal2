@@ -1,0 +1,74 @@
+{
+  "DB_ابراهيم": {
+    "count": 177,
+    "quantity": 3338.97,
+    "amount": 73157403.0,
+    "gasLiters": 8330.0,
+    "gasValue": 3581900.0,
+    "stationTrips": 92,
+    "factoryTrips": 85
+  },
+  "DB_رواد_ريادة": {
+    "count": 187,
+    "quantity": 3689.16,
+    "amount": 89668698.0,
+    "gasLiters": 6461.0,
+    "gasValue": 2778230.0,
+    "stationTrips": 111,
+    "factoryTrips": 76
+  },
+  "DB_سجاد_صويره": {
+    "count": 89,
+    "quantity": 1665.996,
+    "amount": 40480836.0,
+    "gasLiters": 4748.0,
+    "gasValue": 2041640.0,
+    "stationTrips": 54,
+    "factoryTrips": 35
+  },
+  "DB_شركة": {
+    "count": 74,
+    "quantity": 1396.76,
+    "amount": 31352750.0,
+    "gasLiters": 9061.0,
+    "gasValue": 3896230.0,
+    "stationTrips": 40,
+    "factoryTrips": 34
+  },
+  "DB_شركة_يونيغاز": {
+    "count": 150,
+    "quantity": 2808.18,
+    "amount": 67605690.0,
+    "gasLiters": 10824.0,
+    "gasValue": 4654320.0,
+    "stationTrips": 90,
+    "factoryTrips": 60
+  },
+  "DB_علي_صبار": {
+    "count": 547,
+    "quantity": 10289.79,
+    "amount": 241821777.0,
+    "gasLiters": 58197.0,
+    "gasValue": 25024710.0,
+    "stationTrips": 318,
+    "factoryTrips": 229
+  },
+  "DB_قيصر_شمري": {
+    "count": 200,
+    "quantity": 3770.6,
+    "amount": 84607538.0,
+    "gasLiters": 26941.0,
+    "gasValue": 11584630.0,
+    "stationTrips": 108,
+    "factoryTrips": 92
+  },
+  "DB_قيصر_وارد": {
+    "count": 115,
+    "quantity": 2539.99,
+    "amount": 53525671.0,
+    "gasLiters": 9921.0,
+    "gasValue": 4266030.0,
+    "stationTrips": 66,
+    "factoryTrips": 49
+  }
+}

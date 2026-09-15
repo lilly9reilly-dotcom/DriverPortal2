@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>بوابة العميل — الناقلات النموذجية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- LOGIN -->
+    <section id="loginView" class="login-view">
+      <div class="login-atmosphere" aria-hidden="true"></div>
+      <div class="login-panel">
+        <p class="brand">الناقلات النموذجية</p>
+        <h1>بوابة العميل</h1>
+        <p class="lead">اطّلع على وصولاتك وأرباحك من قاعدتك الخاصة فقط.</p>
+
+        <label for="clientSelect">اختر العميل</label>
+        <select id="clientSelect"></select>
+
+        <label for="loginCode">رمز الدخول</label>
+        <input id="loginCode" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="أدخل رمز الدخول" />
+
+        <button id="loginBtn" class="btn-primary" type="button">دخول إلى البوابة</button>
+        <p id="loginError" class="error" hidden></p>
+        <p class="hint" id="loginHint"></p>
+      </div>
+    </section>
+
+    <!-- APP SHELL -->
+    <section id="appView" class="app-view hidden">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">بوابة العميل</p>
+          <h2 id="clientTitle">—</h2>
+          <p id="clientMeta" class="muted">—</p>
+        </div>
+        <div class="top-actions">
+          <button id="refreshBtn" class="btn-ghost" type="button">تحديث</button>
+          <button id="logoutBtn" class="btn-ghost" type="button">خروج</button>
+        </div>
+      </header>
+
+      <nav class="tabs" aria-label="أقسام البوابة">
+        <button class="tab active" data-tab="home" type="button">الرئيسية</button>
+        <button class="tab" data-tab="receipts" type="button">الوصولات</button>
+        <button class="tab" data-tab="cars" type="button">سياراتي</button>
+        <button class="tab" data-tab="about" type="button">عن القاعدة</button>
+      </nav>
+
+      <main>
+        <section id="tab-home" class="tab-panel">
+          <div class="filters">
+            <label>الشهر
+              <select id="monthFilter"></select>
+            </label>
+            <label>الفترة
+              <select id="periodFilter">
+                <option value="all">كل الشهر</option>
+                <option value="1-15">1 — 15</option>
+                <option value="16-end">16 — النهاية</option>
+              </select>
+            </label>
+            <label>النوع
+              <select id="typeFilter">
+                <option value="all">الكل</option>
+                <option value="محطة">محطات</option>
+                <option value="معمل">معامل</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="stats" id="statsGrid">
+            <div class="stat"><span>الوصولات</span><strong id="statCount">0</strong></div>
+            <div class="stat"><span>الكمية (طن)</span><strong id="statQty">0</strong></div>
+            <div class="stat"><span>المبلغ</span><strong id="statAmount">0</strong></div>
+            <div class="stat"><span>قيمة الكاز</span><strong id="statGas">0</strong></div>
+          </div>
+
+          <div class="split">
+            <div class="stat soft"><span>نقلات المحطات</span><strong id="statStation">0</strong></div>
+            <div class="stat soft"><span>نقلات المعامل</span><strong id="statFactory">0</strong></div>
+          </div>
+
+          <p class="note">الأرقام من قاعدتك وحدها (<span id="dbName">—</span>). لا تظهر بيانات عملاء آخرين.</p>
+        </section>
+
+        <section id="tab-receipts" class="tab-panel hidden">
+          <div class="toolbar">
+            <input id="searchInput" type="search" placeholder="بحث برقم الوصل أو السائق أو السيارة" />
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الوصل</th>
+                  <th>السيارة</th>
+                  <th>السائق</th>
+                  <th>الوجهة</th>
+                  <th>النوع</th>
+                  <th>الكمية</th>
+                  <th>المبلغ</th>
+                  <th>التفريغ</th>
+                </tr>
+              </thead>
+              <tbody id="receiptsBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="tab-cars" class="tab-panel hidden">
+          <div id="carsGrid" class="cars-grid"></div>
+        </section>
+
+        <section id="tab-about" class="tab-panel hidden">
+          <article class="about">
+            <h3>كيف تعمل البوابة؟</h3>
+            <p>كل عميل له قاعدة بيانات مستقلة باسم <strong id="aboutDb">DB_...</strong>. الوصولات تُوزَّع تلقائيًا حسب رقم السيارة.</p>
+            <p>هذه نسخة متصفح للمعاينة. بعد اعتماد الشكل والبيانات نحولها لتطبيق موبايل.</p>
+            <ul>
+              <li>المحطات والمعامل مفصولان في نوع الحركة.</li>
+              <li>لا يمكن رؤية قواعد العملاء الآخرين.</li>
+              <li>الوضع الحالي: بيانات تجريبية من التوزيع التاريخي.</li>
+            </ul>
+          </article>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
