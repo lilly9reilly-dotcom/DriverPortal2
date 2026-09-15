@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_ADMIN_URL = process.env.DRIVER_PORTAL_ADMIN_URL ||
-  'https://script.google.com/macros/s/AKfycbwCreVvebaAN7C4W2OZu6ura7cza42P2lIssNt4sVBv1raDqZkQYY-ZZyNNcl9_iynhAw/exec?page=admin';
+  'https://script.google.com/macros/s/AKfycbwQsUx8PVIIPufmI8Ev0tTy6qEBtcNn7LXldhmCnuPwpq0VfZUjAx8pl13jSWxywvRM9A/exec?page=admin';
 const DEFAULT_DEMAND_TEMPLATE_URL = process.env.DRIVER_PORTAL_DEMAND_TEMPLATE_URL ||
   'https://script.google.com/macros/s/AKfycbw-3wKRuKImCvvB4ip3PGokDP18yJz6HDW2QylDmvQGxAbyn8Wq-FIlHQ9ms-i7wlCEQA/exec?page=demand_template';
 const CONFIG_PATH = path.join(__dirname, 'manager-config.json');
