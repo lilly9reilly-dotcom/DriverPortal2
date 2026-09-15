@@ -38,6 +38,7 @@
           <p id="clientMeta" class="muted">—</p>
         </div>
         <div class="top-actions">
+          <button id="notifBtn" class="btn-ghost notif-btn" type="button">الإشعارات <span id="notifBadge" class="badge-count hidden">0</span></button>
           <button id="refreshBtn" class="btn-ghost" type="button">تحديث</button>
           <button id="logoutBtn" class="btn-ghost" type="button">خروج</button>
         </div>
@@ -49,6 +50,7 @@
         <button class="tab" data-tab="account" type="button">حسابي</button>
         <button class="tab" data-tab="statements" type="button">كشوفي</button>
         <button class="tab" data-tab="reports" type="button">تقارير</button>
+        <button class="tab" data-tab="settings" type="button">الإعدادات</button>
       </nav>
 
       <main>
@@ -70,9 +72,10 @@
             <div class="form-row">
               <input id="receiveAmount" type="number" min="0" step="1000" placeholder="المبلغ د.ع" />
               <select id="receiveMethod">
-                <option value="بطاقة">بطاقة</option>
-                <option value="مصرف">مصرف</option>
                 <option value="زين كاش">زين كاش</option>
+                <option value="ماستركارد">ماستركارد</option>
+                <option value="بطاقة مصرفية">بطاقة مصرفية</option>
+                <option value="حساب مصرفي">حساب مصرفي</option>
                 <option value="نقداً">نقداً</option>
               </select>
             </div>
@@ -122,9 +125,9 @@
             <div class="stat"><span>قيمة الكاز</span><strong id="accGas">0</strong></div>
           </div>
           <div class="payout-grid">
-            <div class="card"><h3>بطاقة</h3><p id="payoutCard" class="muted">جاهز للربط الحي</p></div>
-            <div class="card"><h3>مصرف</h3><p id="payoutBank" class="muted">جاهز للربط الحي</p></div>
-            <div class="card"><h3>زين كاش</h3><p id="payoutZain" class="muted">جاهز للربط الحي</p></div>
+            <div class="card"><h3>ماستركارد</h3><p id="payoutCard" class="muted">أضفها من الإعدادات</p></div>
+            <div class="card"><h3>حساب/بطاقة مصرفية</h3><p id="payoutBank" class="muted">أضفها من الإعدادات</p></div>
+            <div class="card"><h3>زين كاش</h3><p id="payoutZain" class="muted">أضفها من الإعدادات</p></div>
           </div>
           <h3 class="section-title">حركات الحساب</h3>
           <div class="table-wrap">
@@ -167,9 +170,67 @@
           </div>
           <div id="carsGrid" class="cars-grid"></div>
         </section>
+
+        <section id="tab-settings" class="tab-panel hidden">
+          <article class="card">
+            <h3>وسائل استلام أموالي</h3>
+            <p class="muted">أضف بياناتك حتى تتمكن الإدارة من تحويل مستحقاتك إلى الوسيلة التي تختارها.</p>
+            <div class="settings-grid">
+              <label>زين كاش
+                <input id="payZain" type="text" inputmode="tel" placeholder="07xxxxxxxxx" />
+              </label>
+              <label>ماستركارد
+                <input id="payMaster" type="text" placeholder="رقم البطاقة أو آخر 4 أرقام + الاسم" />
+              </label>
+              <label>بطاقة مصرفية
+                <input id="payBankCard" type="text" placeholder="رقم البطاقة المصرفية / الاسم على البطاقة" />
+              </label>
+              <label>اسم المصرف
+                <input id="payBankName" type="text" placeholder="مثال: مصرف الرافدين" />
+              </label>
+              <label>رقم الحساب / IBAN
+                <input id="payBankAccount" type="text" placeholder="رقم الحساب أو IBAN" />
+              </label>
+              <label>ملاحظات
+                <input id="payNotes" type="text" placeholder="اختياري" />
+              </label>
+            </div>
+            <button id="savePayoutBtn" class="btn-primary" type="button">حفظ وسائل الاستلام</button>
+            <p id="payoutSaveMsg" class="hint"></p>
+          </article>
+
+          <article class="card">
+            <h3>تسوية حسابي</h3>
+            <p class="muted">كل تحويل من الإدارة يظهر هنا. أكّد الاستلام بعد وصول المبلغ إلى وسيلتك.</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>المعرف</th>
+                    <th>المبلغ</th>
+                    <th>الوسيلة</th>
+                    <th>التفاصيل</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
+                <tbody id="settlementsBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </section>
       </main>
     </section>
   </div>
+
+    <aside id="notifDrawer" class="notif-drawer hidden" aria-label="الإشعارات">
+      <div class="notif-head">
+        <h3>إشعارات الأموال</h3>
+        <button id="closeNotifBtn" class="btn-ghost" type="button">إغلاق</button>
+      </div>
+      <div id="notifList" class="notif-list"></div>
+    </aside>
+
   <script src="app.js"></script>
 </body>
 </html>

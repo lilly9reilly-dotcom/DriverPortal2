@@ -6,7 +6,10 @@
     db: null,
     receipts: [],
     moves: [],
-    chart: null
+    chart: null,
+    payout: { zainCash: "", mastercard: "", bankCard: "", bankAccount: "", bankName: "", notes: "" },
+    settlements: [],
+    notices: []
   };
 
   const $ = (id) => document.getElementById(id);
@@ -44,6 +47,42 @@
     catch { return null; }
   }
   function clearSession() { localStorage.removeItem("clientPortalSession"); }
+
+  function payoutKey(id) { return "clientPortalPayout:" + id; }
+  function settlementsKey(id) { return "clientPortalSettlements:" + id; }
+  function noticesKey(id) { return "clientPortalNotices:" + id; }
+  function adminNoticesKey() { return "adminMoneyNotices"; }
+
+  function readPayout(id) {
+    try { return Object.assign({ zainCash: "", mastercard: "", bankCard: "", bankAccount: "", bankName: "", notes: "" }, JSON.parse(localStorage.getItem(payoutKey(id)) || "{}")); }
+    catch { return { zainCash: "", mastercard: "", bankCard: "", bankAccount: "", bankName: "", notes: "" }; }
+  }
+  function writePayout(id, payout) { localStorage.setItem(payoutKey(id), JSON.stringify(payout)); }
+
+  function readSettlements(id) {
+    try { return JSON.parse(localStorage.getItem(settlementsKey(id)) || "[]"); }
+    catch { return []; }
+  }
+  function writeSettlements(id, rows) { localStorage.setItem(settlementsKey(id), JSON.stringify(rows)); }
+
+  function readNotices(id) {
+    try { return JSON.parse(localStorage.getItem(noticesKey(id)) || "[]"); }
+    catch { return []; }
+  }
+  function writeNotices(id, rows) { localStorage.setItem(noticesKey(id), JSON.stringify(rows)); }
+
+  function readAdminNotices() {
+    try { return JSON.parse(localStorage.getItem(adminNoticesKey()) || "[]"); }
+    catch { return []; }
+  }
+  function writeAdminNotices(rows) { localStorage.setItem(adminNoticesKey(), JSON.stringify(rows)); }
+
+  function maskSecret(v) {
+    const s = String(v || "").trim();
+    if (!s) return "غير مضاف";
+    if (s.length <= 4) return s;
+    return "****" + s.slice(-4);
+  }
 
   function isFactory(r) {
     return String(r.movement || "").includes("معمل") || String(r.destination || "").includes("معمل");
@@ -106,6 +145,9 @@
     state.db = db;
     state.receipts = db.receipts || [];
     state.moves = readMoves(client.id);
+    state.payout = readPayout(client.id);
+    state.settlements = readSettlements(client.id);
+    state.notices = readNotices(client.id);
     saveSession(client);
     $("loginView").classList.add("hidden");
     $("appView").classList.remove("hidden");
@@ -184,6 +226,11 @@
     renderMoves();
     renderCars();
     renderChart(t);
+    renderPayoutCards();
+    fillPayoutForm();
+    renderSettlements();
+    renderNotices();
+    updateReceiveMethodOptions();
   }
 
   function renderTrips(rows) {
@@ -339,6 +386,263 @@
     a.click();
   }
 
+
+  function fillPayoutForm() {
+    const p = state.payout || {};
+    if ($("payZain")) $("payZain").value = p.zainCash || "";
+    if ($("payMaster")) $("payMaster").value = p.mastercard || "";
+    if ($("payBankCard")) $("payBankCard").value = p.bankCard || "";
+    if ($("payBankName")) $("payBankName").value = p.bankName || "";
+    if ($("payBankAccount")) $("payBankAccount").value = p.bankAccount || "";
+    if ($("payNotes")) $("payNotes").value = p.notes || "";
+  }
+
+  function renderPayoutCards() {
+    const p = state.payout || {};
+    if ($("payoutCard")) $("payoutCard").textContent = p.mastercard ? maskSecret(p.mastercard) : "غير مضاف — من الإعدادات";
+    if ($("payoutBank")) {
+      const bank = [p.bankName, p.bankAccount ? maskSecret(p.bankAccount) : "", p.bankCard ? ("بطاقة " + maskSecret(p.bankCard)) : ""]
+        .filter(Boolean).join(" · ");
+      $("payoutBank").textContent = bank || "غير مضاف — من الإعدادات";
+    }
+    if ($("payoutZain")) $("payoutZain").textContent = p.zainCash ? p.zainCash : "غير مضاف — من الإعدادات";
+  }
+
+  function updateReceiveMethodOptions() {
+    const sel = $("receiveMethod");
+    if (!sel) return;
+    const p = state.payout || {};
+    const opts = [];
+    if (p.zainCash) opts.push(["زين كاش", "زين كاش"]);
+    if (p.mastercard) opts.push(["ماستركارد", "ماستركارد"]);
+    if (p.bankCard) opts.push(["بطاقة مصرفية", "بطاقة مصرفية"]);
+    if (p.bankAccount || p.bankName) opts.push(["حساب مصرفي", "حساب مصرفي"]);
+    opts.push(["نقداً", "نقداً"]);
+    const current = sel.value;
+    sel.innerHTML = opts.map(([v, l]) => '<option value="' + v + '">' + l + "</option>").join("");
+    if (opts.some(([v]) => v === current)) sel.value = current;
+  }
+
+  function savePayoutMethods() {
+    if (!state.session) return;
+    const payout = {
+      zainCash: ($("payZain").value || "").trim(),
+      mastercard: ($("payMaster").value || "").trim(),
+      bankCard: ($("payBankCard").value || "").trim(),
+      bankName: ($("payBankName").value || "").trim(),
+      bankAccount: ($("payBankAccount").value || "").trim(),
+      notes: ($("payNotes").value || "").trim()
+    };
+    if (!payout.zainCash && !payout.mastercard && !payout.bankCard && !payout.bankAccount) {
+      $("payoutSaveMsg").textContent = "أضف وسيلة واحدة على الأقل";
+      return;
+    }
+    state.payout = payout;
+    writePayout(state.session.id, payout);
+    $("payoutSaveMsg").textContent = "تم حفظ وسائل الاستلام";
+    renderPayoutCards();
+    updateReceiveMethodOptions();
+  }
+
+  function renderSettlements() {
+    const body = $("settlementsBody");
+    if (!body) return;
+    const rows = state.settlements || [];
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="6">لا توجد تسويات بعد. ستظهر هنا عند إرسال الإدارة مبلغاً لك.</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.slice().reverse().map((s) => {
+      const canConfirm = s.status === "مرسل";
+      return "<tr>" +
+        "<td>" + esc(s.settlementId) + "</td>" +
+        "<td>" + fmt.money(s.amount) + "</td>" +
+        "<td>" + esc(s.method) + "</td>" +
+        "<td>" + esc(s.methodDetail || "—") + "</td>" +
+        "<td><span class=\"badge status\">" + esc(s.status) + "</span></td>" +
+        "<td>" + (canConfirm
+          ? ('<button type="button" class="btn-primary btn-small" data-confirm-settlement="' + esc(s.settlementId) + '" onclick="window.__confirmClientSettlement && window.__confirmClientSettlement(\'' + String(s.settlementId).replace(/'/g,'') + '\')">تأكيد الاستلام</button>')
+          : "تم") + "</td>" +
+        "</tr>";
+    }).join("");
+  }
+
+  function renderNotices() {
+    const list = $("notifList");
+    const badge = $("notifBadge");
+    const notice = $("moneyNotice");
+    const rows = state.notices || [];
+    const unread = rows.filter((n) => !n.read).length;
+    if (badge) {
+      if (unread > 0) {
+        badge.classList.remove("hidden");
+        badge.textContent = String(unread);
+      } else {
+        badge.classList.add("hidden");
+      }
+    }
+    if (notice) {
+      const latest = rows.find((n) => !n.read) || rows[0];
+      if (latest) {
+        notice.classList.remove("hidden");
+        notice.textContent = latest.title + ": " + latest.text;
+      }
+    }
+    if (!list) return;
+    if (!rows.length) {
+      list.innerHTML = '<p class="muted">لا توجد إشعارات حالياً.</p>';
+      return;
+    }
+    list.innerHTML = rows.slice().reverse().map((n) =>
+      '<article class="notif-item' + (n.read ? "" : " unread") + '">' +
+      "<h4>" + esc(n.title) + "</h4>" +
+      "<p>" + esc(n.text) + "</p>" +
+      '<div class="notif-meta">' + esc(n.time || "") + " · " + esc(n.method || "") + "</div>" +
+      "</article>"
+    ).join("");
+  }
+
+  function openNotifDrawer() {
+    renderNotices();
+    $("notifDrawer").classList.remove("hidden");
+    // mark read
+    state.notices = (state.notices || []).map((n) => Object.assign({}, n, { read: true }));
+    if (state.session) writeNotices(state.session.id, state.notices);
+    renderNotices();
+  }
+
+  function closeNotifDrawer() {
+    $("notifDrawer").classList.add("hidden");
+  }
+
+  function methodDetailFor(method) {
+    const p = state.payout || {};
+    if (method.indexOf("زين") >= 0) return p.zainCash || "";
+    if (method.indexOf("ماستر") >= 0) return p.mastercard || "";
+    if (method.indexOf("بطاقة") >= 0) return p.bankCard || "";
+    if (method.indexOf("حساب") >= 0 || method.indexOf("مصرف") >= 0) {
+      return [p.bankName, p.bankAccount].filter(Boolean).join(" / ");
+    }
+    return "";
+  }
+
+  function confirmSettlement(settlementId) {
+    if (!state.session) return;
+    const row = (state.settlements || []).find((s) => s.settlementId === settlementId);
+    if (!row || row.status !== "مرسل") return;
+    row.status = "مستلم";
+    row.receiveNote = "أكد العميل الاستلام من التطبيق";
+    row.receivedAt = new Date().toISOString();
+    writeSettlements(state.session.id, state.settlements);
+
+    state.moves.push({
+      date: new Date().toISOString().slice(0, 10),
+      type: "استلام",
+      method: row.method,
+      amount: Number(row.amount || 0),
+      note: "تسوية " + settlementId
+    });
+    writeMoves(state.session.id, state.moves);
+
+    const notice = {
+      id: "NTC-" + Date.now(),
+      time: new Date().toLocaleString("en-GB"),
+      title: "تم تأكيد وصول المبلغ",
+      text: "تم تسجيل استلام " + fmt.money(row.amount) + " د.ع عبر " + row.method,
+      amount: row.amount,
+      method: row.method,
+      read: false,
+      settlementId: settlementId
+    };
+    state.notices.push(notice);
+    writeNotices(state.session.id, state.notices);
+
+    const adminRows = readAdminNotices();
+    adminRows.push({
+      id: "ADM-" + Date.now(),
+      time: new Date().toLocaleString("en-GB"),
+      clientCode: state.session.loginCode,
+      clientName: state.session.name,
+      dbSheet: state.session.dbSheet,
+      title: "العميل أكد استلام المبلغ",
+      text: state.session.name + " أكّد استلام " + fmt.money(row.amount) + " د.ع عبر " + row.method,
+      amount: row.amount,
+      method: row.method,
+      settlementId: settlementId,
+      read: false
+    });
+    writeAdminNotices(adminRows);
+    renderAll();
+  }
+
+  // Demo helper used by local admin page / console: simulate admin sending money.
+  window.__demoAdminSendSettlement = function(payload) {
+    payload = payload || {};
+    const code = String(payload.code || "").toUpperCase();
+    const client = state.clients.find((c) => String(c.loginCode).toUpperCase() === code) || state.session;
+    if (!client) return { success: false, message: "عميل غير موجود" };
+    const amount = Number(payload.amount || 0);
+    const method = String(payload.method || "زين كاش");
+    if (!(amount > 0)) return { success: false, message: "مبلغ غير صالح" };
+    const payout = readPayout(client.id);
+    let methodDetail = "";
+    if (method.indexOf("زين") >= 0) methodDetail = payout.zainCash || "";
+    else if (method.indexOf("ماستر") >= 0) methodDetail = payout.mastercard || "";
+    else if (method.indexOf("بطاقة") >= 0) methodDetail = payout.bankCard || "";
+    else methodDetail = [payout.bankName, payout.bankAccount].filter(Boolean).join(" / ");
+
+    const settlementId = "STL-" + Date.now();
+    const settlements = readSettlements(client.id);
+    settlements.push({
+      settlementId: settlementId,
+      amount: amount,
+      method: method,
+      methodDetail: methodDetail,
+      status: "مرسل",
+      sendNote: payload.note || "تحويل من الإدارة",
+      receiveNote: "",
+      receivedAt: "",
+      time: new Date().toLocaleString("en-GB")
+    });
+    writeSettlements(client.id, settlements);
+
+    const notices = readNotices(client.id);
+    notices.push({
+      id: "NTC-" + Date.now(),
+      time: new Date().toLocaleString("en-GB"),
+      title: "تم إرسال مبلغ إليك",
+      text: "تم تحويل " + Number(amount).toLocaleString("en-US") + " د.ع عبر " + method + (methodDetail ? " (" + methodDetail + ")" : ""),
+      amount: amount,
+      method: method,
+      read: false,
+      settlementId: settlementId
+    });
+    writeNotices(client.id, notices);
+
+    const adminRows = readAdminNotices();
+    adminRows.push({
+      id: "ADM-" + Date.now(),
+      time: new Date().toLocaleString("en-GB"),
+      clientCode: client.loginCode,
+      clientName: client.name,
+      dbSheet: client.dbSheet,
+      title: "تم تسجيل إرسال للعميل",
+      text: "أُرسل " + Number(amount).toLocaleString("en-US") + " د.ع إلى " + client.name + " عبر " + method,
+      amount: amount,
+      method: method,
+      settlementId: settlementId,
+      read: false
+    });
+    writeAdminNotices(adminRows);
+
+    if (state.session && state.session.id === client.id) {
+      state.settlements = settlements;
+      state.notices = notices;
+      renderAll();
+    }
+    return { success: true, settlementId: settlementId };
+  };
+
   async function boot() {
     const meta = await loadJson("data/clients.json");
     state.clients = meta.clients || [];
@@ -349,6 +653,16 @@
       if (state.session) await openClient(state.session);
     });
     $("receiveBtn").addEventListener("click", registerReceive);
+
+    if ($("savePayoutBtn")) $("savePayoutBtn").addEventListener("click", savePayoutMethods);
+    if ($("notifBtn")) $("notifBtn").addEventListener("click", openNotifDrawer);
+    if ($("closeNotifBtn")) $("closeNotifBtn").addEventListener("click", closeNotifDrawer);
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-confirm-settlement]");
+      if (!btn) return;
+      confirmSettlement(btn.getAttribute("data-confirm-settlement"));
+    });
+
     $("exportBtn").addEventListener("click", exportCsv);
     ["monthFilter", "typeFilter"].forEach((id) => $(id).addEventListener("change", renderAll));
     $("searchInput").addEventListener("input", renderAll);

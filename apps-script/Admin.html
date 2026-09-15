@@ -366,6 +366,7 @@
         <div class="side-item active" data-section="dashboard">لوحة التحكم</div>
         <div class="side-item" data-section="ministry">حساب الوزارة</div>
         <div class="side-item" data-section="registry">قواعد بيانات العملاء</div>
+        <div class="side-item" data-section="settlements">تسوية العملاء</div>
         <div class="side-item" data-section="reports">التقارير</div>
         <div class="side-item" data-section="drivers">السواق</div>
         <div class="side-item" data-section="activations">تفعيل الشركات</div>
@@ -551,6 +552,54 @@
               <tbody></tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      
+      <section id="section-settlements" class="section">
+        <div class="table-wrap">
+          <div class="table-head">
+            <h2>تسوية حسابات العملاء + إشعارات الأموال</h2>
+            <div class="actions">
+              <button class="btn-blue" onclick="refreshSettlementsPanel()">تحديث</button>
+            </div>
+          </div>
+          <p class="k-sub">أرسل مستحقات العميل إلى وسيلته (زين كاش / ماستركارد / بطاقة / حساب مصرفي). عند تأكيد العميل من تطبيقه يصلك إشعار فوري هنا.</p>
+        </div>
+
+        <section class="grid-2">
+          <div class="card">
+            <h2 class="panel-title">إرسال مبلغ</h2>
+            <div class="filters" style="display:grid;gap:8px;">
+              <input id="stlClientCode" type="text" placeholder="كود العميل مثل C2221" />
+              <input id="stlAmount" type="number" placeholder="المبلغ د.ع" />
+              <select id="stlMethod">
+                <option>زين كاش</option>
+                <option>ماستركارد</option>
+                <option>بطاقة مصرفية</option>
+                <option>حساب مصرفي</option>
+              </select>
+              <input id="stlNote" type="text" placeholder="ملاحظة التسوية" />
+              <button class="btn-green" onclick="sendClientSettlement()">إرسال وإشعار العميل</button>
+            </div>
+            <div id="stlPayoutBox" class="k-sub" style="margin-top:10px;"></div>
+          </div>
+          <div class="card">
+            <h2 class="panel-title">إشعارات الإدارة</h2>
+            <div id="stlAdminNotices" class="bars"></div>
+          </div>
+        </section>
+
+        <div class="table-wrap" style="margin-top:14px;">
+          <div class="table-head"><h2>سجل التسويات</h2></div>
+          <table>
+            <thead>
+              <tr>
+                <th>المعرف</th><th>العميل</th><th>المبلغ</th><th>الوسيلة</th><th>التفاصيل</th><th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody id="stlTableBody"></tbody>
+          </table>
         </div>
       </section>
 
@@ -899,7 +948,8 @@
     }
 
     function openSection(sectionKey) {
-      ["dashboard", "ministry", "registry", "reports", "drivers", "activations", "owners"].forEach(function(key) {
+      if (sectionKey === "settlements") { try { refreshSettlementsPanel(); } catch (e) {} }
+      ["dashboard", "ministry", "registry", "settlements", "reports", "drivers", "activations", "owners"].forEach(function(key) {
         var el = document.getElementById("section-" + key);
         if (!el) return;
         if (key === sectionKey) el.classList.add("active");
@@ -2708,6 +2758,58 @@
       }
       showLoader(false);
     }
-  </script>
+  
+    async function refreshSettlementsPanel() {
+      try {
+        var notices = await runServer("adminListMoneyNotices", { limit: 50 });
+        var box = document.getElementById("stlAdminNotices");
+        if (box) {
+          var rows = (notices && notices.data) || [];
+          box.innerHTML = rows.length ? rows.map(function(n){
+            return '<div class="mini"><div class="name">' + (n.title || "") + '</div><div class="num" style="font-size:13px;">' + (n.text || "") + '</div></div>';
+          }).join("") : '<div class="k-sub">لا إشعارات بعد</div>';
+        }
+        var list = await runServer("adminListClientSettlements", { limit: 100 });
+        var body = document.getElementById("stlTableBody");
+        if (body) {
+          var data = (list && list.data) || [];
+          body.innerHTML = data.length ? data.map(function(s){
+            return "<tr><td>" + (s.settlementId||"") + "</td><td>" + (s.clientName||"") + "</td><td>" + (s.amount||0) + "</td><td>" + (s.method||"") + "</td><td>" + (s.methodDetail||"") + "</td><td>" + (s.status||"") + "</td></tr>";
+          }).join("") : '<tr><td colspan="6">لا تسويات</td></tr>';
+        }
+        var methods = await runServer("adminListClientPayoutMethods", {});
+        var payoutBox = document.getElementById("stlPayoutBox");
+        if (payoutBox) {
+          var code = (document.getElementById("stlClientCode").value || "").trim().toUpperCase();
+          var m = ((methods && methods.data) || []).find(function(x){ return String(x.clientCode||"").toUpperCase() === code; });
+          payoutBox.textContent = m
+            ? ("زين:" + (m.zainCash||"—") + " | ماستر:" + (m.mastercard||"—") + " | بطاقة:" + (m.bankCard||"—") + " | حساب:" + (m.bankName||"") + " " + (m.bankAccount||"—"))
+            : "لا توجد وسائل محفوظة لهذا الكود بعد";
+        }
+      } catch (err) {
+        showMsg("تعذر تحديث التسويات: " + err, true);
+      }
+    }
+
+    async function sendClientSettlement() {
+      try {
+        var payload = {
+          code: (document.getElementById("stlClientCode").value || "").trim(),
+          amount: Number(document.getElementById("stlAmount").value || 0),
+          method: document.getElementById("stlMethod").value,
+          note: document.getElementById("stlNote").value || "",
+          actor: "admin-dashboard"
+        };
+        var res = await runServer("adminSendClientSettlement", payload);
+        if (!res || !res.success) throw new Error((res && res.message) || "فشل الإرسال");
+        showMsg("تم إرسال التسوية وإشعار العميل", false);
+        document.getElementById("stlAmount").value = "";
+        await refreshSettlementsPanel();
+      } catch (err) {
+        showMsg(String(err), true);
+      }
+    }
+
+</script>
 </body>
 </html>

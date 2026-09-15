@@ -38,3 +38,11 @@ cd client-web
 - `android-client-webview/`
 - `scripts/safe-predeploy-verify.sh`
 - `scripts/safe-postdeploy-smoke.sh`
+
+
+## تحديث تسوية العملاء (2026-09-15)
+- إعدادات وسائل الاستلام داخل بوابة العميل
+- تسوية حساب لكل عميل + تأكيد استلام
+- إشعارات إرسال/استلام في العميل ولوحة الإدارة
+- صفحة معاينة محلية: `client-web/admin-settlements.html`
+- قسم Admin: تسوية العملاء (يتفعل بعد clasp publish)

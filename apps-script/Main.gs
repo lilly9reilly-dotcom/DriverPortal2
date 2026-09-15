@@ -153,6 +153,16 @@ function handleRequest(e) {
     if (action === "clientLogin") return json(clientPortalLogin_(data));
     if (action === "clientGetState") return json(clientPortalGetState_(data));
     if (action === "clientRegisterReceive") return json(clientPortalRegisterReceive_(data));
+    if (action === "clientSavePayoutMethods") return json(clientSavePayoutMethods_(data));
+    if (action === "clientGetPayoutMethods") return json(clientGetPayoutMethods_(data));
+    if (action === "clientListSettlements") return json(clientListSettlements_(data));
+    if (action === "clientListMoneyNotices") return json(clientListMoneyNotices_(data));
+    if (action === "clientConfirmSettlementReceived") return json(clientConfirmSettlementReceived_(data));
+    if (action === "adminSendClientSettlement") return json(adminSendClientSettlement_(data));
+    if (action === "adminListClientSettlements") return json(adminListClientSettlements_(data));
+    if (action === "adminListMoneyNotices") return json(adminListMoneyNotices_(data));
+    if (action === "adminListClientPayoutMethods") return json(adminListClientPayoutMethods_(data));
+    if (action === "ensureClientFinanceSheets") return json(ensureClientFinanceSheets_());
     if (action === "listRoles") return json(listSystemRoles_());
     if (action === "ensureRoleSheets") return json(ensureRoleReferenceSheets_(data));
     if (action === "appendAuditLog") return json(appendAuditLog_(data));
