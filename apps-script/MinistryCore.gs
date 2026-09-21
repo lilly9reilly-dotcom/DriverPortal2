@@ -609,7 +609,7 @@ MinistryCore.officialAgentFleetSeed = function() {
       },
       {
         name: "شركة ارض الهادي",
-        kind: "شركة",
+        kind: "معتمد",
         cars: ["12207", "31896", "27591", "36341", "23589", "35837", "22006", "30706", "27912", "23917", "24189"]
       },
       {
@@ -624,7 +624,7 @@ MinistryCore.officialAgentFleetSeed = function() {
       },
       {
         name: "شركة يونيغاز",
-        kind: "شركة",
+        kind: "معتمد",
         cars: ["22219", "22084", "22076", "22339"]
       }
     ]
