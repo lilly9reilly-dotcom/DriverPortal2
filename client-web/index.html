@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b4f63" />
-  <title>بوابة العميل — الناقلات النموذجية</title>
+  <title>تطبيق المعتمد — الناقلات النموذجية</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet" />
@@ -18,22 +18,22 @@
       <div class="login-atmosphere" aria-hidden="true"></div>
       <div class="login-panel">
         <p class="brand">الناقلات النموذجية</p>
-        <h1>بوابة العميل</h1>
-        <p class="lead">دخول بالكود الخاص فقط. ترى سياراتك ووصولاتك وحسابك وحدك.</p>
+        <h1>تطبيق المعتمد</h1>
+        <p class="lead">دخول بالكود الخاص فقط. ترى سياراتك ووصولاتك وحسابك وحدك — للمعتمدين وليس للشركات.</p>
 
         <label for="loginCode">كود الدخول</label>
-        <input id="loginCode" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="مثال: C2221" />
+        <input id="loginCode" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="مثال: C1587" />
 
         <button id="loginBtn" class="btn-primary" type="button">دخول</button>
         <p id="loginError" class="error" hidden></p>
-        <p class="hint">وضع المعاينة: يونيغاز <strong>C2221</strong> · شركة ارض الهادي <strong>C1220</strong></p>
+        <p class="hint">معاينة معتمد: سجاد صويره <strong>C1587</strong> · ابراهيم <strong>C3137</strong></p>
       </div>
     </section>
 
     <section id="appView" class="app-view hidden">
       <header class="topbar">
         <div>
-          <p class="eyebrow">بوابة العميل</p>
+          <p class="eyebrow">تطبيق المعتمد</p>
           <h2 id="clientTitle">—</h2>
           <p id="clientMeta" class="muted">—</p>
         </div>
@@ -82,7 +82,7 @@
             <button id="receiveBtn" class="btn-primary" type="button">تسجيل الاستلام</button>
             <p id="receiveMsg" class="hint"></p>
           </div>
-          <p class="note">القاعدة: <span id="dbName">—</span> · العزل حسب كود العميل فقط.</p>
+          <p class="note">القاعدة: <span id="dbName">—</span> · العزل حسب كود المعتمد فقط.</p>
         </section>
 
         <section id="tab-trips" class="tab-panel hidden">

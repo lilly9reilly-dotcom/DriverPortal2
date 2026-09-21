@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة تسوية العملاء — معاينة</title>
+  <title>لوحة تسوية المعتمدين — معاينة</title>
   <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -16,13 +16,13 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>تسوية حسابات العملاء</h1>
-    <p class="muted">معاينة محلية للداشبورد: إرسال أموال للعميل + استلام إشعار عندما يؤكد العميل الوصول. يعمل مع نفس بيانات بوابة العميل على هذا المتصفح.</p>
-    <div class="notice-admin">افتح أولاً <a href="./index.html">بوابة العميل</a> وسجّل دخول العميل وأضف وسائل الاستلام من الإعدادات، ثم ارجع هنا لإرسال مبلغ.</div>
+    <h1>تسوية حسابات المعتمدين</h1>
+    <p class="muted">معاينة محلية للداشبورد: إرسال أموال للمعتمد + استلام إشعار عندما يؤكد الوصول. يعمل مع نفس بيانات تطبيق المعتمد على هذا المتصفح.</p>
+    <div class="notice-admin">افتح أولاً <a href="./index.html">تطبيق المعتمد</a> وسجّل دخول معتمد (مثل سجاد C1587) وأضف وسائل الاستلام من الإعدادات، ثم ارجع هنا لإرسال مبلغ.</div>
     <div class="grid">
       <article class="card">
-        <h3>إرسال مبلغ لعميل</h3>
-        <label>كود العميل
+        <h3>إرسال مبلغ لمعتمد</h3>
+        <label>كود المعتمد
           <select id="clientCode"></select>
         </label>
         <label>المبلغ
@@ -39,7 +39,7 @@
         <label>ملاحظة
           <input id="note" type="text" placeholder="تسوية الفترة ..." />
         </label>
-        <button id="sendBtn" class="btn-primary" type="button">إرسال وإشعار العميل</button>
+        <button id="sendBtn" class="btn-primary" type="button">إرسال وإشعار المعتمد</button>
         <p id="sendMsg" class="hint"></p>
         <h3 class="section-title">وسائل الاستلام المحفوظة</h3>
         <pre id="payoutPreview" class="muted" style="white-space:pre-wrap;background:#f8fafb;padding:10px;border-radius:10px;"></pre>

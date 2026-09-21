@@ -364,7 +364,7 @@
       type: "استلام",
       method: method,
       amount: amount,
-      note: "تسجيل من بوابة العميل"
+      note: "تسجيل من تطبيق المعتمد"
     });
     writeMoves(state.session.id, state.moves);
     $("receiveAmount").value = "";
@@ -531,7 +531,7 @@
     const row = (state.settlements || []).find((s) => s.settlementId === settlementId);
     if (!row || row.status !== "مرسل") return;
     row.status = "مستلم";
-    row.receiveNote = "أكد العميل الاستلام من التطبيق";
+    row.receiveNote = "أكد المعتمد الاستلام من التطبيق";
     row.receivedAt = new Date().toISOString();
     writeSettlements(state.session.id, state.settlements);
 
@@ -564,7 +564,7 @@
       clientCode: state.session.loginCode,
       clientName: state.session.name,
       dbSheet: state.session.dbSheet,
-      title: "العميل أكد استلام المبلغ",
+      title: "المعتمد أكد استلام المبلغ",
       text: state.session.name + " أكّد استلام " + fmt.money(row.amount) + " د.ع عبر " + row.method,
       amount: row.amount,
       method: row.method,
@@ -580,7 +580,7 @@
     payload = payload || {};
     const code = String(payload.code || "").toUpperCase();
     const client = state.clients.find((c) => String(c.loginCode).toUpperCase() === code) || state.session;
-    if (!client) return { success: false, message: "عميل غير موجود" };
+    if (!client) return { success: false, message: "معتمد غير موجود" };
     const amount = Number(payload.amount || 0);
     const method = String(payload.method || "زين كاش");
     if (!(amount > 0)) return { success: false, message: "مبلغ غير صالح" };
@@ -626,7 +626,7 @@
       clientCode: client.loginCode,
       clientName: client.name,
       dbSheet: client.dbSheet,
-      title: "تم تسجيل إرسال للعميل",
+      title: "تم تسجيل إرسال للمعتمد",
       text: "أُرسل " + Number(amount).toLocaleString("en-US") + " د.ع إلى " + client.name + " عبر " + method,
       amount: amount,
       method: method,
