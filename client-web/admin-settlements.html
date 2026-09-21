@@ -81,13 +81,13 @@
       const settlements = JSON.parse(localStorage.getItem(settlementsKey(c.id)) || '[]');
       document.getElementById('settlementsPreview').innerHTML = settlements.length
         ? '<ul>' + settlements.slice().reverse().map(s => `<li>${s.settlementId}: ${Number(s.amount).toLocaleString('en-US')} — ${s.method} — <b>${s.status}</b></li>`).join('') + '</ul>'
-        : '<p class="muted">لا تسويات لهذا العميل بعد</p>';
+        : '<p class="muted">لا تسويات لهذا المعتمد بعد</p>';
     }
     function renderAdmin(){
       const rows = JSON.parse(localStorage.getItem(adminKey()) || '[]').slice().reverse();
       document.getElementById('adminNotices').innerHTML = rows.length
         ? rows.slice(0, 30).map(n => `<article class="notif-item${n.read?'':' unread'}"><h4>${n.title}</h4><p>${n.text}</p><div class="notif-meta">${n.time || ''} · ${n.clientName || ''}</div></article>`).join('')
-        : '<p class="muted">لا إشعارات بعد. عند تأكيد العميل للاستلام ستظهر هنا.</p>';
+        : '<p class="muted">لا إشعارات بعد. عند تأكيد المعتمد للاستلام ستظهر هنا.</p>';
     }
     document.getElementById('sendBtn').onclick = () => {
       const c = selectedClient();
@@ -102,7 +102,7 @@
       else if (method.includes('بطاقة')) methodDetail = p.bankCard || '';
       else methodDetail = [p.bankName, p.bankAccount].filter(Boolean).join(' / ');
       if (!methodDetail && method !== 'نقداً') {
-        document.getElementById('sendMsg').textContent = 'العميل لم يضف هذه الوسيلة بعد في إعداداته';
+        document.getElementById('sendMsg').textContent = 'المعتمد لم يضف هذه الوسيلة بعد في إعداداته';
         return;
       }
       const settlementId = 'STL-' + Date.now();
@@ -113,9 +113,9 @@
       notices.push({ id: 'NTC-' + Date.now(), time: new Date().toLocaleString('en-GB'), title: 'تم إرسال مبلغ إليك', text: `تم تحويل ${amount.toLocaleString('en-US')} د.ع عبر ${method}${methodDetail ? ' ('+methodDetail+')' : ''}`, amount, method, read: false, settlementId });
       localStorage.setItem(noticesKey(c.id), JSON.stringify(notices));
       const admin = JSON.parse(localStorage.getItem(adminKey()) || '[]');
-      admin.push({ id: 'ADM-' + Date.now(), time: new Date().toLocaleString('en-GB'), clientCode: c.loginCode, clientName: c.name, dbSheet: c.dbSheet, title: 'تم تسجيل إرسال للعميل', text: `أُرسل ${amount.toLocaleString('en-US')} د.ع إلى ${c.name} عبر ${method}`, amount, method, settlementId, read: false });
+      admin.push({ id: 'ADM-' + Date.now(), time: new Date().toLocaleString('en-GB'), clientCode: c.loginCode, clientName: c.name, dbSheet: c.dbSheet, title: 'تم تسجيل إرسال للمعتمد', text: `أُرسل ${amount.toLocaleString('en-US')} د.ع إلى ${c.name} عبر ${method}`, amount, method, settlementId, read: false });
       localStorage.setItem(adminKey(), JSON.stringify(admin));
-      document.getElementById('sendMsg').textContent = 'تم الإرسال. اطلب من العميل فتح بوابة العميل وتأكيد الاستلام.';
+      document.getElementById('sendMsg').textContent = 'تم الإرسال. اطلب من المعتمد فتح تطبيق المعتمد وتأكيد الاستلام.';
       document.getElementById('amount').value = '';
       refreshPayout();
       renderAdmin();

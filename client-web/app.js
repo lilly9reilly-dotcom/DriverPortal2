@@ -685,6 +685,16 @@
       showTab(btn.dataset.tab);
     });
 
+    const params = new URLSearchParams(location.search);
+    const demoCode = (params.get("code") || "").trim();
+    if (demoCode) {
+      $("loginCode").value = demoCode;
+      await doLogin();
+      const demoTab = (params.get("tab") || "").trim();
+      if (demoTab) showTab(demoTab);
+      return;
+    }
+
     const existing = readSession();
     if (existing && state.clients.some((c) => c.id === existing.id)) {
       await openClient(existing);
