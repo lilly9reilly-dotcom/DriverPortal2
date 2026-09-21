@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>لوحة تسوية العملاء — معاينة</title>
+  <title>لوحة تسوية المعتمدين — معاينة</title>
   <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
   <style>
@@ -16,13 +16,13 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>تسوية حسابات العملاء</h1>
-    <p class="muted">معاينة محلية للداشبورد: إرسال أموال للعميل + استلام إشعار عندما يؤكد العميل الوصول. يعمل مع نفس بيانات بوابة العميل على هذا المتصفح.</p>
-    <div class="notice-admin">افتح أولاً <a href="./index.html">بوابة العميل</a> وسجّل دخول العميل وأضف وسائل الاستلام من الإعدادات، ثم ارجع هنا لإرسال مبلغ.</div>
+    <h1>تسوية حسابات المعتمدين</h1>
+    <p class="muted">معاينة محلية للداشبورد: إرسال أموال للمعتمد + استلام إشعار عندما يؤكد الوصول. يعمل مع نفس بيانات تطبيق المعتمد على هذا المتصفح.</p>
+    <div class="notice-admin">افتح أولاً <a href="./index.html">تطبيق المعتمد</a> وسجّل دخول معتمد (مثل سجاد C1587) وأضف وسائل الاستلام من الإعدادات، ثم ارجع هنا لإرسال مبلغ.</div>
     <div class="grid">
       <article class="card">
-        <h3>إرسال مبلغ لعميل</h3>
-        <label>كود العميل
+        <h3>إرسال مبلغ لمعتمد</h3>
+        <label>كود المعتمد
           <select id="clientCode"></select>
         </label>
         <label>المبلغ
@@ -39,7 +39,7 @@
         <label>ملاحظة
           <input id="note" type="text" placeholder="تسوية الفترة ..." />
         </label>
-        <button id="sendBtn" class="btn-primary" type="button">إرسال وإشعار العميل</button>
+        <button id="sendBtn" class="btn-primary" type="button">إرسال وإشعار المعتمد</button>
         <p id="sendMsg" class="hint"></p>
         <h3 class="section-title">وسائل الاستلام المحفوظة</h3>
         <pre id="payoutPreview" class="muted" style="white-space:pre-wrap;background:#f8fafb;padding:10px;border-radius:10px;"></pre>
@@ -81,13 +81,13 @@
       const settlements = JSON.parse(localStorage.getItem(settlementsKey(c.id)) || '[]');
       document.getElementById('settlementsPreview').innerHTML = settlements.length
         ? '<ul>' + settlements.slice().reverse().map(s => `<li>${s.settlementId}: ${Number(s.amount).toLocaleString('en-US')} — ${s.method} — <b>${s.status}</b></li>`).join('') + '</ul>'
-        : '<p class="muted">لا تسويات لهذا العميل بعد</p>';
+        : '<p class="muted">لا تسويات لهذا المعتمد بعد</p>';
     }
     function renderAdmin(){
       const rows = JSON.parse(localStorage.getItem(adminKey()) || '[]').slice().reverse();
       document.getElementById('adminNotices').innerHTML = rows.length
         ? rows.slice(0, 30).map(n => `<article class="notif-item${n.read?'':' unread'}"><h4>${n.title}</h4><p>${n.text}</p><div class="notif-meta">${n.time || ''} · ${n.clientName || ''}</div></article>`).join('')
-        : '<p class="muted">لا إشعارات بعد. عند تأكيد العميل للاستلام ستظهر هنا.</p>';
+        : '<p class="muted">لا إشعارات بعد. عند تأكيد المعتمد للاستلام ستظهر هنا.</p>';
     }
     document.getElementById('sendBtn').onclick = () => {
       const c = selectedClient();
@@ -102,7 +102,7 @@
       else if (method.includes('بطاقة')) methodDetail = p.bankCard || '';
       else methodDetail = [p.bankName, p.bankAccount].filter(Boolean).join(' / ');
       if (!methodDetail && method !== 'نقداً') {
-        document.getElementById('sendMsg').textContent = 'العميل لم يضف هذه الوسيلة بعد في إعداداته';
+        document.getElementById('sendMsg').textContent = 'المعتمد لم يضف هذه الوسيلة بعد في إعداداته';
         return;
       }
       const settlementId = 'STL-' + Date.now();
@@ -113,9 +113,9 @@
       notices.push({ id: 'NTC-' + Date.now(), time: new Date().toLocaleString('en-GB'), title: 'تم إرسال مبلغ إليك', text: `تم تحويل ${amount.toLocaleString('en-US')} د.ع عبر ${method}${methodDetail ? ' ('+methodDetail+')' : ''}`, amount, method, read: false, settlementId });
       localStorage.setItem(noticesKey(c.id), JSON.stringify(notices));
       const admin = JSON.parse(localStorage.getItem(adminKey()) || '[]');
-      admin.push({ id: 'ADM-' + Date.now(), time: new Date().toLocaleString('en-GB'), clientCode: c.loginCode, clientName: c.name, dbSheet: c.dbSheet, title: 'تم تسجيل إرسال للعميل', text: `أُرسل ${amount.toLocaleString('en-US')} د.ع إلى ${c.name} عبر ${method}`, amount, method, settlementId, read: false });
+      admin.push({ id: 'ADM-' + Date.now(), time: new Date().toLocaleString('en-GB'), clientCode: c.loginCode, clientName: c.name, dbSheet: c.dbSheet, title: 'تم تسجيل إرسال للمعتمد', text: `أُرسل ${amount.toLocaleString('en-US')} د.ع إلى ${c.name} عبر ${method}`, amount, method, settlementId, read: false });
       localStorage.setItem(adminKey(), JSON.stringify(admin));
-      document.getElementById('sendMsg').textContent = 'تم الإرسال. اطلب من العميل فتح بوابة العميل وتأكيد الاستلام.';
+      document.getElementById('sendMsg').textContent = 'تم الإرسال. اطلب من المعتمد فتح تطبيق المعتمد وتأكيد الاستلام.';
       document.getElementById('amount').value = '';
       refreshPayout();
       renderAdmin();
