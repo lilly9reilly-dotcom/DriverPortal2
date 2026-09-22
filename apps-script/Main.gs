@@ -65,6 +65,7 @@ function handleRequest(e) {
     if (action === "systemHealthCheck") return json(systemHealthCheck(data));
     if (action === "createSystemBackup") return json(createSystemBackup(data));
     if (action === "resetAllDataWithArchive") return json(resetAllDataWithArchive(data));
+    if (action === "resetAccountingFreshStart") return json(resetAccountingFreshStart(data));
 
     if (action === "companyActivationVerify") return json(verifyCompanyActivation(data));
     if (action === "companyActivationList") return json(listCompanyActivationCodes(data));
@@ -598,6 +599,16 @@ function listCompanyActivationAudit(data) {
   return { success: true, data: out };
 }
 
+/**
+ * تصفير محاسبي آمن: أرشفة أوراق الأشهر، حذف التقارير المولَّدة،
+ * وتفريغ قواعد المعتمدين DB_* (مع الإبقاء على العناوين).
+ * لا يمس المعتمدين/السيارات/GPS/التفعيل.
+ * dryRun=true = معاينة فقط بدون backup ولا تعديل.
+ */
+function resetAccountingFreshStart(data) {
+  return resetAllDataWithArchive(data);
+}
+
 function resetAllDataWithArchive(data) {
   data = data || {};
   var dryRun = String(data.dryRun || "").toLowerCase() === "true";
@@ -606,14 +617,18 @@ function resetAllDataWithArchive(data) {
     return { success: false, message: "confirmToken غير صحيح", requiredToken: "RESET_ALL_CONFIRMED" };
   }
 
-  var backup = createSystemBackup({ label: "clean_rebuild" });
-  if (!backup.success) return { success: false, message: "فشل النسخة الاحتياطية" };
+  var backup = { success: true, skipped: true };
+  if (!dryRun) {
+    backup = createSystemBackup({ label: "accounting_fresh_start" });
+    if (!backup.success) return { success: false, message: "فشل النسخة الاحتياطية" };
+  }
 
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var sheets = ss.getSheets();
   var stamp = Utilities.formatDate(new Date(), "Asia/Baghdad", "yyyyMMdd_HHmmss");
   var archived = [];
   var deleted = [];
+  var clearedDb = [];
 
   for (var i = sheets.length - 1; i >= 0; i--) {
     var sh = sheets[i];
@@ -627,10 +642,17 @@ function resetAllDataWithArchive(data) {
       n === "Fleet" ||
       n === "العملاء" ||
       n === "السيارات" ||
+      n === "معتمدون" ||
       n === "60" ||
       n === "تنظيم_المعتمدين" ||
-      /^DB_/.test(n)
+      /^gps_/i.test(n)
     ) continue;
+
+    if (/^DB_/.test(n)) {
+      if (!dryRun) clearAgentDatabaseSheet_(sh);
+      clearedDb.push(n);
+      continue;
+    }
 
     if (/^(F_)?\d{4}_\d{2}$/i.test(n)) {
       if (!dryRun) sh.setName("ARCH_" + n + "_" + stamp);
@@ -656,8 +678,27 @@ function resetAllDataWithArchive(data) {
     backup: backup,
     archivedMonthSheets: archived,
     deletedSupportSheets: deleted,
-    recreated: [currentMonth, "F_" + currentMonth]
+    clearedAgentDatabases: clearedDb,
+    recreated: [currentMonth, "F_" + currentMonth],
+    message: dryRun
+      ? ("معاينة: أرشفة " + archived.length + " شهر · تفريغ " + clearedDb.length + " قاعدة معتمد · حذف " + deleted.length + " ورقة مولَّدة")
+      : ("تم التصفير: أرشفة " + archived.length + " · تفريغ DB_ " + clearedDb.length + " · شهر فارغ " + currentMonth)
   };
+}
+
+function clearAgentDatabaseSheet_(sheet) {
+  if (!sheet) return;
+  var last = sheet.getLastRow();
+  if (last > 1) {
+    sheet.deleteRows(2, last - 1);
+  }
+  if (sheet.getLastRow() === 0) {
+    var headers = typeof MinistryCore !== "undefined" && MinistryCore.agentLedgerHeaders
+      ? MinistryCore.agentLedgerHeaders()
+      : ["رقم الوصل", "السائق", "رقم السيارة"];
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+  }
 }
 
 function createSystemBackup(data) {
