@@ -52,3 +52,7 @@ temp-prod-deploy-clean/
 artifacts/routing-experiment/*.tsv
 artifacts/routing-experiment/summary.json
 .npm-global/
+
+agent-portal/build/
+release/agent-portal/*.apk
+

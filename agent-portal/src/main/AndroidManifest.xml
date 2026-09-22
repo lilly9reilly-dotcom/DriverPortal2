@@ -1,11 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.INTERNET" />
   <application
       android:allowBackup="false"
-      android:label="ط¨ظˆط§ط¨ط© ط§ظ„ط¹ظ…ظٹظ„"
+      android:icon="@android:drawable/ic_menu_myplaces"
+      android:label="تطبيق المعتمد"
       android:supportsRtl="true"
-      android:usesCleartextTraffic="false">
+      android:usesCleartextTraffic="true">
     <activity
         android:name=".MainActivity"
         android:exported="true"
@@ -17,4 +18,3 @@
     </activity>
   </application>
 </manifest>
-

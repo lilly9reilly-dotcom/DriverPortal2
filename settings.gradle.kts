@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "DriverPortal"
 include(":app")
+include(":agent-portal")
  
