@@ -27,8 +27,16 @@
       .replaceAll('"', "&quot;");
   }
 
+  async function netFetch(url) {
+    try {
+      return await fetch(url);
+    } catch (_) {
+      throw new Error("تعذّر الاتصال بالخادم — تحقق من الإنترنت أو رابط النظام ثم أعد المحاولة.");
+    }
+  }
+
   async function loadJson(path) {
-    const res = await fetch(path);
+    const res = await netFetch(path);
     if (!res.ok) throw new Error("تعذر تحميل " + path);
     return res.json();
   }
@@ -98,7 +106,7 @@
     if (cfg.mode === "live" && cfg.apiUrl) {
       const url = cfg.apiUrl + (cfg.apiUrl.includes("?") ? "&" : "?") +
         "action=clientLogin&code=" + encodeURIComponent(code);
-      const res = await fetch(url);
+      const res = await netFetch(url);
       if (!res.ok) throw new Error("فشل الاتصال بالخادم");
       const json = await res.json();
       if (!json.success) throw new Error(json.message || "كود غير صحيح");
@@ -114,7 +122,7 @@
       const url = cfg.apiUrl + (cfg.apiUrl.includes("?") ? "&" : "?") +
         "action=clientGetState&code=" + encodeURIComponent(client.loginCode) +
         "&dbSheet=" + encodeURIComponent(client.dbSheet);
-      const res = await fetch(url);
+      const res = await netFetch(url);
       if (!res.ok) throw new Error("تعذر جلب القاعدة");
       const json = await res.json();
       if (!json.success) throw new Error(json.message || "فشل جلب البيانات");
@@ -687,7 +695,17 @@
 
     const existing = readSession();
     if (existing && state.clients.some((c) => c.id === existing.id)) {
-      await openClient(existing);
+      try {
+        await openClient(existing);
+      } catch (err) {
+        console.error("تعذّر استئناف الجلسة السابقة:", err);
+        clearSession();
+        $("appView").classList.add("hidden");
+        $("loginView").classList.remove("hidden");
+        $("loginError").hidden = false;
+        $("loginError").textContent =
+          "انتهت الجلسة السابقة أو تعذّر الاتصال بالخادم. الرجاء تسجيل الدخول من جديد.";
+      }
     }
   }
 
