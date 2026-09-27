@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet"><meta charset="UTF-8"><title>لصق قواعد العملاء</title>
+<style>
+body{font-family:Alyamama,Tahoma,sans-serif;padding:16px}
+table{border-collapse:collapse;margin:12px 0}
+td,th{border:1px solid #333;padding:6px 10px}
+h2{margin-top:28px}
+.names span{display:inline-block;margin:6px;padding:4px 8px;border:1px solid #000;background:#ffc}
+</style></head>
+<body>
+<p>انسخ كل جدول كاملًا ثم الصقه في الشيت.</p>
+<h2>أسماء الأوراق</h2>
+<div class="names">
+<span>العملاء</span>
+<span>السيارات</span>
+<span>تنظيم_المعتمدين</span>
+<span>DB_سجاد_صويره</span>
+<span>DB_ابراهيم</span>
+<span>DB_رواد_ريادة</span>
+<span>DB_قيصر_وارد</span>
+<span>DB_شركة_ارض_الهادي</span>
+<span>DB_قيصر_شمري</span>
+<span>DB_شركة</span>
+<span>DB_شركة_يونيغاز</span>
+<span>DB_غير_مصنف</span>
+</div>
+
+<h2 id="clients">جدول العملاء</h2>
+<table id="t-clients">
+<tr><th>الاسم</th><th>النوع</th><th>فعال</th><th>قاعدة البيانات</th></tr>
+<tr><td>سجاد صويره</td><td>معتمد</td><td>1</td><td>DB_سجاد_صويره</td></tr>
+<tr><td>ابراهيم</td><td>معتمد</td><td>1</td><td>DB_ابراهيم</td></tr>
+<tr><td>رواد ريادة</td><td>معتمد</td><td>1</td><td>DB_رواد_ريادة</td></tr>
+<tr><td>قيصر وارد</td><td>معتمد</td><td>1</td><td>DB_قيصر_وارد</td></tr>
+<tr><td>شركة ارض الهادي</td><td>معتمد</td><td>1</td><td>DB_شركة_ارض_الهادي</td></tr>
+<tr><td>قيصر شمري</td><td>معتمد</td><td>1</td><td>DB_قيصر_شمري</td></tr>
+<tr><td>شركة</td><td>شركة</td><td>1</td><td>DB_شركة</td></tr>
+<tr><td>شركة يونيغاز</td><td>معتمد</td><td>1</td><td>DB_شركة_يونيغاز</td></tr>
+</table>
+
+<h2 id="cars">جدول السيارات</h2>
+<table id="t-cars">
+<tr><th>رقم السيارة</th><th>السائق الافتراضي</th><th>تابع لـ</th><th>اسم العميل</th><th>فعال</th><th>ملاحظات</th></tr>
+<tr><td>15871</td><td></td><td>معتمد</td><td>سجاد صويره</td><td>1</td><td></td></tr>
+<tr><td>16414</td><td></td><td>معتمد</td><td>سجاد صويره</td><td>1</td><td></td></tr>
+<tr><td>16416</td><td></td><td>معتمد</td><td>سجاد صويره</td><td>1</td><td></td></tr>
+<tr><td>31378</td><td></td><td>معتمد</td><td>ابراهيم</td><td>1</td><td></td></tr>
+<tr><td>22549</td><td></td><td>معتمد</td><td>ابراهيم</td><td>1</td><td></td></tr>
+<tr><td>36375</td><td></td><td>معتمد</td><td>ابراهيم</td><td>1</td><td></td></tr>
+<tr><td>32028</td><td></td><td>معتمد</td><td>ابراهيم</td><td>1</td><td></td></tr>
+<tr><td>22351</td><td></td><td>معتمد</td><td>رواد ريادة</td><td>1</td><td></td></tr>
+<tr><td>31669</td><td></td><td>معتمد</td><td>رواد ريادة</td><td>1</td><td></td></tr>
+<tr><td>28123</td><td></td><td>معتمد</td><td>رواد ريادة</td><td>1</td><td></td></tr>
+<tr><td>29684</td><td></td><td>معتمد</td><td>قيصر وارد</td><td>1</td><td></td></tr>
+<tr><td>33687</td><td></td><td>معتمد</td><td>قيصر وارد</td><td>1</td><td></td></tr>
+<tr><td>29635</td><td></td><td>معتمد</td><td>قيصر وارد</td><td>1</td><td></td></tr>
+<tr><td>36290</td><td></td><td>معتمد</td><td>قيصر وارد</td><td>1</td><td></td></tr>
+<tr><td>12207</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>31896</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>27591</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>36341</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>23589</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>35837</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>22006</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>30706</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>27912</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>23917</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>24189</td><td></td><td>معتمد</td><td>شركة ارض الهادي</td><td>1</td><td></td></tr>
+<tr><td>20585</td><td></td><td>معتمد</td><td>قيصر شمري</td><td>1</td><td></td></tr>
+<tr><td>27685</td><td></td><td>معتمد</td><td>قيصر شمري</td><td>1</td><td></td></tr>
+<tr><td>20756</td><td></td><td>معتمد</td><td>قيصر شمري</td><td>1</td><td></td></tr>
+<tr><td>20858</td><td></td><td>معتمد</td><td>قيصر شمري</td><td>1</td><td></td></tr>
+<tr><td>22973</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>24057</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>24382</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>25710</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>30353</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>29744</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>29555</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>13417</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>27740</td><td></td><td>شركة</td><td>شركة</td><td>1</td><td></td></tr>
+<tr><td>22219</td><td></td><td>معتمد</td><td>شركة يونيغاز</td><td>1</td><td></td></tr>
+<tr><td>22084</td><td></td><td>معتمد</td><td>شركة يونيغاز</td><td>1</td><td></td></tr>
+<tr><td>22076</td><td></td><td>معتمد</td><td>شركة يونيغاز</td><td>1</td><td></td></tr>
+<tr><td>22339</td><td></td><td>معتمد</td><td>شركة يونيغاز</td><td>1</td><td></td></tr>
+</table>
+
+<h2>ترويسة قاعدة العميل</h2>
+<table id="t-ledger">
+<tr>
+<th>رقم الوصل</th><th>السائق</th><th>رقم السيارة</th><th>تاريخ التحميل</th><th>تاريخ التفريغ</th>
+<th>الكمية طن</th><th>الوجهة</th><th>نوع الحركة</th><th>الشهر</th><th>الفترة</th>
+<th>سعر الطن</th><th>المبلغ</th><th>لترات الكاز</th><th>قيمة الكاز</th><th>المعتمد</th>
+<th>وقت الترحيل</th><th>مفتاح الترحيل</th>
+</tr>
+</table>
+</body></html>

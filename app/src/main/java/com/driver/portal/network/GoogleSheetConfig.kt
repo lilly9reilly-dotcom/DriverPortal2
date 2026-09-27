@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 object GoogleSheetConfig {
 
     private const val API_SCRIPT_ROOT =
-        "https://script.google.com/macros/s/AKfycbwCreVvebaAN7C4W2OZu6ura7cza42P2lIssNt4sVBv1raDqZkQYY-ZZyNNcl9_iynhAw/"
+        "https://script.google.com/macros/s/AKfycbwQsUx8PVIIPufmI8Ev0tTy6qEBtcNn7LXldhmCnuPwpq0VfZUjAx8pl13jSWxywvRM9A/"
     private const val ADMIN_SCRIPT_ROOT = API_SCRIPT_ROOT
 
     const val BASE_URL: String = API_SCRIPT_ROOT

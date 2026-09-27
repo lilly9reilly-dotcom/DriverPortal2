@@ -316,7 +316,7 @@ function initCharts(data) {
           legend: {
             position: 'bottom',
             labels: {
-              font: { family: "'Segoe UI', Arial", size: 12 },
+              font: { family: "'Alyamama', 'Tajawal', Arial", size: 12 },
               padding: 15
             }
           }
@@ -354,7 +354,7 @@ function initCharts(data) {
         responsive: true,
         maintainAspectRatio: true,
         plugins: {
-          legend: { labels: { font: { family: "'Segoe UI', Arial", size: 12 } } }
+          legend: { labels: { font: { family: "'Alyamama', 'Tajawal', Arial", size: 12 } } }
         },
         scales: {
           y: {

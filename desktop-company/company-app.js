@@ -1777,7 +1777,7 @@ function exportReportPdf() {
         <meta charset="UTF-8" />
         <title>تقرير الشركة</title>
         <style>
-          body { font-family: Tahoma, Arial, sans-serif; margin: 20px; color: #1d2c3a; }
+          body { font-family: "Alyamama", Tahoma, Arial, sans-serif; margin: 20px; color: #1d2c3a; }
           h1 { margin: 0 0 8px 0; font-size: 22px; }
           p { margin: 0 0 14px 0; }
           table { width: 100%; border-collapse: collapse; font-size: 12px; }

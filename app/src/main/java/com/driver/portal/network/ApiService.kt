@@ -76,13 +76,21 @@ interface ApiService {
     @GET("exec")
     fun getHistory(
         @Query("action") action: String = "history",
-        @Query("driverName") driverName: String
+        @Query("driverName") driverName: String,
+        @Query("companyId") companyId: String = DriverScopeConfig.COMPANY_ID,
+        @Query("activationCode") activationCode: String = DriverScopeConfig.ACTIVATION_CODE,
+        @Query("deviceId") deviceId: String = DriverScopeConfig.DEVICE_ID,
+        @Query("packageName") packageName: String = DriverScopeConfig.PACKAGE_NAME
     ): Call<HistoryResponse>
 
     @GET("exec")
     fun getMaintenanceRequests(
         @Query("action") action: String = "getMaintenance",
-        @Query("carNumber") carNumber: String
+        @Query("carNumber") carNumber: String,
+        @Query("companyId") companyId: String = DriverScopeConfig.COMPANY_ID,
+        @Query("activationCode") activationCode: String = DriverScopeConfig.ACTIVATION_CODE,
+        @Query("deviceId") deviceId: String = DriverScopeConfig.DEVICE_ID,
+        @Query("packageName") packageName: String = DriverScopeConfig.PACKAGE_NAME
     ): Call<MaintenanceResponse>
 
     @FormUrlEncoded

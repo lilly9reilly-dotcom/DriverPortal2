@@ -1690,7 +1690,7 @@ function exportDemandsPdf() {
       <meta charset="utf-8" />
       <title>${demandTabLabel(activeTab)} - ${month}</title>
       <style>
-        body{font-family:Tahoma,Arial,sans-serif;padding:16px;color:#222}
+        body{font-family:"Alyamama",Tahoma,Arial,sans-serif;padding:16px;color:#222}
         h2{margin:0 0 8px}
         .meta{margin-bottom:14px;color:#666}
         table{width:100%;border-collapse:collapse}

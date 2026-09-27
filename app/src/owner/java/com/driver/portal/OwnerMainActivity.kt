@@ -98,7 +98,7 @@ private enum class OwnerRole(val title: String) {
 }
 
 private const val OWNER_ADMIN_TRANSPORT_URL =
-    "https://script.google.com/macros/s/AKfycbwCreVvebaAN7C4W2OZu6ura7cza42P2lIssNt4sVBv1raDqZkQYY-ZZyNNcl9_iynhAw/exec?page=admin"
+    "https://script.google.com/macros/s/AKfycbwQsUx8PVIIPufmI8Ev0tTy6qEBtcNn7LXldhmCnuPwpq0VfZUjAx8pl13jSWxywvRM9A/exec?page=admin"
 
 private object OwnerAuthStore {
     private const val PREF = "owner_auth_prefs"

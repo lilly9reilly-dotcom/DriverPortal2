@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تسوية العملاء — معاينة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { padding: 20px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .notice-admin { background:#fff7e8; border:1px solid #f0d7a3; padding:10px 12px; border-radius:12px; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>تسوية حسابات العملاء</h1>
+    <p class="muted">معاينة محلية للداشبورد: إرسال أموال للعميل + استلام إشعار عندما يؤكد العميل الوصول. يعمل مع نفس بيانات بوابة العميل على هذا المتصفح.</p>
+    <div class="notice-admin">افتح أولاً <a href="./index.html">بوابة العميل</a> وسجّل دخول العميل وأضف وسائل الاستلام من الإعدادات، ثم ارجع هنا لإرسال مبلغ.</div>
+    <div class="grid">
+      <article class="card">
+        <h3>إرسال مبلغ لعميل</h3>
+        <label>كود العميل
+          <select id="clientCode"></select>
+        </label>
+        <label>المبلغ
+          <input id="amount" type="number" min="1000" step="1000" placeholder="مثال: 500000" />
+        </label>
+        <label>الوسيلة
+          <select id="method">
+            <option>زين كاش</option>
+            <option>ماستركارد</option>
+            <option>بطاقة مصرفية</option>
+            <option>حساب مصرفي</option>
+          </select>
+        </label>
+        <label>ملاحظة
+          <input id="note" type="text" placeholder="تسوية الفترة ..." />
+        </label>
+        <button id="sendBtn" class="btn-primary" type="button">إرسال وإشعار العميل</button>
+        <p id="sendMsg" class="hint"></p>
+        <h3 class="section-title">وسائل الاستلام المحفوظة</h3>
+        <pre id="payoutPreview" class="muted" style="white-space:pre-wrap;background:#f8fafb;padding:10px;border-radius:10px;"></pre>
+      </article>
+      <article class="card">
+        <h3>إشعارات الإدارة</h3>
+        <div id="adminNotices"></div>
+        <h3 class="section-title">سجل التسويات</h3>
+        <div id="settlementsPreview"></div>
+      </article>
+    </div>
+  </div>
+  <script>
+    async function loadClients() {
+      const res = await fetch('data/clients.json');
+      const meta = await res.json();
+      const sel = document.getElementById('clientCode');
+      sel.innerHTML = (meta.clients || []).map(c => `<option value="${c.loginCode}" data-id="${c.id}" data-name="${c.name}" data-db="${c.dbSheet}">${c.name} — ${c.loginCode}</option>`).join('');
+      sel.addEventListener('change', refreshPayout);
+      refreshPayout();
+      renderAdmin();
+    }
+    function payoutKey(id){ return 'clientPortalPayout:' + id; }
+    function settlementsKey(id){ return 'clientPortalSettlements:' + id; }
+    function noticesKey(id){ return 'clientPortalNotices:' + id; }
+    function adminKey(){ return 'adminMoneyNotices'; }
+    function selectedClient(){
+      const opt = document.getElementById('clientCode').selectedOptions[0];
+      return { loginCode: opt.value, id: opt.dataset.id, name: opt.dataset.name, dbSheet: opt.dataset.db };
+    }
+    function refreshPayout(){
+      const c = selectedClient();
+      const p = JSON.parse(localStorage.getItem(payoutKey(c.id)) || '{}');
+      document.getElementById('payoutPreview').textContent =
+        `زين كاش: ${p.zainCash || '—'}
+ماستركارد: ${p.mastercard || '—'}
+بطاقة: ${p.bankCard || '—'}
+مصرف: ${p.bankName || '—'} / ${p.bankAccount || '—'}`;
+      const settlements = JSON.parse(localStorage.getItem(settlementsKey(c.id)) || '[]');
+      document.getElementById('settlementsPreview').innerHTML = settlements.length
+        ? '<ul>' + settlements.slice().reverse().map(s => `<li>${s.settlementId}: ${Number(s.amount).toLocaleString('en-US')} — ${s.method} — <b>${s.status}</b></li>`).join('') + '</ul>'
+        : '<p class="muted">لا تسويات لهذا العميل بعد</p>';
+    }
+    function renderAdmin(){
+      const rows = JSON.parse(localStorage.getItem(adminKey()) || '[]').slice().reverse();
+      document.getElementById('adminNotices').innerHTML = rows.length
+        ? rows.slice(0, 30).map(n => `<article class="notif-item${n.read?'':' unread'}"><h4>${n.title}</h4><p>${n.text}</p><div class="notif-meta">${n.time || ''} · ${n.clientName || ''}</div></article>`).join('')
+        : '<p class="muted">لا إشعارات بعد. عند تأكيد العميل للاستلام ستظهر هنا.</p>';
+    }
+    document.getElementById('sendBtn').onclick = () => {
+      const c = selectedClient();
+      const amount = Number(document.getElementById('amount').value || 0);
+      const method = document.getElementById('method').value;
+      const note = document.getElementById('note').value;
+      if (!(amount > 0)) { document.getElementById('sendMsg').textContent = 'أدخل مبلغاً صالحاً'; return; }
+      const p = JSON.parse(localStorage.getItem(payoutKey(c.id)) || '{}');
+      let methodDetail = '';
+      if (method.includes('زين')) methodDetail = p.zainCash || '';
+      else if (method.includes('ماستر')) methodDetail = p.mastercard || '';
+      else if (method.includes('بطاقة')) methodDetail = p.bankCard || '';
+      else methodDetail = [p.bankName, p.bankAccount].filter(Boolean).join(' / ');
+      if (!methodDetail && method !== 'نقداً') {
+        document.getElementById('sendMsg').textContent = 'العميل لم يضف هذه الوسيلة بعد في إعداداته';
+        return;
+      }
+      const settlementId = 'STL-' + Date.now();
+      const settlements = JSON.parse(localStorage.getItem(settlementsKey(c.id)) || '[]');
+      settlements.push({ settlementId, amount, method, methodDetail, status: 'مرسل', sendNote: note || 'تحويل من الإدارة', receiveNote: '', receivedAt: '', time: new Date().toLocaleString('en-GB') });
+      localStorage.setItem(settlementsKey(c.id), JSON.stringify(settlements));
+      const notices = JSON.parse(localStorage.getItem(noticesKey(c.id)) || '[]');
+      notices.push({ id: 'NTC-' + Date.now(), time: new Date().toLocaleString('en-GB'), title: 'تم إرسال مبلغ إليك', text: `تم تحويل ${amount.toLocaleString('en-US')} د.ع عبر ${method}${methodDetail ? ' ('+methodDetail+')' : ''}`, amount, method, read: false, settlementId });
+      localStorage.setItem(noticesKey(c.id), JSON.stringify(notices));
+      const admin = JSON.parse(localStorage.getItem(adminKey()) || '[]');
+      admin.push({ id: 'ADM-' + Date.now(), time: new Date().toLocaleString('en-GB'), clientCode: c.loginCode, clientName: c.name, dbSheet: c.dbSheet, title: 'تم تسجيل إرسال للعميل', text: `أُرسل ${amount.toLocaleString('en-US')} د.ع إلى ${c.name} عبر ${method}`, amount, method, settlementId, read: false });
+      localStorage.setItem(adminKey(), JSON.stringify(admin));
+      document.getElementById('sendMsg').textContent = 'تم الإرسال. اطلب من العميل فتح بوابة العميل وتأكيد الاستلام.';
+      document.getElementById('amount').value = '';
+      refreshPayout();
+      renderAdmin();
+    };
+    loadClients();
+    setInterval(renderAdmin, 3000);
+  </script>
+</body>
+</html>

@@ -6,6 +6,9 @@
         <item name="android:colorPrimary">@color/primary</item>
         <item name="android:colorPrimaryDark">@color/primary_dark</item>
         <item name="android:colorAccent">@color/accent</item>
+
+        <!-- Brand typography -->
+        <item name="android:fontFamily">@font/alyamama</item>
         
         <!-- Status Bar -->
         <item name="android:statusBarColor">@color/primary_dark</item>
@@ -38,36 +41,42 @@
 
     <!-- Text Styles -->
     <style name="TextStyle.Headline1">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:textSize">32sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
 
     <style name="TextStyle.Headline2">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:textSize">28sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
 
     <style name="TextStyle.Title">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:textSize">20sp</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
 
     <style name="TextStyle.Subtitle">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:textSize">16sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/text_secondary</item>
     </style>
 
     <style name="TextStyle.Body">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/text_primary</item>
     </style>
 
     <style name="TextStyle.Caption">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:textSize">12sp</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textColor">@color/text_hint</item>
@@ -75,6 +84,7 @@
 
     <!-- Button Styles -->
     <style name="Button.Primary">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:background">@color/primary</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">16sp</item>
@@ -82,6 +92,7 @@
     </style>
 
     <style name="Button.Secondary">
+        <item name="android:fontFamily">@font/alyamama</item>
         <item name="android:background">@color/secondary</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">16sp</item>

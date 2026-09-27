@@ -403,7 +403,8 @@ fun TripCard(
                                         "sheet" to tripSheet,
                                         "tripSheet" to tripSheet,
                                         "factorySheet" to factorySheet,
-                                        "source" to "trip"
+                                        "source" to "trip",
+                                        *com.driver.portal.network.DriverScopeConfig.asQueryPairs()
                                     )
 
                                     URL(url).readText()
@@ -650,10 +651,16 @@ private fun normalizeTripItem(obj: JSONObject): TripItem? {
     val rawTotal = obj.optString("total").cleanField()
     val rawDate = obj.optString("date").cleanField()
     val rawStatus = obj.optString("status", "ok").cleanField().ifBlank { "ok" }
-    val rawImageUrl = obj.optString("imageUrl").cleanField()
+    val rawImageUrl = firstUrlValue(
+        obj.optString("imageUrl").cleanField(),
+        obj.optString("fileUrl").cleanField()
+    )
     val rawSendTime = obj.optString("sendTime").cleanField()
     val rawNotes = obj.optString("notes").cleanField()
-    val rawOwner = obj.optString("owner").cleanField()
+    val rawOwner = firstNotBlankNonUrl(
+        obj.optString("owner").cleanField(),
+        obj.optString("ownerType").cleanField()
+    )
     val rawFinalQuantity = obj.optString("finalQuantity").cleanField()
     val rawFinalAmount = obj.optString("finalAmount").cleanField()
 
